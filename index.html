@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RawLLM Pro v5.9.18</title>
+  <title>RawLLM Pro v5.9.19</title>
   <link rel="stylesheet" href="./assets/css/github-dark.min.css">
   <script src="./assets/js/marked.min.js"></script>
   <script src="./assets/js/highlight.min.js"></script>
@@ -145,6 +145,7 @@
       font-size: 15px; line-height: 1.5; word-wrap: break-word; display: flex; flex-direction: column; gap: 8px; position: relative;
     }
     .msg-user { align-self: flex-end; background: var(--user-bubble); color: white; border-bottom-right-radius: 2px; }
+    .msg-user .message-content { white-space: pre-wrap !important; word-wrap: break-word; }
     .msg-ai { align-self: flex-start; background: var(--ai-bubble); border: 1px solid var(--border-color); border-bottom-left-radius: 2px; width: 100%; }
     .msg-header { display: flex; justify-content: flex-end; align-items: center; gap: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 2px; }
     .gear-toggle-btn {
@@ -209,6 +210,7 @@
     #stop-btn { background: var(--error); color: white; display: none; }
     .dock-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); padding: 0 4px; }
     .dock-footer-left { display: flex; align-items: center; gap: 10px; }
+    #status-text { min-width: 95px; display: inline-block; white-space: nowrap; }
     .prefill-toggle-btn { background: none; border: none; color: var(--text-muted); font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 4px; min-height: 28px; }
     .prefill-toggle-btn:hover { color: var(--text-main); background: var(--bg-surface-hover); }
     .prefill-active-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; display: none; }
@@ -1253,7 +1255,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const ta = container.querySelector('.edit-textarea'); ta.value = original; ta.focus();
       container.querySelector('.cancel-edit-btn').onclick = (e) => { e.stopPropagation(); renderChatViewport(); };
       container.querySelector('.save-edit-btn').onclick = async (e) => {
-        e.stopPropagation(); const text = ta.value.trim(); if (!text) return;
+        e.stopPropagation(); const text = ta.value.replace(/^\s+|\s+$/g, ''); if (!text) return;
         activeThread.messages = activeThread.messages.slice(0, msgIndex);
         activeThread.messages.push({ role: 'user', content: text });
         activeThread.updated_at = Date.now(); await dbPut(activeThread);
@@ -1348,7 +1350,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     }
 
     async function sendMessage() {
-      const text = ui.userInput.value.trim();
+      const text = ui.userInput.value.replace(/^\s+|\s+$/g, '');
       if (!text || !activeThread || activeGenerations.has(activeThread.id)) return;
       if (activeThread.messages.length === 0) {
         activeThread.title = text.length > 25 ? text.substring(0, 25) + '...' : text;
@@ -1579,7 +1581,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
     ui.btnExportBackup.onclick = async () => {
       try {
-        const backup = { version: '5.9.16', exported_at: Date.now(), threads: await dbGetAll(), presets: await loadPresets(), custom_prompts: getCustomPrompts(), system_prompts: await getSystemPromptPresets() };
+        const backup = { version: '5.9.18', exported_at: Date.now(), threads: await dbGetAll(), presets: await loadPresets(), custom_prompts: getCustomPrompts(), system_prompts: await getSystemPromptPresets() };
         await window.Bridge.files.save(`rawllm_pro_backup_${Date.now()}.json`, toB64(JSON.stringify(backup, null, 2)), true);
         alert("Full backup exported successfully!");
       } catch (e) { showError("Backup Failed: " + e.message); }
