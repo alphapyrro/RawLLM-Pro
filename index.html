@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RawLLM Pro v5.9.16</title>
+  <title>RawLLM Pro v5.9.17</title>
   <link rel="stylesheet" href="./github-dark.min.css">
   <script src="./marked.min.js"></script>
   <script src="./highlight.min.js"></script>
@@ -144,7 +144,7 @@
       max-width: 92%; min-width: 220px; padding: 10px 14px; border-radius: 12px;
       font-size: 15px; line-height: 1.5; word-wrap: break-word; display: flex; flex-direction: column; gap: 8px; position: relative;
     }
-    .msg-user { align-self: flex-end; background: var(--user-bubble); color: white; border-bottom-right-radius: 2px; }
+    .msg-user { align-self: flex-end; background: var(--user-bubble); color: white; border-bottom-right-radius: 2px; white-space: pre-wrap; }
     .msg-ai { align-self: flex-start; background: var(--ai-bubble); border: 1px solid var(--border-color); border-bottom-left-radius: 2px; width: 100%; }
     .msg-header { display: flex; justify-content: flex-end; align-items: center; gap: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 2px; }
     .gear-toggle-btn {
@@ -213,6 +213,11 @@
     .prefill-toggle-btn:hover { color: var(--text-main); background: var(--bg-surface-hover); }
     .prefill-active-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; display: none; }
     .prompt-manage-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 6px; }
+    #status-text {
+      display: inline-block;
+      min-width: 130px;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -1579,7 +1584,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
     ui.btnExportBackup.onclick = async () => {
       try {
-        const backup = { version: '5.9.16', exported_at: Date.now(), threads: await dbGetAll(), presets: await loadPresets(), custom_prompts: getCustomPrompts(), system_prompts: await getSystemPromptPresets() };
+        const backup = { version: '5.9.17', exported_at: Date.now(), threads: await dbGetAll(), presets: await loadPresets(), custom_prompts: getCustomPrompts(), system_prompts: await getSystemPromptPresets() };
         await window.Bridge.files.save(`rawllm_pro_backup_${Date.now()}.json`, toB64(JSON.stringify(backup, null, 2)), true);
         alert("Full backup exported successfully!");
       } catch (e) { showError("Backup Failed: " + e.message); }
