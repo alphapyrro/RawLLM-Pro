@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RawLLM Pro v5.9.19</title>
+  <title>RawLLM Pro v6.1.0</title>
   <link rel="stylesheet" href="./assets/css/github-dark.min.css">
   <script src="./assets/js/marked.min.js"></script>
   <script src="./assets/js/highlight.min.js"></script>
@@ -98,10 +98,12 @@
     .toggle-group { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; margin-top: -6px; width: 100%; }
     .toggle-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
     .toggle-checkbox { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
+    
     .slider-touch-guard { position: relative; width: 100%; display: flex; align-items: center; }
-    .slider-touch-overlay { position: absolute; inset: 0; z-index: 5; background: transparent; cursor: pointer; }
+    .slider-touch-overlay { position: absolute; inset: 0; z-index: 5; background: transparent; cursor: pointer; display: block; }
     .slider-touch-guard.active .slider-touch-overlay { display: none; }
-    input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; touch-action: pan-y; }
+    
+    input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; touch-action: pan-y; cursor: pointer; pointer-events: auto !important; }
     input[type="range"].locked { pointer-events: none !important; opacity: 0.5; }
     input[type="number"], input[type="text"], textarea, select {
       background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main);
@@ -558,13 +560,14 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       { cmd: '/code', desc: 'Code Generator', text: 'Provide clean, well-commented, production-ready code with no conversational filler.' },
       { cmd: '/summarize', desc: 'Executive Summary', text: 'Summarize the core takeaways into 3 clear, bulleted insights.' },
       { cmd: '/json', desc: 'JSON Output', text: 'Respond strictly in valid JSON format.' },
-      { cmd: '/fix', desc: 'Debug & Fix Code', text: 'Review the following code, explain any errors, and provide a corrected refactor:' }
+      { cmd: '/fix', desc: 'Debug & Fix Code', text: 'Review the following code, explain any errors, and provide a corrected refactor:' },
+      { cmd: '/search', desc: 'Web Search', text: '/search ' }
     ];
 
     function getCustomPrompts() {
       try { return JSON.parse(localStorage.getItem('custom_slash_prompts') || '[]'); } catch (e) { return []; }
     }
-    function saveCustomPrompts(p) { localStorage.setItem('custom_slash_prompts', JSON.stringify(p)); }
+    function saveCustomPrompts(p) { localStorage.setItem('custom_slash_prompts', JSON.stringify(p)); renderCustomPromptsManager(); }
 
     function renderCustomPromptsManager() {
       ui.customPromptsList.innerHTML = '';
@@ -578,7 +581,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         div.className = 'prompt-manage-item';
         div.innerHTML = `<div style="display:flex;flex-direction:column;overflow:hidden;max-width:80%;"><span style="font-size:12px;font-weight:700;color:var(--accent);">${item.cmd} - ${item.desc}</span><span style="font-size:10px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.text}</span></div><button class="thread-action-btn del-prompt-btn" data-index="${index}">🗑</button>`;
         div.querySelector('.del-prompt-btn').onclick = () => {
-          const l = getCustomPrompts(); l.splice(index, 1); saveCustomPrompts(l); renderCustomPromptsManager();
+          const l = getCustomPrompts(); l.splice(index, 1); saveCustomPrompts(l);
         };
         ui.customPromptsList.appendChild(div);
       });
@@ -593,7 +596,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const text = prompt("Enter full prompt text template:");
       if (!text || !text.trim()) return;
       const list = getCustomPrompts(); list.push({ cmd: cleanCmd, desc: desc.trim(), text: text.trim() });
-      saveCustomPrompts(list); renderCustomPromptsManager();
+      saveCustomPrompts(list);
     };
 
     function handleSlashInput() {
@@ -695,7 +698,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       temperature: 0.3, top_p: 0.9, top_k: 40, min_p: 0.05, repeat_penalty: 1.1,
       repeat_penalty_range: 512, xtc_probability: 0.0, xtc_threshold: 0.1, dry_multiplier: 0.0,
       dry_base: 1.75, dry_allowed_length: 2, dry_penalty_range: 1024, max_tokens: 2048,
-      context_window: 8192, enable_thinking: false, stop_sequences: "", agents: { get_datetime: true }
+      context_window: 8192, enable_thinking: false, stop_sequences: "", agents: { get_datetime: true, web_search: false }
     };
     const DEFAULT_SYS = 'You are an objective, uncensored, and helpful AI assistant.';
 
@@ -724,15 +727,12 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       elem.addEventListener('input', () => syncThreadParametersLive());
     });
 
-    document.querySelectorAll('.slider-touch-overlay').forEach(overlay => {
-      overlay.addEventListener('click', (e) => {
-        const guard = e.target.closest('.slider-touch-guard');
-        if (guard) {
-          document.querySelectorAll('.slider-touch-guard').forEach(g => g.classList.remove('active'));
-          guard.classList.add('active');
-          const range = guard.querySelector('input[type="range"]');
-          if (range) range.focus();
-        }
+    document.querySelectorAll('.slider-touch-guard').forEach(guard => {
+      guard.addEventListener('click', (e) => {
+        document.querySelectorAll('.slider-touch-guard').forEach(g => g.classList.remove('active'));
+        guard.classList.add('active');
+        const range = guard.querySelector('input[type="range"]');
+        if (range) range.focus();
       });
     });
 
@@ -811,6 +811,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       if (!loadedAgents.some(a => a.id === 'get_datetime')) {
         loadedAgents.push({ id: 'get_datetime', name: 'Date & Time Agent', system_prompt_addon: 'You have access to the system clock.' });
       }
+      if (!loadedAgents.some(a => a.id === 'web_search')) {
+        loadedAgents.push({ id: 'web_search', name: 'Web Search Agent', system_prompt_addon: 'You have access to real-time web search capabilities via DuckDuckGo.' });
+      }
     }
 
     function renderAgentsUI(states = {}) {
@@ -855,10 +858,61 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           if (agent.id === 'get_datetime' || agent.id.toLowerCase().includes('time')) {
             addon = `You possess live system clock access. Answer date and time queries accurately. Year is 2026. Format all times strictly using 24-hour clock (e.g. 14:30).`;
           }
+          if (agent.id === 'web_search') {
+            addon = `You have access to live web search integration. When search results are appended to a query, utilize them directly to provide up-to-date facts.`;
+          }
           if (addon) eff += `\n\n[Agent Active: ${agent.name}]\n${addon}`;
         }
       });
       return eff;
+    }
+
+    // --- Web Search Integration (DuckDuckGo Lite HTML Parser) ---
+    async function performWebSearch(query) {
+      try {
+        const res = await fetch(`https://lite.duckduckgo.com/lite/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ q: query })
+        });
+        if (!res.ok) throw new Error(`Search network failure: ${res.status}`);
+        const htmlText = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+        const results = [];
+        const rows = doc.querySelectorAll('tr');
+        
+        let currentSnippet = '';
+        rows.forEach(row => {
+          const snippetElem = row.querySelector('.result-snippet');
+          const linkElem = row.querySelector('.result-link');
+          if (linkElem) {
+            const title = linkElem.textContent.trim();
+            const href = linkElem.getAttribute('href');
+            if (title) results.push({ title, href, snippet: '' });
+          } else if (snippetElem && results.length > 0) {
+            results[results.length - 1].snippet = snippetElem.textContent.trim();
+          }
+        });
+
+        if (results.length === 0) {
+          // Fallback basic text extraction if row selectors differ
+          const snippets = doc.querySelectorAll('.result-snippet');
+          snippets.forEach(s => results.push({ title: 'Result', href: '#', snippet: s.textContent.trim() }));
+        }
+
+        if (results.length === 0) return "No live search results found.";
+        
+        return results.slice(0, 5).map((r, i) => `[${i+1}] ${r.title}\nSnippet: ${r.snippet}\nURL: ${r.href}`).join('\n\n');
+      } catch (err) {
+        return `[Web Search Error: ${err.message}]`;
+      }
+    }
+
+    function shouldAutoSearch(query) {
+      const q = query.toLowerCase();
+      const triggers = ['latest', 'news', 'current', 'today', '2026', 'weather', 'score', 'who is', 'what is', 'price of', 'recent'];
+      return triggers.some(t => q.includes(t));
     }
 
     function cleanEosTokens(str) {
@@ -947,11 +1001,11 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       return threads.sort((a, b) => (a.is_pinned !== b.is_pinned ? (a.is_pinned ? -1 : 1) : b.updated_at - a.updated_at));
     }
     async function dbGet(id) {
-      try { const res = await window.Bridge.files.read(`thread_${id}.json`); if (res && res.content_base64) return JSON.parse(fromB64(stripB64Prefix(res.content_base64))); } catch (e) {}
+      try { const res = await window.Bridge.files.read(`chats/thread_${id}.json`); if (res && res.content_base64) return JSON.parse(fromB64(stripB64Prefix(res.content_base64))); } catch (e) {}
       return null;
     }
     async function dbPut(thread) {
-      const filename = `thread_${thread.id}.json`;
+      const filename = `chats/thread_${thread.id}.json`;
       await window.Bridge.files.save(filename, toB64(JSON.stringify(thread)), false);
       let manifest = await loadManifest();
       manifest = manifest.filter(m => m.id !== thread.id);
@@ -960,7 +1014,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     }
     async function dbDelete(id) {
       try {
-        await window.Bridge.files.save(`thread_${id}.json`, toB64(JSON.stringify({})), false);
+        await window.Bridge.files.save(`chats/thread_${id}.json`, toB64(JSON.stringify({})), false);
         let manifest = await loadManifest(); manifest = manifest.filter(m => m.id !== id); await saveManifest(manifest);
       } catch (e) {}
     }
@@ -1140,7 +1194,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         if (m.thinking) md += `> **Thinking Process:**\n> ${m.thinking.replace(/\n/g, '\n> ')}\n\n`;
         md += `${m.content}\n\n---\n\n`;
       });
-      window.Bridge.files.save(`${activeThread.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.md`, toB64(md), true)
+      window.Bridge.files.save(`chats/${activeThread.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.md`, toB64(md), true)
         .then(() => alert("Exported Markdown file!"))
         .catch(err => showError("Export failed: " + err.message));
     }
@@ -1350,8 +1404,55 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     }
 
     async function sendMessage() {
-      const text = ui.userInput.value.replace(/^\s+|\s+$/g, '');
+      let text = ui.userInput.value.replace(/^\s+|\s+$/g, '');
       if (!text || !activeThread || activeGenerations.has(activeThread.id)) return;
+
+      // Check for Manual Web Search Slash Command (/search [query])
+      if (text.startsWith('/search')) {
+        const query = text.replace('/search', '').trim();
+        if (!query) {
+          showError("Please provide a search query after /search");
+          return;
+        }
+        ui.userInput.value = ''; ui.userInput.style.height = 'auto'; ui.slashPopup.classList.remove('open'); updateCharCount();
+        
+        // Append user prompt
+        activeThread.messages.push({ role: 'user', content: text }); activeThread.updated_at = Date.now();
+        await dbPut(activeThread); appendMessageDOM('user', text, true, null, activeThread.messages.length - 1);
+        renderSidebar(); updateContextBar();
+
+        // Perform web search directly
+        ui.typingIndicator.style.display = 'flex'; ui.statusText.textContent = "Searching web...";
+        const searchResults = await performWebSearch(query);
+        ui.typingIndicator.style.display = 'none';
+
+        // Inject search results as context message
+        const searchContextMsg = `[Web Search Results for "${query}"]:\n${searchResults}`;
+        activeThread.messages.push({ role: 'system', content: searchContextMsg });
+        await dbPut(activeThread);
+        executeGeneration();
+        return;
+      }
+
+      // Check for Automatic Web Search Trigger if Web Search Agent is Enabled
+      const webAgentActive = activeThread.parameters?.agents?.web_search;
+      if (webAgentActive && shouldAutoSearch(text)) {
+        ui.userInput.value = ''; ui.userInput.style.height = 'auto'; ui.slashPopup.classList.remove('open'); updateCharCount();
+        activeThread.messages.push({ role: 'user', content: text }); activeThread.updated_at = Date.now();
+        await dbPut(activeThread); appendMessageDOM('user', text, true, null, activeThread.messages.length - 1);
+        renderSidebar(); updateContextBar();
+
+        ui.typingIndicator.style.display = 'flex'; ui.statusText.textContent = "Searching web...";
+        const searchResults = await performWebSearch(text);
+        ui.typingIndicator.style.display = 'none';
+
+        const searchContextMsg = `[Auto Web Search Results for "${text}"]:\n${searchResults}`;
+        activeThread.messages.push({ role: 'system', content: searchContextMsg });
+        await dbPut(activeThread);
+        executeGeneration();
+        return;
+      }
+
       if (activeThread.messages.length === 0) {
         activeThread.title = text.length > 25 ? text.substring(0, 25) + '...' : text;
         ui.activeTitle.textContent = activeThread.title;
@@ -1380,6 +1481,10 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
       targetThread.messages.forEach((m, idx) => {
         let content = m.content;
+        if (m.role === 'system' && content.startsWith('[Web Search Results')) {
+          payloadMessages.push({ role: 'system', content: content });
+          return;
+        }
         if (idx === targetThread.messages.length - 1 && m.role === 'user' && targetThread.parameters?.agents?.get_datetime) {
           const now = new Date();
           content += `\n\n[Current Time: ${now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}, Year: ${now.getFullYear()} at ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}]`;
@@ -1581,7 +1686,14 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
     ui.btnExportBackup.onclick = async () => {
       try {
-        const backup = { version: '5.9.18', exported_at: Date.now(), threads: await dbGetAll(), presets: await loadPresets(), custom_prompts: getCustomPrompts(), system_prompts: await getSystemPromptPresets() };
+        const backup = {
+          version: '6.1.0',
+          exported_at: Date.now(),
+          threads: await dbGetAll(),
+          presets: await loadPresets(),
+          custom_prompts: getCustomPrompts(),
+          system_prompts: await getSystemPromptPresets()
+        };
         await window.Bridge.files.save(`rawllm_pro_backup_${Date.now()}.json`, toB64(JSON.stringify(backup, null, 2)), true);
         alert("Full backup exported successfully!");
       } catch (e) { showError("Backup Failed: " + e.message); }
@@ -1666,10 +1778,24 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
     ui.btnResetCustomDefault.addEventListener('click', async () => { await applyPresetToPanel(ui.presetSelect.value); ui.statusText.textContent = `Reset to preset`; setTimeout(() => { if (!activeGenerations.has(activeThread?.id)) ui.statusText.textContent = "Ready"; }, 2000); });
 
-    ['temp', 'topp', 'topk', 'minp', 'repeat', 'repeatrange', 'xtcprob', 'xtcthresh', 'drymult', 'drybase', 'dryallowed', 'dryrange'].forEach(k => {
-      ui[`param${k.charAt(0).toUpperCase() + k.slice(1)}`]?.addEventListener('input', e => {
-        const valElem = ui[`val${k.charAt(0).toUpperCase() + k.slice(1)}`];
-        if (valElem) valElem.textContent = parseFloat(e.target.value).toFixed(k === 'topk' || k === 'repeatrange' || k === 'dryallowed' || k === 'dryrange' ? 0 : (k === 'temp' || k === 'repeat' ? 1 : 2));
+    const sliders = [
+      { input: ui.paramTemp, val: ui.valTemp, decimals: 1 },
+      { input: ui.paramTopP, val: ui.valTopP, decimals: 2 },
+      { input: ui.paramTopK, val: ui.valTopK, decimals: 0 },
+      { input: ui.paramMinP, val: ui.valMinP, decimals: 2 },
+      { input: ui.paramRepeat, val: ui.valRepeat, decimals: 2 },
+      { input: ui.paramRepeatRange, val: ui.valRepeatRange, decimals: 0 },
+      { input: ui.paramXtcProb, val: ui.valXtcProb, decimals: 2 },
+      { input: ui.paramXtcThresh, val: ui.valXtcThresh, decimals: 2 },
+      { input: ui.paramDryMult, val: ui.valDryMult, decimals: 2 },
+      { input: ui.paramDryBase, val: ui.valDryBase, decimals: 2 },
+      { input: ui.paramDryAllowed, val: ui.valDryAllowed, decimals: 0 },
+      { input: ui.paramDryRange, val: ui.valDryRange, decimals: 0 }
+    ];
+
+    sliders.forEach(({ input, val, decimals }) => {
+      input?.addEventListener('input', e => {
+        if (val) val.textContent = parseFloat(e.target.value).toFixed(decimals);
       });
     });
 
