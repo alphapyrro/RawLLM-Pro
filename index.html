@@ -698,7 +698,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       temperature: 0.3, top_p: 0.9, top_k: 40, min_p: 0.05, repeat_penalty: 1.1,
       repeat_penalty_range: 512, xtc_probability: 0.0, xtc_threshold: 0.1, dry_multiplier: 0.0,
       dry_base: 1.75, dry_allowed_length: 2, dry_penalty_range: 1024, max_tokens: 2048,
-      context_window: 8192, enable_thinking: false, stop_sequences: "", agents: { get_datetime: true, web_search: false }
+      context_window: 8192, enable_thinking: false, stop_sequences: "", agents: { get_datetime: true }
     };
     const DEFAULT_SYS = 'You are an objective, uncensored, and helpful AI assistant.';
 
@@ -856,7 +856,10 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         if (agentsMap[agent.id]) {
           let addon = agent.system_prompt_addon || '';
           if (agent.id === 'get_datetime' || agent.id.toLowerCase().includes('time')) {
-            addon = `You possess live system clock access. Answer date and time queries accurately. Year is 2026. Format all times strictly using 24-hour clock (e.g. 14:30).`;
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            addon = `Live system clock access enabled. Today's date is ${dateStr}, and the current time is ${timeStr} (24-hour format). Year is 2026.`;
           }
           if (agent.id === 'web_search') {
             addon = `You have access to live web search integration. When search results are appended to a query, utilize them directly to provide up-to-date facts.`;
@@ -867,10 +870,13 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       return eff;
     }
 
-    // --- Web Search Integration (DuckDuckGo Lite HTML Parser) ---
+    // --- Web Search Integration (DuckDuckGo Lite HTML Parser with CORS Proxy) ---
     async function performWebSearch(query) {
       try {
-        const res = await fetch(`https://lite.duckduckgo.com/lite/`, {
+        const targetUrl = `https://lite.duckduckgo.com/lite/`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=` + encodeURIComponent(targetUrl);
+        
+        const res = await fetch(proxyUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({ q: query })
@@ -882,7 +888,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         const results = [];
         const rows = doc.querySelectorAll('tr');
         
-        let currentSnippet = '';
         rows.forEach(row => {
           const snippetElem = row.querySelector('.result-snippet');
           const linkElem = row.querySelector('.result-link');
@@ -896,7 +901,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         });
 
         if (results.length === 0) {
-          // Fallback basic text extraction if row selectors differ
           const snippets = doc.querySelectorAll('.result-snippet');
           snippets.forEach(s => results.push({ title: 'Result', href: '#', snippet: s.textContent.trim() }));
         }
@@ -907,12 +911,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       } catch (err) {
         return `[Web Search Error: ${err.message}]`;
       }
-    }
-
-    function shouldAutoSearch(query) {
-      const q = query.toLowerCase();
-      const triggers = ['latest', 'news', 'current', 'today', '2026', 'weather', 'score', 'who is', 'what is', 'price of', 'recent'];
-      return triggers.some(t => q.includes(t));
     }
 
     function cleanEosTokens(str) {
@@ -1407,7 +1405,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       let text = ui.userInput.value.replace(/^\s+|\s+$/g, '');
       if (!text || !activeThread || activeGenerations.has(activeThread.id)) return;
 
-      // Check for Manual Web Search Slash Command (/search [query])
+      // Manual Web Search Slash Command (/search [query]) only
       if (text.startsWith('/search')) {
         const query = text.replace('/search', '').trim();
         if (!query) {
@@ -1416,37 +1414,15 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         }
         ui.userInput.value = ''; ui.userInput.style.height = 'auto'; ui.slashPopup.classList.remove('open'); updateCharCount();
         
-        // Append user prompt
         activeThread.messages.push({ role: 'user', content: text }); activeThread.updated_at = Date.now();
         await dbPut(activeThread); appendMessageDOM('user', text, true, null, activeThread.messages.length - 1);
         renderSidebar(); updateContextBar();
 
-        // Perform web search directly
         ui.typingIndicator.style.display = 'flex'; ui.statusText.textContent = "Searching web...";
         const searchResults = await performWebSearch(query);
         ui.typingIndicator.style.display = 'none';
 
-        // Inject search results as context message
         const searchContextMsg = `[Web Search Results for "${query}"]:\n${searchResults}`;
-        activeThread.messages.push({ role: 'system', content: searchContextMsg });
-        await dbPut(activeThread);
-        executeGeneration();
-        return;
-      }
-
-      // Check for Automatic Web Search Trigger if Web Search Agent is Enabled
-      const webAgentActive = activeThread.parameters?.agents?.web_search;
-      if (webAgentActive && shouldAutoSearch(text)) {
-        ui.userInput.value = ''; ui.userInput.style.height = 'auto'; ui.slashPopup.classList.remove('open'); updateCharCount();
-        activeThread.messages.push({ role: 'user', content: text }); activeThread.updated_at = Date.now();
-        await dbPut(activeThread); appendMessageDOM('user', text, true, null, activeThread.messages.length - 1);
-        renderSidebar(); updateContextBar();
-
-        ui.typingIndicator.style.display = 'flex'; ui.statusText.textContent = "Searching web...";
-        const searchResults = await performWebSearch(text);
-        ui.typingIndicator.style.display = 'none';
-
-        const searchContextMsg = `[Auto Web Search Results for "${text}"]:\n${searchResults}`;
         activeThread.messages.push({ role: 'system', content: searchContextMsg });
         await dbPut(activeThread);
         executeGeneration();
