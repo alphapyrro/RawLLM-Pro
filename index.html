@@ -1,9 +1,15 @@
 <!DOCTYPE html>
+<!--
+  RawLLM for Layla
+  Created by: alphapyrro
+  Feel free to modify, optimize, and share! 
+  If you publish a fork, please include a nod back to the original author.
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RawLLM Pro v6.1.0</title>
+  <title>RawLLM Pro v7.0.0</title>
   <link rel="stylesheet" href="./assets/css/github-dark.min.css">
   <script src="./assets/js/marked.min.js"></script>
   <script src="./assets/js/highlight.min.js"></script>
@@ -94,17 +100,39 @@
     .param-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
     .param-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-muted); }
     .param-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--accent); margin-top: 6px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; width: 100%; }
-    .param-val { color: var(--accent); }
     .toggle-group { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; margin-top: -6px; width: 100%; }
     .toggle-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
     .toggle-checkbox { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
     
-    .slider-touch-guard { position: relative; width: 100%; display: flex; align-items: center; }
+    .sync-row { display: flex; align-items: center; gap: 12px; width: 100%; }
+    .slider-touch-guard { position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; }
     .slider-touch-overlay { position: absolute; inset: 0; z-index: 5; background: transparent; cursor: pointer; display: block; }
     .slider-touch-guard.active .slider-touch-overlay { display: none; }
     
     input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; touch-action: pan-y; cursor: pointer; pointer-events: auto !important; }
     input[type="range"].locked { pointer-events: none !important; opacity: 0.5; }
+    .num-input-sync {
+      width: 64px !important;
+      max-width: 64px !important;
+      flex: 0 0 64px !important;
+      padding: 4px 6px !important;
+      font-size: 13px;
+      font-family: var(--font-mono);
+      text-align: right;
+      background: var(--bg-base);
+      border: 1px solid var(--border-color);
+      color: var(--accent);
+      border-radius: 6px;
+      font-weight: 600;
+      -moz-appearance: textfield;
+    }
+    .num-input-sync::-webkit-outer-spin-button,
+    .num-input-sync::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .num-input-sync:focus { outline: none; border-color: var(--accent); }
+
     input[type="number"], input[type="text"], textarea, select {
       background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main);
       padding: 10px; border-radius: 8px; font-family: var(--font-sans); font-size: 14px; width: 100%;
@@ -235,7 +263,7 @@
       <div class="param-group">
         <label class="param-header">Parameter Presets</label>
         <div class="preset-row">
-          <select id="preset-select"><option value="default">Default</option></select>
+          <select id="preset-select"><option value="Default">Default</option></select>
           <button class="btn-secondary" id="btn-del-preset" title="Delete Preset">🗑️</button>
         </div>
       </div>
@@ -247,7 +275,7 @@
     <div class="param-group">
       <label class="param-header">System Prompt Presets</label>
       <div class="preset-row">
-        <select id="sys-prompt-select"><option value="default">Default Prompt</option></select>
+        <select id="sys-prompt-select"><option value="Default Prompt">Default Prompt</option></select>
         <button class="btn-secondary" id="btn-save-sys-preset" title="Save System Prompt">💾</button>
         <button class="btn-secondary" id="btn-del-sys-preset" title="Delete System Prompt">🗑️</button>
       </div>
@@ -263,6 +291,17 @@
       </div>
     </div>
     <div id="agents-container" class="param-group" style="display:none;"></div>
+    
+    <div class="param-section-title">Web Search Configuration</div>
+    <div class="param-group">
+      <label class="param-header">Search API Endpoint URL</label>
+      <input type="text" id="setting-search-endpoint" placeholder="https://api.y.com/search">
+    </div>
+    <div class="param-group">
+      <label class="param-header">Search API Key</label>
+      <input type="text" id="setting-search-key" placeholder="Enter provider API Key...">
+    </div>
+
     <div class="param-section-title">Stop Sequences Customization</div>
     <div class="param-group">
       <label class="param-header">Custom Stop Sequences (Comma Separated)</label>
@@ -279,57 +318,97 @@
       <button class="btn-secondary" id="btn-import-backup" style="flex:1;">📂 Restore Data</button>
       <input type="file" id="file-import-input" accept=".json" style="display:none;">
     </div>
+    
     <div class="param-section-title">Standard Samplers</div>
     <div class="param-group">
-      <div class="param-header"><label>Temperature</label><span class="param-val" id="val-temp">0.70</span></div>
-      <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-temp" class="sync-slider" min="0" max="2" step="0.05" value="0.7"></div>
+      <label class="param-header">Temperature</label>
+      <div class="sync-row">
+        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-temp" class="sync-slider" min="0" max="2" step="0.05" value="0.7"></div>
+        <input type="number" id="num-temp" class="num-input-sync" min="0" max="2" step="0.05" value="0.70">
+      </div>
     </div>
     <div class="param-group">
-      <div class="param-header"><label>Top P</label><span class="param-val" id="val-topp">0.90</span></div>
-      <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-topp" class="sync-slider" min="0" max="1" step="0.05" value="0.9"></div>
+      <label class="param-header">Top P</label>
+      <div class="sync-row">
+        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-topp" class="sync-slider" min="0" max="1" step="0.05" value="0.9"></div>
+        <input type="number" id="num-topp" class="num-input-sync" min="0" max="1" step="0.05" value="0.90">
+      </div>
     </div>
     <div class="param-group">
-      <div class="param-header"><label>Top K</label><span class="param-val" id="val-topk">40</span></div>
-      <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-topk" class="sync-slider" min="1" max="100" step="1" value="40"></div>
+      <label class="param-header">Top K</label>
+      <div class="sync-row">
+        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-topk" class="sync-slider" min="0" max="100" step="1" value="40"></div>
+        <input type="number" id="num-topk" class="num-input-sync" min="0" max="100" step="1" value="40">
+      </div>
     </div>
     <div class="param-group">
-      <div class="param-header"><label>Min P</label><span class="param-val" id="val-minp">0.05</span></div>
-      <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-minp" class="sync-slider" min="0" max="1" step="0.01" value="0.05"></div>
+      <label class="param-header">Min P</label>
+      <div class="sync-row">
+        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-minp" class="sync-slider" min="0" max="1" step="0.01" value="0.05"></div>
+        <input type="number" id="num-minp" class="num-input-sync" min="0" max="1" step="0.01" value="0.05">
+      </div>
     </div>
     <div class="param-group">
-      <div class="param-header"><label>Repeat Penalty</label><span class="param-val" id="val-repeat">1.10</span></div>
-      <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-repeat" class="sync-slider" min="1" max="2" step="0.05" value="1.1"></div>
+      <label class="param-header">Repeat Penalty</label>
+      <div class="sync-row">
+        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-repeat" class="sync-slider" min="1" max="2" step="0.05" value="1.1"></div>
+        <input type="number" id="num-repeat" class="num-input-sync" min="1" max="2" step="0.05" value="1.10">
+      </div>
     </div>
     <div class="param-group">
-      <div class="param-header"><label>Repetition Penalty Range</label><span class="param-val" id="val-repeatrange">512</span></div>
-      <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-repeatrange" class="sync-slider" min="0" max="2048" step="16" value="512"></div>
+      <label class="param-header">Repetition Penalty Range</label>
+      <div class="sync-row">
+        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-repeatrange" class="sync-slider" min="0" max="2048" step="16" value="512"></div>
+        <input type="number" id="num-repeatrange" class="num-input-sync" min="0" max="2048" step="16" value="512">
+      </div>
     </div>
+    
     <div class="param-section-title">XTC Sampler</div>
     <div class="param-group">
-      <div class="param-header"><label>XTC Probability</label><span class="param-val" id="val-xtcprob">0.00</span></div>
-      <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-xtcprob" class="sync-slider" min="0" max="1" step="0.05" value="0"></div>
+      <label class="param-header">XTC Probability</label>
+      <div class="sync-row">
+        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-xtcprob" class="sync-slider" min="0" max="1" step="0.05" value="0"></div>
+        <input type="number" id="num-xtcprob" class="num-input-sync" min="0" max="1" step="0.05" value="0.00">
+      </div>
     </div>
     <div class="param-group">
-      <div class="param-header"><label>XTC Threshold</label><span class="param-val" id="val-xtcthresh">0.10</span></div>
-      <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-xtcthresh" class="sync-slider" min="0" max="0.5" step="0.01" value="0.1"></div>
+      <label class="param-header">XTC Threshold</label>
+      <div class="sync-row">
+        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-xtcthresh" class="sync-slider" min="0" max="0.5" step="0.01" value="0.1"></div>
+        <input type="number" id="num-xtcthresh" class="num-input-sync" min="0" max="0.5" step="0.01" value="0.10">
+      </div>
     </div>
+    
     <div class="param-section-title">DRY Sampler</div>
     <div class="param-group">
-      <div class="param-header"><label>Dry Multiplier</label><span class="param-val" id="val-drymult">0.80</span></div>
-      <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-drymult" class="sync-slider" min="0" max="3" step="0.05" value="0.8"></div>
+      <label class="param-header">Dry Multiplier</label>
+      <div class="sync-row">
+        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-drymult" class="sync-slider" min="0" max="3" step="0.05" value="0.8"></div>
+        <input type="number" id="num-drymult" class="num-input-sync" min="0" max="3" step="0.05" value="0.80">
+      </div>
     </div>
     <div class="param-group">
-      <div class="param-header"><label>Dry Base</label><span class="param-val" id="val-drybase">1.75</span></div>
-      <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-drybase" class="sync-slider" min="1" max="3" step="0.05" value="1.75"></div>
+      <label class="param-header">Dry Base</label>
+      <div class="sync-row">
+        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-drybase" class="sync-slider" min="1" max="3" step="0.05" value="1.75"></div>
+        <input type="number" id="num-drybase" class="num-input-sync" min="1" max="3" step="0.05" value="1.75">
+      </div>
     </div>
     <div class="param-group">
-      <div class="param-header"><label>Dry Allowed Length</label><span class="param-val" id="val-dryallowed">2</span></div>
-      <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-dryallowed" class="sync-slider" min="0" max="10" step="1" value="2"></div>
+      <label class="param-header">Dry Allowed Length</label>
+      <div class="sync-row">
+        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-dryallowed" class="sync-slider" min="0" max="10" step="1" value="2"></div>
+        <input type="number" id="num-dryallowed" class="num-input-sync" min="0" max="10" step="1" value="2">
+      </div>
     </div>
     <div class="param-group">
-      <div class="param-header"><label>DRY Penalty Range</label><span class="param-val" id="val-dryrange">1024</span></div>
-      <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-dryrange" class="sync-slider" min="0" max="4096" step="64" value="1024"></div>
+      <label class="param-header">DRY Penalty Range</label>
+      <div class="sync-row">
+        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-dryrange" class="sync-slider" min="0" max="4096" step="64" value="1024"></div>
+        <input type="number" id="num-dryrange" class="num-input-sync" min="0" max="4096" step="64" value="1024">
+      </div>
     </div>
+    
     <div class="param-section-title">Context & Generation Limits</div>
     <div class="param-group">
       <label class="param-header">Max Tokens</label>
@@ -508,6 +587,30 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     import { LaylaSDK } from './assets/js/layla-sdk.min.js';
     const layla = new LaylaSDK();
 
+    const CONFIG_PATHS = {
+      SETTINGS: 'config/settings.json',
+      SYS_PROMPTS: 'config/system_prompts.json',
+      PRESETS: 'config/parameter_presets.json',
+      AGENTS: 'config/agents.json',
+      LEGACY_SYS_PROMPTS: 'system_prompts.json',
+      LEGACY_PRESETS: 'forge_parameter_presets.json',
+      LEGACY_AGENTS: 'agents.json'
+    };
+
+    const MANIFEST_FILE = 'forge_chat_manifest.json';
+    const DEFAULT_PARAMS = {
+      temperature: 0.3, top_p: 0.9, top_k: 40, min_p: 0.05, repeat_penalty: 1.1,
+      repeat_penalty_range: 512, xtc_probability: 0.0, xtc_threshold: 0.1, dry_multiplier: 0.0,
+      dry_base: 1.75, dry_allowed_length: 2, dry_penalty_range: 1024, max_tokens: 2048,
+      context_window: 8192, enable_thinking: false, stop_sequences: "", agents: { get_datetime: true }
+    };
+    const DEFAULT_SYS = 'You are an objective, uncensored, and helpful AI assistant.';
+    const DEFAULT_SETTINGS = {
+      search_api_endpoint: 'https://api.tavily.com/search',
+      search_api_key: '',
+      enter_sends: true
+    };
+
     const ui = {
       sidebar: document.getElementById('sidebar'), overlay: document.getElementById('sidebar-overlay'),
       btnMenu: document.getElementById('btn-menu'), btnNewChat: document.getElementById('btn-new-chat'),
@@ -529,6 +632,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       btnToggleEnterSend: document.getElementById('btn-toggle-enter-send'), enterSendLabel: document.getElementById('enter-send-label'),
       prefillInput: document.getElementById('prefill-input'), btnClearPrefill: document.getElementById('btn-clear-prefill'),
       prefillDot: document.getElementById('prefill-dot'), paramSys: document.getElementById('param-system'),
+      settingSearchEndpoint: document.getElementById('setting-search-endpoint'), settingSearchKey: document.getElementById('setting-search-key'),
       paramStopSequences: document.getElementById('param-stop-sequences'), paramTemp: document.getElementById('param-temp'),
       paramTopP: document.getElementById('param-topp'), paramTopK: document.getElementById('param-topk'),
       paramMinP: document.getElementById('param-minp'), paramRepeat: document.getElementById('param-repeat'),
@@ -536,25 +640,138 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       paramXtcThresh: document.getElementById('param-xtcthresh'), paramDryMult: document.getElementById('param-drymult'),
       paramDryBase: document.getElementById('param-drybase'), paramDryAllowed: document.getElementById('param-dryallowed'),
       paramDryRange: document.getElementById('param-dryrange'), paramMax: document.getElementById('param-maxtokens'),
-      paramContextWindow: document.getElementById('param-contextwindow'), valTemp: document.getElementById('val-temp'),
-      valTopP: document.getElementById('val-topp'), valTopK: document.getElementById('val-topk'),
-      valMinP: document.getElementById('val-minp'), valRepeat: document.getElementById('val-repeat'),
-      valRepeatRange: document.getElementById('val-repeatrange'), valXtcProb: document.getElementById('val-xtcprob'),
-      valXtcThresh: document.getElementById('val-xtcthresh'), valDryMult: document.getElementById('val-drymult'),
-      valDryBase: document.getElementById('val-drybase'), valDryAllowed: document.getElementById('val-dryallowed'),
-      valDryRange: document.getElementById('val-dryrange'), chatViewport: document.getElementById('chat-viewport'),
-      typingIndicator: document.getElementById('typing-indicator'), activeTitle: document.getElementById('active-thread-title'),
-      userInput: document.getElementById('user-input'), btnSend: document.getElementById('send-btn'),
-      btnStop: document.getElementById('stop-btn'), charCount: document.getElementById('char-count'),
-      statusText: document.getElementById('status-text'), errorBanner: document.getElementById('error-banner'),
-      contextLabel: document.getElementById('context-label'), contextBarFill: document.getElementById('context-bar-fill'),
-      contextWarning: document.getElementById('context-warning')
+      paramContextWindow: document.getElementById('param-contextwindow'),
+      numTemp: document.getElementById('num-temp'), numTopP: document.getElementById('num-topp'),
+      numTopK: document.getElementById('num-topk'), numMinP: document.getElementById('num-minp'),
+      numRepeat: document.getElementById('num-repeat'), numRepeatRange: document.getElementById('num-repeatrange'),
+      numXtcProb: document.getElementById('num-xtcprob'), numXtcThresh: document.getElementById('num-xtcthresh'),
+      numDryMult: document.getElementById('num-drymult'), numDryBase: document.getElementById('num-drybase'),
+      numDryAllowed: document.getElementById('num-dryallowed'), numDryRange: document.getElementById('num-dryrange'),
+      chatViewport: document.getElementById('chat-viewport'), typingIndicator: document.getElementById('typing-indicator'),
+      activeTitle: document.getElementById('active-thread-title'), userInput: document.getElementById('user-input'),
+      btnSend: document.getElementById('send-btn'), btnStop: document.getElementById('stop-btn'),
+      charCount: document.getElementById('char-count'), statusText: document.getElementById('status-text'),
+      errorBanner: document.getElementById('error-banner'), contextLabel: document.getElementById('context-label'),
+      contextBarFill: document.getElementById('context-bar-fill'), contextWarning: document.getElementById('context-warning')
     };
 
     let activeThread = null, isAutoScrolling = true, isUserInteracting = false, currentStreamTokens = 0, isProgrammaticUpdate = false;
     const activeGenerations = new Map();
-    let enterSends = localStorage.getItem('enter_sends') !== 'false';
-    let loadedAgents = [{ id: 'get_datetime', name: 'Date & Time Agent', system_prompt_addon: 'You have access to the system clock.' }];
+    let loadedSettings = { ...DEFAULT_SETTINGS };
+    let enterSends = true;
+    let loadedAgents = [
+      { id: 'get_datetime', name: 'Date & Time Agent', system_prompt_addon: 'You have access to the system clock.' },
+      { id: 'web_search', name: 'Web Search Agent', system_prompt_addon: 'You have access to real-time web search capabilities.' }
+    ];
+
+    function toB64(str) { return btoa(unescape(encodeURIComponent(str))); }
+    function fromB64(str) { return decodeURIComponent(escape(atob(str))); }
+    function stripB64Prefix(str) {
+      if (typeof str !== 'string') return str;
+      const idx = str.indexOf('base64,');
+      return idx >= 0 ? str.slice(idx + 7) : str;
+    }
+
+    async function loadSettings() {
+      try {
+        const res = await window.Bridge.files.read(CONFIG_PATHS.SETTINGS);
+        if (res && res.content_base64) {
+          const parsed = JSON.parse(fromB64(stripB64Prefix(res.content_base64)));
+          loadedSettings = { ...DEFAULT_SETTINGS, ...parsed };
+          return loadedSettings;
+        }
+      } catch (e) {}
+      const fallbackLocalKey = localStorage.getItem('tavily_api_key');
+      const fallbackLocalEndpoint = localStorage.getItem('tavily_api_endpoint');
+      const fallbackEnterSends = localStorage.getItem('enter_sends');
+      if (fallbackLocalKey) loadedSettings.search_api_key = fallbackLocalKey;
+      if (fallbackLocalEndpoint) loadedSettings.search_api_endpoint = fallbackLocalEndpoint;
+      if (fallbackEnterSends !== null) loadedSettings.enter_sends = fallbackEnterSends !== 'false';
+      await saveSettings(loadedSettings);
+      return loadedSettings;
+    }
+
+    async function saveSettings(settings) {
+      loadedSettings = { ...loadedSettings, ...settings };
+      try {
+        await window.Bridge.files.save(CONFIG_PATHS.SETTINGS, toB64(JSON.stringify(loadedSettings, null, 2)), false);
+      } catch (e) {}
+      localStorage.setItem('tavily_api_key', loadedSettings.search_api_key);
+      localStorage.setItem('tavily_api_endpoint', loadedSettings.search_api_endpoint);
+      localStorage.setItem('enter_sends', loadedSettings.enter_sends);
+    }
+
+    async function getSystemPromptPresets() {
+      try {
+        const res = await window.Bridge.files.read(CONFIG_PATHS.SYS_PROMPTS);
+        if (res && res.content_base64) return JSON.parse(fromB64(stripB64Prefix(res.content_base64)));
+      } catch (e) {}
+      try {
+        const legacyRes = await window.Bridge.files.read(CONFIG_PATHS.LEGACY_SYS_PROMPTS);
+        if (legacyRes && legacyRes.content_base64) {
+          const legacyData = JSON.parse(fromB64(stripB64Prefix(legacyRes.content_base64)));
+          await saveSystemPromptPresets(legacyData);
+          return legacyData;
+        }
+      } catch (e) {}
+      const initial = { "Default Prompt": DEFAULT_SYS };
+      await saveSystemPromptPresets(initial);
+      return initial;
+    }
+
+    async function saveSystemPromptPresets(p) {
+      await window.Bridge.files.save(CONFIG_PATHS.SYS_PROMPTS, toB64(JSON.stringify(p, null, 2)), false);
+    }
+
+    async function loadPresets() {
+      try {
+        const res = await window.Bridge.files.read(CONFIG_PATHS.PRESETS);
+        if (res && res.content_base64) return JSON.parse(fromB64(stripB64Prefix(res.content_base64)));
+      } catch (e) {}
+      try {
+        const legacyRes = await window.Bridge.files.read(CONFIG_PATHS.LEGACY_PRESETS);
+        if (legacyRes && legacyRes.content_base64) {
+          const legacyData = JSON.parse(fromB64(stripB64Prefix(legacyRes.content_base64)));
+          await savePresets(legacyData);
+          return legacyData;
+        }
+      } catch (e) {}
+      const initial = { "Default": { system_prompt: DEFAULT_SYS, parameters: { ...DEFAULT_PARAMS } } };
+      await savePresets(initial);
+      return initial;
+    }
+
+    async function savePresets(p) {
+      await window.Bridge.files.save(CONFIG_PATHS.PRESETS, toB64(JSON.stringify(p, null, 2)), false);
+    }
+
+    async function fetchAgents() {
+      try {
+        const res = await window.Bridge.files.read(CONFIG_PATHS.AGENTS);
+        if (res && res.content_base64) {
+          const parsed = JSON.parse(fromB64(stripB64Prefix(res.content_base64)));
+          if (Array.isArray(parsed)) {
+            loadedAgents = parsed.map(a => typeof a === 'string' ? { id: a, name: a, system_prompt_addon: '' } : { id: a.id || a.name || 'agent_' + Math.random(), name: a.name || a.id || 'Agent', system_prompt_addon: a.system_prompt_addon || a.description || '' });
+          } else if (typeof parsed === 'object' && parsed !== null) {
+            loadedAgents = Object.keys(parsed).map(k => ({ id: k, name: parsed[k].name || k, system_prompt_addon: parsed[k].system_prompt_addon || '' }));
+          }
+        }
+      } catch (e) {
+        try {
+          const legacyRes = await window.Bridge.files.read(CONFIG_PATHS.LEGACY_AGENTS);
+          if (legacyRes && legacyRes.content_base64) {
+            const parsed = JSON.parse(fromB64(stripB64Prefix(legacyRes.content_base64)));
+            if (Array.isArray(parsed)) loadedAgents = parsed;
+          }
+        } catch (le) {}
+      }
+      if (!loadedAgents.some(a => a.id === 'get_datetime')) {
+        loadedAgents.push({ id: 'get_datetime', name: 'Date & Time Agent', system_prompt_addon: 'You have access to the system clock.' });
+      }
+      if (!loadedAgents.some(a => a.id === 'web_search')) {
+        loadedAgents.push({ id: 'web_search', name: 'Web Search Agent', system_prompt_addon: 'You have access to real-time web search capabilities.' });
+      }
+    }
 
     const DEFAULT_PROMPT_TEMPLATES = [
       { cmd: '/code', desc: 'Code Generator', text: 'Provide clean, well-commented, production-ready code with no conversational filler.' },
@@ -620,15 +837,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       ui.slashPopup.classList.remove('open');
     }
 
-    const SYS_PROMPTS_FILE = 'system_prompts.json';
-    async function getSystemPromptPresets() {
-      try {
-        const res = await window.Bridge.files.read(SYS_PROMPTS_FILE);
-        if (res && res.content_base64) return JSON.parse(fromB64(stripB64Prefix(res.content_base64)));
-      } catch (e) {}
-      return { "Default Prompt": DEFAULT_SYS };
-    }
-    async function saveSystemPromptPresets(p) { await window.Bridge.files.save(SYS_PROMPTS_FILE, toB64(JSON.stringify(p, null, 2)), false); }
     async function getSystemPromptKeyForText(text) {
       if (!text) return null;
       const p = await getSystemPromptPresets();
@@ -691,17 +899,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       }
     };
 
-    const MANIFEST_FILE = 'forge_chat_manifest.json';
-    const PRESETS_FILE = 'forge_parameter_presets.json';
-    const AGENTS_FILE = 'agents.json';
-    const DEFAULT_PARAMS = {
-      temperature: 0.3, top_p: 0.9, top_k: 40, min_p: 0.05, repeat_penalty: 1.1,
-      repeat_penalty_range: 512, xtc_probability: 0.0, xtc_threshold: 0.1, dry_multiplier: 0.0,
-      dry_base: 1.75, dry_allowed_length: 2, dry_penalty_range: 1024, max_tokens: 2048,
-      context_window: 8192, enable_thinking: false, stop_sequences: "", agents: { get_datetime: true }
-    };
-    const DEFAULT_SYS = 'You are an objective, uncensored, and helpful AI assistant.';
-
     async function syncThreadParametersLive() {
       if (!activeThread) return;
       activeThread.system_prompt = ui.paramSys.value;
@@ -723,12 +920,61 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       updateContextBar();
     }
 
-    document.querySelectorAll('.sync-slider, #param-maxtokens, #param-contextwindow, #param-stop-sequences').forEach(elem => {
+    const numericControlPairs = [
+      { range: ui.paramTemp, num: ui.numTemp, decimals: 2 },
+      { range: ui.paramTopP, num: ui.numTopP, decimals: 2 },
+      { range: ui.paramTopK, num: ui.numTopK, decimals: 0 },
+      { range: ui.paramMinP, num: ui.numMinP, decimals: 2 },
+      { range: ui.paramRepeat, num: ui.numRepeat, decimals: 2 },
+      { range: ui.paramRepeatRange, num: ui.numRepeatRange, decimals: 0 },
+      { range: ui.paramXtcProb, num: ui.numXtcProb, decimals: 2 },
+      { range: ui.paramXtcThresh, num: ui.numXtcThresh, decimals: 2 },
+      { range: ui.paramDryMult, num: ui.numDryMult, decimals: 2 },
+      { range: ui.paramDryBase, num: ui.numDryBase, decimals: 2 },
+      { range: ui.paramDryAllowed, num: ui.numDryAllowed, decimals: 0 },
+      { range: ui.paramDryRange, num: ui.numDryRange, decimals: 0 }
+    ];
+
+    numericControlPairs.forEach(({ range, num, decimals }) => {
+      range.addEventListener('input', () => {
+        if (isProgrammaticUpdate) return;
+        num.value = decimals > 0 ? parseFloat(range.value).toFixed(decimals) : range.value;
+        syncThreadParametersLive();
+      });
+      num.addEventListener('input', () => {
+        if (isProgrammaticUpdate) return;
+        let v = parseFloat(num.value);
+        if (isNaN(v)) return;
+        const min = parseFloat(range.min), max = parseFloat(range.max);
+        if (v < min) v = min;
+        if (v > max) v = max;
+        range.value = v;
+        syncThreadParametersLive();
+      });
+      num.addEventListener('blur', () => {
+        let v = parseFloat(num.value);
+        const min = parseFloat(range.min), max = parseFloat(range.max);
+        if (isNaN(v) || v < min) v = min;
+        if (v > max) v = max;
+        num.value = decimals > 0 ? v.toFixed(decimals) : v;
+        range.value = v;
+        syncThreadParametersLive();
+      });
+    });
+
+    document.querySelectorAll('#param-maxtokens, #param-contextwindow, #param-stop-sequences').forEach(elem => {
       elem.addEventListener('input', () => syncThreadParametersLive());
     });
 
+    ui.settingSearchEndpoint.addEventListener('change', () => {
+      saveSettings({ search_api_endpoint: ui.settingSearchEndpoint.value.trim() });
+    });
+    ui.settingSearchKey.addEventListener('change', () => {
+      saveSettings({ search_api_key: ui.settingSearchKey.value.trim() });
+    });
+
     document.querySelectorAll('.slider-touch-guard').forEach(guard => {
-      guard.addEventListener('click', (e) => {
+      guard.addEventListener('click', () => {
         document.querySelectorAll('.slider-touch-guard').forEach(g => g.classList.remove('active'));
         guard.classList.add('active');
         const range = guard.querySelector('input[type="range"]');
@@ -753,7 +999,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     }
 
     ui.btnToggleEnterSend.addEventListener('click', () => {
-      enterSends = !enterSends; localStorage.setItem('enter_sends', enterSends); updateEnterSendUI();
+      enterSends = !enterSends;
+      saveSettings({ enter_sends: enterSends });
+      updateEnterSendUI();
     });
 
     function estimateTokens(text) { return text ? Math.ceil(text.length / 4) + 3 : 0; }
@@ -785,34 +1033,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         ui.contextBarFill.style.background = 'var(--warning)'; ui.contextWarning.style.display = 'none';
       } else {
         ui.contextBarFill.style.background = 'var(--accent)'; ui.contextWarning.style.display = 'none';
-      }
-    }
-
-    function toB64(str) { return btoa(unescape(encodeURIComponent(str))); }
-    function fromB64(str) { return decodeURIComponent(escape(atob(str))); }
-    function stripB64Prefix(str) {
-      if (typeof str !== 'string') return str;
-      const idx = str.indexOf('base64,');
-      return idx >= 0 ? str.slice(idx + 7) : str;
-    }
-
-    async function fetchAgents() {
-      try {
-        const res = await window.Bridge.files.read(AGENTS_FILE);
-        if (res && res.content_base64) {
-          const parsed = JSON.parse(fromB64(stripB64Prefix(res.content_base64)));
-          if (Array.isArray(parsed)) {
-            loadedAgents = parsed.map(a => typeof a === 'string' ? { id: a, name: a, system_prompt_addon: '' } : { id: a.id || a.name || 'agent_' + Math.random(), name: a.name || a.id || 'Agent', system_prompt_addon: a.system_prompt_addon || a.description || '' });
-          } else if (typeof parsed === 'object' && parsed !== null) {
-            loadedAgents = Object.keys(parsed).map(k => ({ id: k, name: parsed[k].name || k, system_prompt_addon: parsed[k].system_prompt_addon || '' }));
-          }
-        }
-      } catch (e) {}
-      if (!loadedAgents.some(a => a.id === 'get_datetime')) {
-        loadedAgents.push({ id: 'get_datetime', name: 'Date & Time Agent', system_prompt_addon: 'You have access to the system clock.' });
-      }
-      if (!loadedAgents.some(a => a.id === 'web_search')) {
-        loadedAgents.push({ id: 'web_search', name: 'Web Search Agent', system_prompt_addon: 'You have access to real-time web search capabilities via DuckDuckGo.' });
       }
     }
 
@@ -870,46 +1090,31 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       return eff;
     }
 
-    // --- Web Search Integration (DuckDuckGo Lite HTML Parser with CORS Proxy) ---
     async function performWebSearch(query) {
+      const endpoint = loadedSettings.search_api_endpoint || 'https://api.tavily.com/search';
+      const apiKey = loadedSettings.search_api_key || '';
+      
       try {
-        const targetUrl = `https://lite.duckduckgo.com/lite/`;
-        const proxyUrl = `https://api.allorigins.win/raw?url=` + encodeURIComponent(targetUrl);
-        
-        const res = await fetch(proxyUrl, {
+        const res = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ q: query })
-        });
-        if (!res.ok) throw new Error(`Search network failure: ${res.status}`);
-        const htmlText = await res.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlText, 'text/html');
-        const results = [];
-        const rows = doc.querySelectorAll('tr');
-        
-        rows.forEach(row => {
-          const snippetElem = row.querySelector('.result-snippet');
-          const linkElem = row.querySelector('.result-link');
-          if (linkElem) {
-            const title = linkElem.textContent.trim();
-            const href = linkElem.getAttribute('href');
-            if (title) results.push({ title, href, snippet: '' });
-          } else if (snippetElem && results.length > 0) {
-            results[results.length - 1].snippet = snippetElem.textContent.trim();
-          }
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            api_key: apiKey,
+            query: query,
+            search_depth: "basic",
+            max_results: 1,
+            include_answer: true
+          })
         });
 
-        if (results.length === 0) {
-          const snippets = doc.querySelectorAll('.result-snippet');
-          snippets.forEach(s => results.push({ title: 'Result', href: '#', snippet: s.textContent.trim() }));
+        if (!res.ok) {
+          return `[Search Failed: HTTP Status ${res.status}]`;
         }
 
-        if (results.length === 0) return "No live search results found.";
-        
-        return results.slice(0, 5).map((r, i) => `[${i+1}] ${r.title}\nSnippet: ${r.snippet}\nURL: ${r.href}`).join('\n\n');
+        const data = await res.json();
+        return data.answer || data.results?.[0]?.content || "No search results returned.";
       } catch (err) {
-        return `[Web Search Error: ${err.message}]`;
+        return `[Fetch Exception: ${err.message}]`;
       }
     }
 
@@ -923,11 +1128,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       return [];
     }
     async function saveManifest(m) { await window.Bridge.files.save(MANIFEST_FILE, toB64(JSON.stringify(m)), false); }
-    async function loadPresets() {
-      try { const res = await window.Bridge.files.read(PRESETS_FILE); if (res && res.content_base64) return JSON.parse(fromB64(stripB64Prefix(res.content_base64))); } catch (e) {}
-      return { "Default": { system_prompt: DEFAULT_SYS, parameters: { ...DEFAULT_PARAMS } } };
-    }
-    async function savePresets(p) { await window.Bridge.files.save(PRESETS_FILE, toB64(JSON.stringify(p)), false); }
 
     async function populatePresetDropdown(selectedName) {
       const presets = await loadPresets();
@@ -939,6 +1139,37 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       ui.presetSelect.value = (presets[target] || target === 'Default') ? target : 'Default';
     }
 
+    function updateSynchronizedInputs(params) {
+      isProgrammaticUpdate = true;
+      ui.paramTemp.value = params.temperature ?? 0.3;
+      ui.numTemp.value = parseFloat(ui.paramTemp.value).toFixed(2);
+      ui.paramTopP.value = params.top_p ?? 0.9;
+      ui.numTopP.value = parseFloat(ui.paramTopP.value).toFixed(2);
+      ui.paramTopK.value = params.top_k ?? 40;
+      ui.numTopK.value = ui.paramTopK.value;
+      ui.paramMinP.value = params.min_p ?? 0.05;
+      ui.numMinP.value = parseFloat(ui.paramMinP.value).toFixed(2);
+      ui.paramRepeat.value = params.repeat_penalty ?? 1.1;
+      ui.numRepeat.value = parseFloat(ui.paramRepeat.value).toFixed(2);
+      ui.paramRepeatRange.value = params.repeat_penalty_range ?? 512;
+      ui.numRepeatRange.value = ui.paramRepeatRange.value;
+      ui.paramXtcProb.value = params.xtc_probability ?? 0.0;
+      ui.numXtcProb.value = parseFloat(ui.paramXtcProb.value).toFixed(2);
+      ui.paramXtcThresh.value = params.xtc_threshold ?? 0.1;
+      ui.numXtcThresh.value = parseFloat(ui.paramXtcThresh.value).toFixed(2);
+      ui.paramDryMult.value = params.dry_multiplier ?? 0.0;
+      ui.numDryMult.value = parseFloat(ui.paramDryMult.value).toFixed(2);
+      ui.paramDryBase.value = params.dry_base ?? 1.75;
+      ui.numDryBase.value = parseFloat(ui.paramDryBase.value).toFixed(2);
+      ui.paramDryAllowed.value = params.dry_allowed_length ?? 2;
+      ui.numDryAllowed.value = ui.paramDryAllowed.value;
+      ui.paramDryRange.value = params.dry_penalty_range ?? 1024;
+      ui.numDryRange.value = ui.paramDryRange.value;
+      ui.paramMax.value = params.max_tokens ?? 2048;
+      ui.paramContextWindow.value = params.context_window ?? 8192;
+      isProgrammaticUpdate = false;
+    }
+
     async function applyPresetToPanel(name) {
       const presets = await loadPresets();
       const target = presets[name] || (name === 'Default' ? { system_prompt: DEFAULT_SYS, parameters: { ...DEFAULT_PARAMS } } : null);
@@ -946,20 +1177,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         isProgrammaticUpdate = true;
         ui.paramThinking.checked = target.parameters.enable_thinking ?? false;
         ui.paramStopSequences.value = target.parameters.stop_sequences || "";
-        ui.paramTemp.value = target.parameters.temperature ?? 0.3;
-        ui.paramTopP.value = target.parameters.top_p ?? 0.9;
-        ui.paramTopK.value = target.parameters.top_k ?? 40;
-        ui.paramMinP.value = target.parameters.min_p ?? 0.05;
-        ui.paramRepeat.value = target.parameters.repeat_penalty ?? 1.1;
-        ui.paramRepeatRange.value = target.parameters.repeat_penalty_range ?? 512;
-        ui.paramXtcProb.value = target.parameters.xtc_probability ?? 0.0;
-        ui.paramXtcThresh.value = target.parameters.xtc_threshold ?? 0.1;
-        ui.paramDryMult.value = target.parameters.dry_multiplier ?? 0.0;
-        ui.paramDryBase.value = target.parameters.dry_base ?? 1.75;
-        ui.paramDryAllowed.value = target.parameters.dry_allowed_length ?? 2;
-        ui.paramDryRange.value = target.parameters.dry_penalty_range ?? 1024;
-        ui.paramMax.value = target.parameters.max_tokens ?? 2048;
-        ui.paramContextWindow.value = target.parameters.context_window ?? 8192;
+        updateSynchronizedInputs(target.parameters);
 
         const sysPresets = await getSystemPromptPresets();
         let sysPrompt = target.system_prompt || DEFAULT_SYS;
@@ -969,19 +1187,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         isProgrammaticUpdate = false;
 
         renderAgentsUI(target.parameters.agents || DEFAULT_PARAMS.agents);
-        ui.valTemp.textContent = parseFloat(ui.paramTemp.value).toFixed(1);
-        ui.valTopP.textContent = parseFloat(ui.paramTopP.value).toFixed(2);
-        ui.valTopK.textContent = ui.paramTopK.value;
-        ui.valMinP.textContent = parseFloat(ui.paramMinP.value).toFixed(2);
-        ui.valRepeat.textContent = parseFloat(ui.paramRepeat.value).toFixed(2);
-        ui.valRepeatRange.textContent = ui.paramRepeatRange.value;
-        ui.valXtcProb.textContent = parseFloat(ui.paramXtcProb.value).toFixed(2);
-        ui.valXtcThresh.textContent = parseFloat(ui.paramXtcThresh.value).toFixed(2);
-        ui.valDryMult.textContent = parseFloat(ui.paramDryMult.value).toFixed(2);
-        ui.valDryBase.textContent = parseFloat(ui.paramDryBase.value).toFixed(2);
-        ui.valDryAllowed.textContent = ui.paramDryAllowed.value;
-        ui.valDryRange.textContent = ui.paramDryRange.value;
-
         localStorage.setItem('last_selected_preset', name);
         syncThreadParametersLive();
       }
@@ -1065,34 +1270,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         ui.paramSys.value = activeThread.system_prompt;
         ui.paramThinking.checked = activeThread.parameters.enable_thinking;
         ui.paramStopSequences.value = activeThread.parameters.stop_sequences || "";
-        ui.paramTemp.value = activeThread.parameters.temperature ?? 0.3;
-        ui.paramTopP.value = activeThread.parameters.top_p ?? 0.9;
-        ui.paramTopK.value = activeThread.parameters.top_k ?? 40;
-        ui.paramMinP.value = activeThread.parameters.min_p ?? 0.05;
-        ui.paramRepeat.value = activeThread.parameters.repeat_penalty ?? 1.1;
-        ui.paramRepeatRange.value = activeThread.parameters.repeat_penalty_range ?? 512;
-        ui.paramXtcProb.value = activeThread.parameters.xtc_probability ?? 0.0;
-        ui.paramXtcThresh.value = activeThread.parameters.xtc_threshold ?? 0.1;
-        ui.paramDryMult.value = activeThread.parameters.dry_multiplier ?? 0.0;
-        ui.paramDryBase.value = activeThread.parameters.dry_base ?? 1.75;
-        ui.paramDryAllowed.value = activeThread.parameters.dry_allowed_length ?? 2;
-        ui.paramDryRange.value = activeThread.parameters.dry_penalty_range ?? 1024;
-        ui.paramMax.value = activeThread.parameters.max_tokens ?? 2048;
-        ui.paramContextWindow.value = activeThread.parameters.context_window ?? 8192;
+        updateSynchronizedInputs(activeThread.parameters);
 
         renderAgentsUI(activeThread.parameters.agents);
-        ui.valTemp.textContent = parseFloat(ui.paramTemp.value).toFixed(1);
-        ui.valTopP.textContent = parseFloat(ui.paramTopP.value).toFixed(2);
-        ui.valTopK.textContent = ui.paramTopK.value;
-        ui.valMinP.textContent = parseFloat(ui.paramMinP.value).toFixed(2);
-        ui.valRepeat.textContent = parseFloat(ui.paramRepeat.value).toFixed(2);
-        ui.valRepeatRange.textContent = ui.paramRepeatRange.value;
-        ui.valXtcProb.textContent = parseFloat(ui.paramXtcProb.value).toFixed(2);
-        ui.valXtcThresh.textContent = parseFloat(ui.paramXtcThresh.value).toFixed(2);
-        ui.valDryMult.textContent = parseFloat(ui.paramDryMult.value).toFixed(2);
-        ui.valDryBase.textContent = parseFloat(ui.paramDryBase.value).toFixed(2);
-        ui.valDryAllowed.textContent = ui.paramDryAllowed.value;
-        ui.valDryRange.textContent = ui.paramDryRange.value;
 
         if (activeThread.preset_name) localStorage.setItem('last_selected_preset', activeThread.preset_name);
         await populatePresetDropdown(activeThread.preset_name);
@@ -1405,7 +1585,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       let text = ui.userInput.value.replace(/^\s+|\s+$/g, '');
       if (!text || !activeThread || activeGenerations.has(activeThread.id)) return;
 
-      // Manual Web Search Slash Command (/search [query]) only
       if (text.startsWith('/search')) {
         const query = text.replace('/search', '').trim();
         if (!query) {
@@ -1656,19 +1835,26 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
     ui.btnParams.addEventListener('click', async () => {
       const visible = ui.paramsPanel.style.display === 'flex';
-      if (!visible) { await populatePresetDropdown(); await populateSystemPromptDropdown(); renderCustomPromptsManager(); }
+      if (!visible) {
+        await populatePresetDropdown();
+        await populateSystemPromptDropdown();
+        renderCustomPromptsManager();
+        ui.settingSearchEndpoint.value = loadedSettings.search_api_endpoint;
+        ui.settingSearchKey.value = loadedSettings.search_api_key;
+      }
       ui.paramsPanel.style.display = visible ? 'none' : 'flex';
     });
 
     ui.btnExportBackup.onclick = async () => {
       try {
         const backup = {
-          version: '6.1.0',
+          version: '7.0.0',
           exported_at: Date.now(),
           threads: await dbGetAll(),
           presets: await loadPresets(),
           custom_prompts: getCustomPrompts(),
-          system_prompts: await getSystemPromptPresets()
+          system_prompts: await getSystemPromptPresets(),
+          settings: loadedSettings
         };
         await window.Bridge.files.save(`rawllm_pro_backup_${Date.now()}.json`, toB64(JSON.stringify(backup, null, 2)), true);
         alert("Full backup exported successfully!");
@@ -1686,6 +1872,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           if (parsed.presets) await savePresets(parsed.presets);
           if (parsed.custom_prompts) saveCustomPrompts(parsed.custom_prompts);
           if (parsed.system_prompts) await saveSystemPromptPresets(parsed.system_prompts);
+          if (parsed.settings) await saveSettings(parsed.settings);
           alert("Backup restored successfully!"); location.reload();
         } catch (err) { showError("Import failed: Invalid JSON file format."); }
       };
@@ -1754,27 +1941,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
     ui.btnResetCustomDefault.addEventListener('click', async () => { await applyPresetToPanel(ui.presetSelect.value); ui.statusText.textContent = `Reset to preset`; setTimeout(() => { if (!activeGenerations.has(activeThread?.id)) ui.statusText.textContent = "Ready"; }, 2000); });
 
-    const sliders = [
-      { input: ui.paramTemp, val: ui.valTemp, decimals: 1 },
-      { input: ui.paramTopP, val: ui.valTopP, decimals: 2 },
-      { input: ui.paramTopK, val: ui.valTopK, decimals: 0 },
-      { input: ui.paramMinP, val: ui.valMinP, decimals: 2 },
-      { input: ui.paramRepeat, val: ui.valRepeat, decimals: 2 },
-      { input: ui.paramRepeatRange, val: ui.valRepeatRange, decimals: 0 },
-      { input: ui.paramXtcProb, val: ui.valXtcProb, decimals: 2 },
-      { input: ui.paramXtcThresh, val: ui.valXtcThresh, decimals: 2 },
-      { input: ui.paramDryMult, val: ui.valDryMult, decimals: 2 },
-      { input: ui.paramDryBase, val: ui.valDryBase, decimals: 2 },
-      { input: ui.paramDryAllowed, val: ui.valDryAllowed, decimals: 0 },
-      { input: ui.paramDryRange, val: ui.valDryRange, decimals: 0 }
-    ];
-
-    sliders.forEach(({ input, val, decimals }) => {
-      input?.addEventListener('input', e => {
-        if (val) val.textContent = parseFloat(e.target.value).toFixed(decimals);
-      });
-    });
-
     ui.btnResetParams.addEventListener('click', async () => {
       if (activeThread && confirm("Reset this conversation's parameters to factory defaults?")) {
         isProgrammaticUpdate = true;
@@ -1782,14 +1948,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         activeThread.parameters = JSON.parse(JSON.stringify(DEFAULT_PARAMS)); activeThread.preset_name = 'Default';
         activeThread.updated_at = Date.now(); await dbPut(activeThread);
         ui.paramSys.value = activeThread.system_prompt; ui.paramThinking.checked = activeThread.parameters.enable_thinking;
-        ui.paramStopSequences.value = activeThread.parameters.stop_sequences; ui.paramTemp.value = activeThread.parameters.temperature;
-        ui.paramTopP.value = activeThread.parameters.top_p; ui.paramTopK.value = activeThread.parameters.top_k;
-        ui.paramMinP.value = activeThread.parameters.min_p; ui.paramRepeat.value = activeThread.parameters.repeat_penalty;
-        ui.paramRepeatRange.value = activeThread.parameters.repeat_penalty_range; ui.paramXtcProb.value = activeThread.parameters.xtc_probability;
-        ui.paramXtcThresh.value = activeThread.parameters.xtc_threshold; ui.paramDryMult.value = activeThread.parameters.dry_multiplier;
-        ui.paramDryBase.value = activeThread.parameters.dry_base; ui.paramDryAllowed.value = activeThread.parameters.dry_allowed_length;
-        ui.paramDryRange.value = activeThread.parameters.dry_penalty_range; ui.paramMax.value = activeThread.parameters.max_tokens;
-        ui.paramContextWindow.value = activeThread.parameters.context_window;
+        ui.paramStopSequences.value = activeThread.parameters.stop_sequences;
+        updateSynchronizedInputs(activeThread.parameters);
         renderAgentsUI(activeThread.parameters.agents || DEFAULT_PARAMS.agents);
         await populatePresetDropdown('Default'); await populateSystemPromptDropdown('Default Prompt');
         isProgrammaticUpdate = false; updateContextBar();
@@ -1820,7 +1980,11 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
     async function boot() {
       try {
-        await fetchAgents(); updateEnterSendUI(); await populateSystemPromptDropdown();
+        await loadSettings();
+        enterSends = loadedSettings.enter_sends !== false;
+        await fetchAgents();
+        updateEnterSendUI();
+        await populateSystemPromptDropdown();
         const lastId = localStorage.getItem('last_active_thread_id');
         const threads = await dbGetAll();
         if (!threads.length) await createNewThread();
