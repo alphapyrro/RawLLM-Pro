@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RawLLM Pro v7.0.0</title>
+  <title>RawLLM Pro v7.1.0</title>
   <link rel="stylesheet" href="./assets/css/github-dark.min.css">
   <script src="./assets/js/marked.min.js"></script>
   <script src="./assets/js/highlight.min.js"></script>
@@ -88,19 +88,38 @@
     }
     .thread-action-btn:hover { color: var(--text-main); background: var(--border-color); }
     .thread-action-btn.del-btn:hover { color: var(--error); }
+    
     #params-panel {
-      position: absolute; top: 60px; right: 12px; left: 12px; width: calc(100vw - 24px); max-width: 400px; margin: 0 auto; max-height: calc(100vh - 80px);
+      position: absolute; top: 60px; right: 12px; left: 12px; width: calc(100vw - 24px); max-width: 440px; margin: 0 auto; max-height: calc(100vh - 80px);
       background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;
-      padding: 0 16px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); display: none; z-index: 100; flex-direction: column; gap: 14px; overflow-y: auto; overflow-x: hidden;
+      padding: 0 16px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); display: none; z-index: 100; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden;
     }
     .params-sticky-header {
       position: sticky; top: 0; background: var(--bg-surface); z-index: 20;
-      padding: 12px 0; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;
+      padding: 12px 0 6px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;
     }
+    
+    .settings-tab-bar {
+      display: flex; gap: 4px; width: 100%; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
+    }
+    .settings-tab-btn {
+      flex: 1; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-muted);
+      padding: 8px 2px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 36px;
+    }
+    .settings-tab-btn:hover { color: var(--text-main); background: var(--bg-surface-hover); }
+    .settings-tab-btn.active {
+      background: var(--bg-surface-hover); color: var(--accent); border-color: var(--accent);
+    }
+    .settings-tab-page {
+      display: none; flex-direction: column; gap: 12px; width: 100%;
+    }
+    .settings-tab-page.active { display: flex; }
+
     .param-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
     .param-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-muted); }
-    .param-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--accent); margin-top: 6px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; width: 100%; }
-    .toggle-group { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; margin-top: -6px; width: 100%; }
+    .param-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--accent); margin-top: 4px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; width: 100%; }
+    .toggle-group { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; width: 100%; }
     .toggle-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
     .toggle-checkbox { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
     
@@ -133,7 +152,12 @@
     }
     .num-input-sync:focus { outline: none; border-color: var(--accent); }
 
-    input[type="number"], input[type="text"], textarea, select {
+    .input-with-action {
+      display: flex; gap: 6px; width: 100%; align-items: center;
+    }
+    .input-with-action input { flex-grow: 1; }
+
+    input[type="number"], input[type="text"], input[type="password"], textarea, select {
       background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main);
       padding: 10px; border-radius: 8px; font-family: var(--font-sans); font-size: 14px; width: 100%;
     }
@@ -214,11 +238,15 @@
     .dot { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; animation: pulse 1.5s infinite ease-in-out; }
     .dot:nth-child(2) { animation-delay: 0.2s; } .dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes pulse { 0%, 100% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } }
+    
     #context-bar-container { padding: 6px 16px; background: var(--bg-surface); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--text-muted); }
     .context-bar-header { display: flex; justify-content: space-between; align-items: center; }
+    .context-bar-left { display: flex; align-items: center; gap: 6px; }
+    .agent-token-badge { display: none; background: var(--bg-surface-hover); color: var(--accent); padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; border: 1px solid var(--border-color); }
     .context-bar-track { width: 100%; height: 6px; background: var(--bg-base); border-radius: 3px; overflow: hidden; border: 1px solid var(--border-color); }
     .context-bar-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s ease, background-color 0.3s ease; }
     .context-warning-text { color: var(--error); font-weight: 600; display: none; }
+    
     #prefill-drawer { display: none !important; background: var(--bg-surface); border-top: 1px solid var(--border-color); padding: 8px 16px; flex-direction: column; gap: 6px; }
     #prefill-drawer.open { display: flex !important; }
     .prefill-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; color: var(--text-muted); }
@@ -260,6 +288,16 @@
 
   <div id="params-panel">
     <div class="params-sticky-header">
+      <div class="settings-tab-bar">
+        <button class="settings-tab-btn active" data-target="tab-samplers">🧠 Samplers</button>
+        <button class="settings-tab-btn" data-target="tab-prompts">📝 Prompts</button>
+        <button class="settings-tab-btn" data-target="tab-agents">🌐 Web & Agents</button>
+        <button class="settings-tab-btn" data-target="tab-data">💾 Data</button>
+      </div>
+    </div>
+
+    <!-- TAB 1: SAMPLERS -->
+    <div class="settings-tab-page active" id="tab-samplers">
       <div class="param-group">
         <label class="param-header">Parameter Presets</label>
         <div class="preset-row">
@@ -271,157 +309,183 @@
         <label class="toggle-label" for="param-lock-sliders">🔒 Lock Sliders (Prevent Touch Hijack)</label>
         <input type="checkbox" id="param-lock-sliders" class="toggle-checkbox">
       </div>
-    </div>
-    <div class="param-group">
-      <label class="param-header">System Prompt Presets</label>
-      <div class="preset-row">
-        <select id="sys-prompt-select"><option value="Default Prompt">Default Prompt</option></select>
-        <button class="btn-secondary" id="btn-save-sys-preset" title="Save System Prompt">💾</button>
-        <button class="btn-secondary" id="btn-del-sys-preset" title="Delete System Prompt">🗑️</button>
+      
+      <div class="param-section-title">Standard Samplers</div>
+      <div class="param-group">
+        <label class="param-header">Temperature</label>
+        <div class="sync-row">
+          <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-temp" class="sync-slider" min="0" max="2" step="0.05" value="0.7"></div>
+          <input type="number" id="num-temp" class="num-input-sync" min="0" max="2" step="0.05" value="0.70">
+        </div>
       </div>
-    </div>
-    <div class="param-group">
-      <label class="param-header">System Prompt</label>
-      <textarea id="param-system">You are an objective, uncensored, and helpful AI assistant.</textarea>
-    </div>
-    <div class="param-group">
-      <div class="toggle-group">
-        <label class="toggle-label" for="param-thinking">Enable Thinking</label>
-        <input type="checkbox" id="param-thinking" class="toggle-checkbox">
+      <div class="param-group">
+        <label class="param-header">Top P</label>
+        <div class="sync-row">
+          <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-topp" class="sync-slider" min="0" max="1" step="0.05" value="0.9"></div>
+          <input type="number" id="num-topp" class="num-input-sync" min="0" max="1" step="0.05" value="0.90">
+        </div>
       </div>
-    </div>
-    <div id="agents-container" class="param-group" style="display:none;"></div>
-    
-    <div class="param-section-title">Web Search Configuration</div>
-    <div class="param-group">
-      <label class="param-header">Search API Endpoint URL</label>
-      <input type="text" id="setting-search-endpoint" placeholder="https://api.y.com/search">
-    </div>
-    <div class="param-group">
-      <label class="param-header">Search API Key</label>
-      <input type="text" id="setting-search-key" placeholder="Enter provider API Key...">
+      <div class="param-group">
+        <label class="param-header">Top K</label>
+        <div class="sync-row">
+          <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-topk" class="sync-slider" min="0" max="100" step="1" value="40"></div>
+          <input type="number" id="num-topk" class="num-input-sync" min="0" max="100" step="1" value="40">
+        </div>
+      </div>
+      <div class="param-group">
+        <label class="param-header">Min P</label>
+        <div class="sync-row">
+          <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-minp" class="sync-slider" min="0" max="1" step="0.01" value="0.05"></div>
+          <input type="number" id="num-minp" class="num-input-sync" min="0" max="1" step="0.01" value="0.05">
+        </div>
+      </div>
+      <div class="param-group">
+        <label class="param-header">Repeat Penalty</label>
+        <div class="sync-row">
+          <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-repeat" class="sync-slider" min="1" max="2" step="0.05" value="1.1"></div>
+          <input type="number" id="num-repeat" class="num-input-sync" min="1" max="2" step="0.05" value="1.10">
+        </div>
+      </div>
+      <div class="param-group">
+        <label class="param-header">Repetition Penalty Range</label>
+        <div class="sync-row">
+          <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-repeatrange" class="sync-slider" min="0" max="2048" step="16" value="512"></div>
+          <input type="number" id="num-repeatrange" class="num-input-sync" min="0" max="2048" step="16" value="512">
+        </div>
+      </div>
+      
+      <div class="param-section-title">XTC Sampler</div>
+      <div class="param-group">
+        <label class="param-header">XTC Probability</label>
+        <div class="sync-row">
+          <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-xtcprob" class="sync-slider" min="0" max="1" step="0.05" value="0"></div>
+          <input type="number" id="num-xtcprob" class="num-input-sync" min="0" max="1" step="0.05" value="0.00">
+        </div>
+      </div>
+      <div class="param-group">
+        <label class="param-header">XTC Threshold</label>
+        <div class="sync-row">
+          <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-xtcthresh" class="sync-slider" min="0" max="0.5" step="0.01" value="0.1"></div>
+          <input type="number" id="num-xtcthresh" class="num-input-sync" min="0" max="0.5" step="0.01" value="0.10">
+        </div>
+      </div>
+      
+      <div class="param-section-title">DRY Sampler</div>
+      <div class="param-group">
+        <label class="param-header">Dry Multiplier</label>
+        <div class="sync-row">
+          <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-drymult" class="sync-slider" min="0" max="3" step="0.05" value="0.8"></div>
+          <input type="number" id="num-drymult" class="num-input-sync" min="0" max="3" step="0.05" value="0.80">
+        </div>
+      </div>
+      <div class="param-group">
+        <label class="param-header">Dry Base</label>
+        <div class="sync-row">
+          <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-drybase" class="sync-slider" min="1" max="3" step="0.05" value="1.75"></div>
+          <input type="number" id="num-drybase" class="num-input-sync" min="1" max="3" step="0.05" value="1.75">
+        </div>
+      </div>
+      <div class="param-group">
+        <label class="param-header">Dry Allowed Length</label>
+        <div class="sync-row">
+          <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-dryallowed" class="sync-slider" min="0" max="10" step="1" value="2"></div>
+          <input type="number" id="num-dryallowed" class="num-input-sync" min="0" max="10" step="1" value="2">
+        </div>
+      </div>
+      <div class="param-group">
+        <label class="param-header">DRY Penalty Range</label>
+        <div class="sync-row">
+          <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-dryrange" class="sync-slider" min="0" max="4096" step="64" value="1024"></div>
+          <input type="number" id="num-dryrange" class="num-input-sync" min="0" max="4096" step="64" value="1024">
+        </div>
+      </div>
+      
+      <div class="param-section-title">Context & Limits</div>
+      <div class="param-group">
+        <label class="param-header">Max Tokens</label>
+        <input type="number" id="param-maxtokens" value="2048" min="1">
+      </div>
+      <div class="param-group">
+        <label class="param-header">Context Window (Tokens)</label>
+        <input type="number" id="param-contextwindow" value="8192" min="512" step="512">
+      </div>
+
+      <button class="new-chat-btn" id="btn-save-custom-default" style="background: var(--bg-surface-hover); border: 1px solid var(--accent); color: var(--accent); margin-top: 8px;">Save Custom Defaults</button>
+      <button class="btn-overwrite" id="btn-overwrite-preset">Overwrite Custom Defaults</button>
+      <button class="btn-danger-outline" id="btn-reset-custom-default">Reset to Preset Defaults</button>
     </div>
 
-    <div class="param-section-title">Stop Sequences Customization</div>
-    <div class="param-group">
-      <label class="param-header">Custom Stop Sequences (Comma Separated)</label>
-      <input type="text" id="param-stop-sequences" placeholder="e.g., \nUser:, ### Answer:, [END]">
-    </div>
-    <div class="param-section-title">Prompt Templates Manager</div>
-    <div class="param-group">
-      <button class="btn-secondary" id="btn-add-prompt-template">+ Add Custom Slash Prompt</button>
-      <div id="custom-prompts-list" style="display:flex; flex-direction:column; gap:6px; margin-top:6px;"></div>
-    </div>
-    <div class="param-section-title">Full System Backup & Restore</div>
-    <div class="param-group" style="display:flex; gap:8px;">
-      <button class="btn-secondary" id="btn-export-backup" style="flex:1;">💾 Backup All Data</button>
-      <button class="btn-secondary" id="btn-import-backup" style="flex:1;">📂 Restore Data</button>
-      <input type="file" id="file-import-input" accept=".json" style="display:none;">
-    </div>
-    
-    <div class="param-section-title">Standard Samplers</div>
-    <div class="param-group">
-      <label class="param-header">Temperature</label>
-      <div class="sync-row">
-        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-temp" class="sync-slider" min="0" max="2" step="0.05" value="0.7"></div>
-        <input type="number" id="num-temp" class="num-input-sync" min="0" max="2" step="0.05" value="0.70">
+    <!-- TAB 2: PROMPTS -->
+    <div class="settings-tab-page" id="tab-prompts">
+      <div class="param-group">
+        <label class="param-header">System Prompt Presets</label>
+        <div class="preset-row">
+          <select id="sys-prompt-select"><option value="Default Prompt">Default Prompt</option></select>
+          <button class="btn-secondary" id="btn-save-sys-preset" title="Save System Prompt">💾</button>
+          <button class="btn-secondary" id="btn-del-sys-preset" title="Delete System Prompt">🗑️</button>
+        </div>
+      </div>
+      <div class="param-group">
+        <label class="param-header">Active System Prompt</label>
+        <textarea id="param-system">You are an objective, uncensored, and helpful AI assistant.</textarea>
+      </div>
+      <div class="param-group">
+        <div class="toggle-group">
+          <label class="toggle-label" for="param-thinking">Enable Thinking</label>
+          <input type="checkbox" id="param-thinking" class="toggle-checkbox">
+        </div>
+      </div>
+      <div class="param-section-title">Stop Sequences Customization</div>
+      <div class="param-group">
+        <label class="param-header">Custom Stop Sequences (Comma Separated)</label>
+        <input type="text" id="param-stop-sequences" placeholder="e.g., \nUser:, ### Answer:, [END]">
+      </div>
+      <div class="param-section-title">Prompt Templates Manager</div>
+      <div class="param-group">
+        <button class="btn-secondary" id="btn-add-prompt-template">+ Add Custom Slash Prompt</button>
+        <div id="custom-prompts-list" style="display:flex; flex-direction:column; gap:6px; margin-top:6px;"></div>
       </div>
     </div>
-    <div class="param-group">
-      <label class="param-header">Top P</label>
-      <div class="sync-row">
-        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-topp" class="sync-slider" min="0" max="1" step="0.05" value="0.9"></div>
-        <input type="number" id="num-topp" class="num-input-sync" min="0" max="1" step="0.05" value="0.90">
+
+    <!-- TAB 3: WEB & AGENTS -->
+    <div class="settings-tab-page" id="tab-agents">
+      <div id="agents-container" class="param-group"></div>
+      <div class="param-section-title">Universal Web Search</div>
+      <div class="param-group">
+        <label class="param-header">Search Provider Preset</label>
+        <select id="setting-search-provider">
+          <option value="tavily">Tavily (JSON POST)</option>
+          <option value="brave">Brave Search (REST GET)</option>
+          <option value="searxng">SearXNG (Self-Hosted GET)</option>
+          <option value="custom">Custom / Generic</option>
+        </select>
       </div>
-    </div>
-    <div class="param-group">
-      <label class="param-header">Top K</label>
-      <div class="sync-row">
-        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-topk" class="sync-slider" min="0" max="100" step="1" value="40"></div>
-        <input type="number" id="num-topk" class="num-input-sync" min="0" max="100" step="1" value="40">
+      <div class="param-group">
+        <label class="param-header">Search API Endpoint URL</label>
+        <input type="text" id="setting-search-endpoint" placeholder="https://api.tavily.com/search">
       </div>
-    </div>
-    <div class="param-group">
-      <label class="param-header">Min P</label>
-      <div class="sync-row">
-        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-minp" class="sync-slider" min="0" max="1" step="0.01" value="0.05"></div>
-        <input type="number" id="num-minp" class="num-input-sync" min="0" max="1" step="0.01" value="0.05">
+      <div class="param-group">
+        <label class="param-header">Search API Key / Token</label>
+        <div class="input-with-action">
+          <input type="password" id="setting-search-key" placeholder="Enter provider API Key...">
+          <button class="btn-secondary" id="btn-toggle-key-visibility" style="min-height:42px; min-width:44px;" title="Show/Hide Key">👁️</button>
+        </div>
       </div>
+      <button class="btn-secondary" id="btn-test-search" style="margin-top: 4px;">🔍 Test Search Connection</button>
+      <div id="search-test-status" style="font-size: 11px; font-family: var(--font-mono); display: none;"></div>
     </div>
-    <div class="param-group">
-      <label class="param-header">Repeat Penalty</label>
-      <div class="sync-row">
-        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-repeat" class="sync-slider" min="1" max="2" step="0.05" value="1.1"></div>
-        <input type="number" id="num-repeat" class="num-input-sync" min="1" max="2" step="0.05" value="1.10">
+
+    <!-- TAB 4: DATA & BACKUP -->
+    <div class="settings-tab-page" id="tab-data">
+      <div class="param-section-title">Full System Backup & Restore</div>
+      <div class="param-group" style="display:flex; gap:8px;">
+        <button class="btn-secondary" id="btn-export-backup" style="flex:1;">💾 Backup All Data</button>
+        <button class="btn-secondary" id="btn-import-backup" style="flex:1;">📂 Restore Data</button>
+        <input type="file" id="file-import-input" accept=".json" style="display:none;">
       </div>
+      <div class="param-section-title" style="color:var(--error); margin-top:10px;">Danger Zone</div>
+      <button class="btn-danger-outline" id="btn-reset-params">Reset All Parameters to Factory Defaults</button>
     </div>
-    <div class="param-group">
-      <label class="param-header">Repetition Penalty Range</label>
-      <div class="sync-row">
-        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-repeatrange" class="sync-slider" min="0" max="2048" step="16" value="512"></div>
-        <input type="number" id="num-repeatrange" class="num-input-sync" min="0" max="2048" step="16" value="512">
-      </div>
-    </div>
-    
-    <div class="param-section-title">XTC Sampler</div>
-    <div class="param-group">
-      <label class="param-header">XTC Probability</label>
-      <div class="sync-row">
-        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-xtcprob" class="sync-slider" min="0" max="1" step="0.05" value="0"></div>
-        <input type="number" id="num-xtcprob" class="num-input-sync" min="0" max="1" step="0.05" value="0.00">
-      </div>
-    </div>
-    <div class="param-group">
-      <label class="param-header">XTC Threshold</label>
-      <div class="sync-row">
-        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-xtcthresh" class="sync-slider" min="0" max="0.5" step="0.01" value="0.1"></div>
-        <input type="number" id="num-xtcthresh" class="num-input-sync" min="0" max="0.5" step="0.01" value="0.10">
-      </div>
-    </div>
-    
-    <div class="param-section-title">DRY Sampler</div>
-    <div class="param-group">
-      <label class="param-header">Dry Multiplier</label>
-      <div class="sync-row">
-        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-drymult" class="sync-slider" min="0" max="3" step="0.05" value="0.8"></div>
-        <input type="number" id="num-drymult" class="num-input-sync" min="0" max="3" step="0.05" value="0.80">
-      </div>
-    </div>
-    <div class="param-group">
-      <label class="param-header">Dry Base</label>
-      <div class="sync-row">
-        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-drybase" class="sync-slider" min="1" max="3" step="0.05" value="1.75"></div>
-        <input type="number" id="num-drybase" class="num-input-sync" min="1" max="3" step="0.05" value="1.75">
-      </div>
-    </div>
-    <div class="param-group">
-      <label class="param-header">Dry Allowed Length</label>
-      <div class="sync-row">
-        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-dryallowed" class="sync-slider" min="0" max="10" step="1" value="2"></div>
-        <input type="number" id="num-dryallowed" class="num-input-sync" min="0" max="10" step="1" value="2">
-      </div>
-    </div>
-    <div class="param-group">
-      <label class="param-header">DRY Penalty Range</label>
-      <div class="sync-row">
-        <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-dryrange" class="sync-slider" min="0" max="4096" step="64" value="1024"></div>
-        <input type="number" id="num-dryrange" class="num-input-sync" min="0" max="4096" step="64" value="1024">
-      </div>
-    </div>
-    
-    <div class="param-section-title">Context & Generation Limits</div>
-    <div class="param-group">
-      <label class="param-header">Max Tokens</label>
-      <input type="number" id="param-maxtokens" value="2048" min="1">
-    </div>
-    <div class="param-group">
-      <label class="param-header">Context Window (Tokens)</label>
-      <input type="number" id="param-contextwindow" value="8192" min="512" step="512">
-    </div>
-    <button class="new-chat-btn" id="btn-save-custom-default" style="background: var(--bg-surface-hover); border: 1px solid var(--accent); color: var(--accent); margin-top: 8px;">Save Custom Defaults</button>
-    <button class="btn-overwrite" id="btn-overwrite-preset">Overwrite Custom Defaults</button>
-    <button class="btn-danger-outline" id="btn-reset-custom-default">Reset to Preset Defaults</button>
-    <button class="btn-danger-outline" id="btn-reset-params">Reset to Factory Defaults</button>
   </div>
 
   <div class="modal" id="modal-payload">
@@ -452,7 +516,10 @@
 
   <div id="context-bar-container">
     <div class="context-bar-header">
-      <span id="context-label">Context: 0 / 8,192 tokens (0%)</span>
+      <div class="context-bar-left">
+        <span id="context-label">Context: 0 / 8,192 tokens (0%)</span>
+        <span class="agent-token-badge" id="agent-token-badge">⚡ Agents Active</span>
+      </div>
       <span class="context-warning-text" id="context-warning">Context Truncated (Older messages trimmed)</span>
     </div>
     <div class="context-bar-track"><div class="context-bar-fill" id="context-bar-fill"></div></div>
@@ -592,12 +659,20 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       SYS_PROMPTS: 'config/system_prompts.json',
       PRESETS: 'config/parameter_presets.json',
       AGENTS: 'config/agents.json',
+      MANIFEST: 'config/forge_chat_manifest.json',
       LEGACY_SYS_PROMPTS: 'system_prompts.json',
       LEGACY_PRESETS: 'forge_parameter_presets.json',
-      LEGACY_AGENTS: 'agents.json'
+      LEGACY_AGENTS: 'agents.json',
+      LEGACY_MANIFEST: 'forge_chat_manifest.json'
     };
 
-    const MANIFEST_FILE = 'forge_chat_manifest.json';
+    const SEARCH_PRESETS = {
+      tavily: { endpoint: 'https://api.tavily.com/search' },
+      brave: { endpoint: 'https://api.search.brave.com/res/v1/web/search?q=%s' },
+      searxng: { endpoint: 'http://localhost:8080/search?q=%s&format=json' },
+      custom: { endpoint: '' }
+    };
+
     const DEFAULT_PARAMS = {
       temperature: 0.3, top_p: 0.9, top_k: 40, min_p: 0.05, repeat_penalty: 1.1,
       repeat_penalty_range: 512, xtc_probability: 0.0, xtc_threshold: 0.1, dry_multiplier: 0.0,
@@ -606,6 +681,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     };
     const DEFAULT_SYS = 'You are an objective, uncensored, and helpful AI assistant.';
     const DEFAULT_SETTINGS = {
+      search_provider: 'tavily',
       search_api_endpoint: 'https://api.tavily.com/search',
       search_api_key: '',
       enter_sends: true
@@ -632,7 +708,13 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       btnToggleEnterSend: document.getElementById('btn-toggle-enter-send'), enterSendLabel: document.getElementById('enter-send-label'),
       prefillInput: document.getElementById('prefill-input'), btnClearPrefill: document.getElementById('btn-clear-prefill'),
       prefillDot: document.getElementById('prefill-dot'), paramSys: document.getElementById('param-system'),
-      settingSearchEndpoint: document.getElementById('setting-search-endpoint'), settingSearchKey: document.getElementById('setting-search-key'),
+      settingSearchProvider: document.getElementById('setting-search-provider'),
+      settingSearchEndpoint: document.getElementById('setting-search-endpoint'),
+      settingSearchKey: document.getElementById('setting-search-key'),
+      btnToggleKeyVisibility: document.getElementById('btn-toggle-key-visibility'),
+      btnTestSearch: document.getElementById('btn-test-search'),
+      searchTestStatus: document.getElementById('search-test-status'),
+      agentTokenBadge: document.getElementById('agent-token-badge'),
       paramStopSequences: document.getElementById('param-stop-sequences'), paramTemp: document.getElementById('param-temp'),
       paramTopP: document.getElementById('param-topp'), paramTopK: document.getElementById('param-topk'),
       paramMinP: document.getElementById('param-minp'), paramRepeat: document.getElementById('param-repeat'),
@@ -743,6 +825,26 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
     async function savePresets(p) {
       await window.Bridge.files.save(CONFIG_PATHS.PRESETS, toB64(JSON.stringify(p, null, 2)), false);
+    }
+
+    async function loadManifest() {
+      try {
+        const res = await window.Bridge.files.read(CONFIG_PATHS.MANIFEST);
+        if (res && res.content_base64) return JSON.parse(fromB64(stripB64Prefix(res.content_base64)));
+      } catch (e) {}
+      try {
+        const legacyRes = await window.Bridge.files.read(CONFIG_PATHS.LEGACY_MANIFEST);
+        if (legacyRes && legacyRes.content_base64) {
+          const legacyData = JSON.parse(fromB64(stripB64Prefix(legacyRes.content_base64)));
+          await saveManifest(legacyData);
+          return legacyData;
+        }
+      } catch (e) {}
+      return [];
+    }
+
+    async function saveManifest(m) {
+      await window.Bridge.files.save(CONFIG_PATHS.MANIFEST, toB64(JSON.stringify(m)), false);
     }
 
     async function fetchAgents() {
@@ -966,11 +1068,55 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       elem.addEventListener('input', () => syncThreadParametersLive());
     });
 
+    // Settings Tab Switching
+    document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.settings-tab-page').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const targetPage = document.getElementById(btn.dataset.target);
+        if (targetPage) targetPage.classList.add('active');
+      });
+    });
+
+    // Web Search Settings & Actions
+    ui.settingSearchProvider.addEventListener('change', (e) => {
+      const selected = e.target.value;
+      if (SEARCH_PRESETS[selected] && selected !== 'custom') {
+        ui.settingSearchEndpoint.value = SEARCH_PRESETS[selected].endpoint;
+      }
+      saveSettings({
+        search_provider: selected,
+        search_api_endpoint: ui.settingSearchEndpoint.value.trim()
+      });
+    });
+
     ui.settingSearchEndpoint.addEventListener('change', () => {
       saveSettings({ search_api_endpoint: ui.settingSearchEndpoint.value.trim() });
     });
+
     ui.settingSearchKey.addEventListener('change', () => {
       saveSettings({ search_api_key: ui.settingSearchKey.value.trim() });
+    });
+
+    ui.btnToggleKeyVisibility.addEventListener('click', () => {
+      const isPassword = ui.settingSearchKey.type === 'password';
+      ui.settingSearchKey.type = isPassword ? 'text' : 'password';
+      ui.btnToggleKeyVisibility.textContent = isPassword ? '🙈' : '👁️';
+    });
+
+    ui.btnTestSearch.addEventListener('click', async () => {
+      ui.searchTestStatus.style.display = 'block';
+      ui.searchTestStatus.style.color = 'var(--text-muted)';
+      ui.searchTestStatus.textContent = 'Testing connection with query "test"...';
+      const result = await performWebSearch('test');
+      if (result.startsWith('[Search Failed') || result.startsWith('[Fetch Exception') || result.startsWith('[Search Error')) {
+        ui.searchTestStatus.style.color = 'var(--error)';
+        ui.searchTestStatus.textContent = result;
+      } else {
+        ui.searchTestStatus.style.color = 'var(--accent)';
+        ui.searchTestStatus.textContent = `✓ Success! Response snippet: ${result.slice(0, 100)}...`;
+      }
     });
 
     document.querySelectorAll('.slider-touch-guard').forEach(guard => {
@@ -1016,6 +1162,11 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           if (m.thinking) msgTokens += estimateTokens(m.thinking);
         });
       }
+
+      const activeAgents = activeThread.parameters?.agents || {};
+      const anyAgentActive = Object.values(activeAgents).some(Boolean);
+      ui.agentTokenBadge.style.display = anyAgentActive ? 'inline-block' : 'none';
+
       const totalTokens = sysTokens + msgTokens + estimateTokens(ui.userInput.value) + estimateTokens(ui.prefillInput.value) + (activeGenerations.has(activeThread.id) ? currentStreamTokens : 0);
       const limit = activeThread.parameters?.context_window || 8192;
       const pct = Math.min(100, Math.round((totalTokens / limit) * 100));
@@ -1090,29 +1241,95 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       return eff;
     }
 
+    // Universal Web Search Adapter
     async function performWebSearch(query) {
-      const endpoint = loadedSettings.search_api_endpoint || 'https://api.tavily.com/search';
-      const apiKey = loadedSettings.search_api_key || '';
-      
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            api_key: apiKey,
-            query: query,
-            search_depth: "basic",
-            max_results: 1,
-            include_answer: true
-          })
-        });
+      const provider = loadedSettings.search_provider || 'tavily';
+      let endpoint = (loadedSettings.search_api_endpoint || '').trim();
+      const apiKey = (loadedSettings.search_api_key || '').trim();
 
-        if (!res.ok) {
-          return `[Search Failed: HTTP Status ${res.status}]`;
+      if (!endpoint && SEARCH_PRESETS[provider]) {
+        endpoint = SEARCH_PRESETS[provider].endpoint;
+      }
+      if (!endpoint) return "[Search Error: Missing search endpoint URL in Settings]";
+
+      try {
+        let res, data;
+        const cleanQuery = encodeURIComponent(query);
+
+        if (provider === 'tavily' || (!endpoint.includes('%s') && provider !== 'searxng' && provider !== 'brave')) {
+          if (!apiKey && provider === 'tavily') return "[Search Error: API key required for Tavily in Settings]";
+          res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              api_key: apiKey,
+              query: query,
+              search_depth: "basic",
+              max_results: 3,
+              include_answer: true
+            })
+          });
+          if (!res.ok) return `[Search Failed: HTTP Status ${res.status}]`;
+          data = await res.json();
+          if (data.answer) return data.answer;
+          if (data.results && data.results.length) {
+            return data.results.map(r => `• ${r.title ? r.title + ': ' : ''}${r.content || r.snippet || ''}`).join('\n\n');
+          }
+          return "No search results returned.";
         }
 
-        const data = await res.json();
-        return data.answer || data.results?.[0]?.content || "No search results returned.";
+        if (provider === 'brave') {
+          if (!apiKey) return "[Search Error: API token required for Brave Search in Settings]";
+          const targetUrl = endpoint.includes('%s') ? endpoint.replace('%s', cleanQuery) : `${endpoint}${endpoint.includes('?') ? '&' : '?'}q=${cleanQuery}`;
+          res = await fetch(targetUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'X-Subscription-Token': apiKey
+            }
+          });
+          if (!res.ok) return `[Search Failed: HTTP Status ${res.status}]`;
+          data = await res.json();
+          if (data.web?.results?.length) {
+            return data.web.results.slice(0, 3).map(r => `• ${r.title}: ${r.description}`).join('\n\n');
+          }
+          return "No search results returned.";
+        }
+
+        if (provider === 'searxng') {
+          const targetUrl = endpoint.includes('%s') ? endpoint.replace('%s', cleanQuery) : `${endpoint}${endpoint.includes('?') ? '&' : '?'}q=${cleanQuery}&format=json`;
+          res = await fetch(targetUrl, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+          });
+          if (!res.ok) return `[Search Failed: HTTP Status ${res.status}]`;
+          data = await res.json();
+          if (data.results && data.results.length) {
+            return data.results.slice(0, 3).map(r => `• ${r.title}: ${r.content || r.snippet || ''}`).join('\n\n');
+          }
+          if (data.answers && data.answers.length) return data.answers.join('\n');
+          return "No search results returned.";
+        }
+
+        // Custom / Generic GET or POST Fallback
+        if (endpoint.includes('%s')) {
+          const headers = { 'Accept': 'application/json' };
+          if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+          res = await fetch(endpoint.replace('%s', cleanQuery), { method: 'GET', headers });
+        } else {
+          const headers = { 'Content-Type': 'application/json' };
+          if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+          res = await fetch(endpoint, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ query: query, api_key: apiKey })
+          });
+        }
+
+        if (!res.ok) return `[Search Failed: HTTP Status ${res.status}]`;
+        data = await res.json();
+        const extracted = data.answer || data.text || data.snippet || data.content || (data.results?.[0]?.content || data.results?.[0]?.snippet);
+        return typeof extracted === 'string' ? extracted : JSON.stringify(data);
       } catch (err) {
         return `[Fetch Exception: ${err.message}]`;
       }
@@ -1122,12 +1339,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       if (!str) return str;
       return str.replace(/<\|[\s\S]*?\|>/g, '').replace(/<\|im_end\|>|<\|im_start\|>|<\|endoftext\|>|\[END_THOUGHT\]/gi, '').replace(/\|>\|?>?/g, '').trim();
     }
-
-    async function loadManifest() {
-      try { const res = await window.Bridge.files.read(MANIFEST_FILE); if (res && res.content_base64) return JSON.parse(fromB64(stripB64Prefix(res.content_base64))); } catch (e) {}
-      return [];
-    }
-    async function saveManifest(m) { await window.Bridge.files.save(MANIFEST_FILE, toB64(JSON.stringify(m)), false); }
 
     async function populatePresetDropdown(selectedName) {
       const presets = await loadPresets();
@@ -1575,8 +1786,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     }
 
     async function regenerateLastResponse() {
-      if (!activeThread || activeGenerations.has(activeThread.id) || !activeThread.messages.length) return;
-      if (activeThread.messages[activeThread.messages.length - 1].role === 'assistant') {
+      if (!activeThread || activeGenerations.has(activeThread.id)) return;
+      if (activeThread.messages.length && activeThread.messages[activeThread.messages.length - 1].role === 'assistant') {
         activeThread.messages.pop(); await dbPut(activeThread); renderChatViewport(); executeGeneration();
       }
     }
@@ -1680,10 +1891,11 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       }, 500);
 
       let thinkingInterval = null, displayThought = "", displayReply = prefillVal || "";
-      let stopArray = ["<|im_end|>", "<|endoftext|>", "|>", "<|>", "<|end_of_thought|>"];
-      if (targetThread.parameters.stop_sequences?.trim()) {
-        stopArray = [...stopArray, ...targetThread.parameters.stop_sequences.split(',').map(s => s.trim()).filter(Boolean)];
-      }
+let stopArray = [];
+if (targetThread.parameters.stop_sequences?.trim()) {
+  stopArray = targetThread.parameters.stop_sequences.split(',').map(s => s.trim()).filter(Boolean);
+}
+
 
       try {
         if (activeThread?.id === targetThreadId) ui.typingIndicator.style.display = 'none';
@@ -1839,8 +2051,10 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         await populatePresetDropdown();
         await populateSystemPromptDropdown();
         renderCustomPromptsManager();
-        ui.settingSearchEndpoint.value = loadedSettings.search_api_endpoint;
-        ui.settingSearchKey.value = loadedSettings.search_api_key;
+        ui.settingSearchProvider.value = loadedSettings.search_provider || 'tavily';
+        ui.settingSearchEndpoint.value = loadedSettings.search_api_endpoint || '';
+        ui.settingSearchKey.value = loadedSettings.search_api_key || '';
+        ui.searchTestStatus.style.display = 'none';
       }
       ui.paramsPanel.style.display = visible ? 'none' : 'flex';
     });
@@ -1848,8 +2062,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     ui.btnExportBackup.onclick = async () => {
       try {
         const backup = {
-          version: '7.0.0',
+          version: '7.1.0',
           exported_at: Date.now(),
+          manifest: await loadManifest(),
           threads: await dbGetAll(),
           presets: await loadPresets(),
           custom_prompts: getCustomPrompts(),
@@ -1869,6 +2084,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         try {
           const parsed = JSON.parse(evt.target.result);
           if (parsed.threads) for (const t of parsed.threads) await dbPut(t);
+          if (parsed.manifest) await saveManifest(parsed.manifest);
           if (parsed.presets) await savePresets(parsed.presets);
           if (parsed.custom_prompts) saveCustomPrompts(parsed.custom_prompts);
           if (parsed.system_prompts) await saveSystemPromptPresets(parsed.system_prompts);
