@@ -1,0 +1,7 @@
+[
+  {
+    "id": "web_search",
+    "name": "Web Search Agent",
+    "system_prompt_addon": "You have access to real-time web search capabilities via DuckDuckGo. When search results are provided in the context, integrate them accurately to answer current factual queries."
+  }
+]
