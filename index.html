@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RawLLM Pro v7.2.0</title>
+  <title>RawLLM Pro v7.2.1</title>
   <link rel="stylesheet" href="./assets/css/github-dark.min.css">
   <script src="./assets/js/marked.min.js"></script>
   <script src="./assets/js/highlight.min.js"></script>
@@ -219,10 +219,10 @@
     .think-block summary:hover { color: var(--text-main); }
     .think-content { padding: 10px 12px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-color); white-space: pre-wrap; word-wrap: break-word; }
     .stats-hud {
-      display: flex; align-items: center; justify-content: flex-start; gap: 12px; margin-top: 10px;
-      padding-top: 8px; border-top: 1px solid var(--border-color); font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow-x: auto;
+      display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; column-gap: 10px; row-gap: 4px;
+      margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border-color); font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);
     }
-    .stats-hud span { display: inline-flex; align-items: center; flex-shrink: 0; }
+    .stats-hud span { display: inline-flex; align-items: center; white-space: nowrap; flex-shrink: 0; }
     .msg-actions, .msg-actions-constant { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; width: 100%; }
     .bubble-action-btn {
       background: var(--bg-surface-hover); color: var(--text-muted); border: 1px solid var(--border-color);
@@ -1269,6 +1269,13 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         group.innerHTML = `<label class="toggle-label" for="agent-toggle-${agent.id}">${agent.name}</label><input type="checkbox" id="agent-toggle-${agent.id}" class="toggle-checkbox agent-toggle-cb" data-agent-id="${agent.id}" ${checked ? 'checked' : ''}>`;
         ui.agentsContainer.appendChild(group);
 
+        if (agent.id === 'get_datetime') {
+          const note = document.createElement('div');
+          note.style.cssText = 'font-size: 10px; color: var(--text-muted); margin: -4px 0 6px 0; line-height: 1.3;';
+          note.innerHTML = '⚡ <em>Single-pass system context injection (zero latency; no 2-pass tool calling).</em>';
+          ui.agentsContainer.appendChild(note);
+        }
+
         group.querySelector('.agent-toggle-cb').addEventListener('change', (e) => {
           if (activeThread) {
             if (!activeThread.parameters.agents) activeThread.parameters.agents = {};
@@ -1587,7 +1594,7 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         threads.forEach(t => {
           const dateOpts = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: false };
           let dateStr = new Date(t.updated_at).toLocaleString(undefined, dateOpts);
-          if (t.is_forked) dateStr += ' 🔱';
+          if (t.is_forked) dateStr += ' 🔀';
 
           const div = document.createElement('div');
           div.className = `thread-item ${activeThread && activeThread.id === t.id ? 'active' : ''} ${t.is_pinned ? 'pinned' : ''}`;
@@ -1641,7 +1648,7 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       if (!stats) return;
       let hud = container.querySelector('.stats-hud');
       if (!hud) { hud = document.createElement('div'); hud.className = 'stats-hud'; container.appendChild(hud); }
-      hud.innerHTML = `<span>⚡ ${stats.tps.toFixed(1)} t/s</span><span>⏱️ TTFT: ${(stats.ttft/1000).toFixed(2)}s</span><span>⌛ Tot: ${(stats.totalTime/1000).toFixed(2)}s</span><span>📊 Tokens: ${stats.tokens}</span>`;
+      hud.innerHTML = `<span>⚡ ${stats.tps.toFixed(1)} t/s</span><span>⏱️ ${(stats.ttft/1000).toFixed(2)}s</span><span>⌛ ${(stats.totalTime/1000).toFixed(2)}s</span><span>📊 ${stats.tokens}t</span>`;
     }
 
     function exportThreadMarkdown() {
