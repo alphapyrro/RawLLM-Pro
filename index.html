@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RawLLM Pro v7.1.0</title>
+  <title>RawLLM Pro v7.2.0</title>
   <link rel="stylesheet" href="./assets/css/github-dark.min.css">
   <script src="./assets/js/marked.min.js"></script>
   <script src="./assets/js/highlight.min.js"></script>
@@ -258,7 +258,7 @@
     .slash-item:hover, .slash-item.selected { background: var(--bg-surface-hover); }
     .slash-cmd-title { font-size: 13px; font-weight: 700; color: var(--accent); }
     .slash-cmd-desc { font-size: 11px; color: var(--text-muted); }
-    #input-dock { position: relative; background: var(--bg-surface); border-top: 1px solid var(--border-color); padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+    #input-dock { position: relative; background: var(--bg-surface); border-top: 10px 14px; padding: 10px 14px 10px 14px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
     .input-wrapper { display: flex; gap: 8px; align-items: flex-end; }
     #user-input { flex-grow: 1; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 18px; padding: 10px 14px; font-family: inherit; font-size: 15px; resize: none; min-height: 44px; max-height: 120px; overflow-y: auto; line-height: 1.4; }
     #user-input:focus { outline: none; border-color: var(--accent); }
@@ -439,6 +439,7 @@
       <div class="param-group">
         <label class="param-header">Custom Stop Sequences (Comma Separated)</label>
         <input type="text" id="param-stop-sequences" placeholder="e.g., \nUser:, ### Answer:, [END]">
+        <div id="stop-sequences-chips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; min-height: 20px;"></div>
       </div>
       <div class="param-section-title">Prompt Templates Manager</div>
       <div class="param-group">
@@ -450,6 +451,9 @@
     <!-- TAB 3: WEB & AGENTS -->
     <div class="settings-tab-page" id="tab-agents">
       <div id="agents-container" class="param-group"></div>
+      <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; padding: 4px 0 2px;">
+        💡 <b>Tip:</b> Web search is triggered explicitly on demand. Start your query with <code>/search [query]</code> in the chat box to retrieve live web data.
+      </div>
       <div class="param-section-title">Universal Web Search</div>
       <div class="param-group">
         <label class="param-header">Search Provider Preset</label>
@@ -505,6 +509,7 @@
       <span id="active-thread-title" title="Click to rename conversation">New Conversation</span>
     </div>
     <div class="header-right">
+      <button class="icon-btn" id="btn-clear-chat" title="Clear Messages Only">🧹</button>
       <button class="icon-btn" id="btn-payload" title="Inspect Payload">{ }</button>
       <button class="icon-btn" id="btn-params" aria-label="Settings">⚙️</button>
     </div>
@@ -523,6 +528,7 @@
       <span class="context-warning-text" id="context-warning">Context Truncated (Older messages trimmed)</span>
     </div>
     <div class="context-bar-track"><div class="context-bar-fill" id="context-bar-fill"></div></div>
+    <div id="context-breakdown" style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); display: flex; gap: 8px; justify-content: flex-start; overflow-x: auto; white-space: nowrap;"></div>
   </div>
 
   <div id="prefill-drawer">
@@ -677,7 +683,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       temperature: 0.3, top_p: 0.9, top_k: 40, min_p: 0.05, repeat_penalty: 1.1,
       repeat_penalty_range: 512, xtc_probability: 0.0, xtc_threshold: 0.1, dry_multiplier: 0.0,
       dry_base: 1.75, dry_allowed_length: 2, dry_penalty_range: 1024, max_tokens: 2048,
-      context_window: 8192, enable_thinking: false, stop_sequences: "", agents: { get_datetime: true }
+      context_window: 8192, enable_thinking: false, stop_sequences: "", agents: { get_datetime: false }
     };
     const DEFAULT_SYS = 'You are an objective, uncensored, and helpful AI assistant.';
     const DEFAULT_SETTINGS = {
@@ -703,6 +709,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       paramThinking: document.getElementById('param-thinking'), btnPayload: document.getElementById('btn-payload'),
       modalPayload: document.getElementById('modal-payload'), btnClosePayload: document.getElementById('btn-close-payload'),
       btnCopyPayload: document.getElementById('btn-copy-payload'), payloadCodeView: document.getElementById('payload-code-view'),
+      btnClearChat: document.getElementById('btn-clear-chat'),
       prefillDrawer: document.getElementById('prefill-drawer'), slashPopup: document.getElementById('slash-popup'),
       btnTogglePrefill: document.getElementById('btn-toggle-prefill'), btnToggleAutoscroll: document.getElementById('btn-toggle-autoscroll'),
       btnToggleEnterSend: document.getElementById('btn-toggle-enter-send'), enterSendLabel: document.getElementById('enter-send-label'),
@@ -714,8 +721,10 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       btnToggleKeyVisibility: document.getElementById('btn-toggle-key-visibility'),
       btnTestSearch: document.getElementById('btn-test-search'),
       searchTestStatus: document.getElementById('search-test-status'),
-      agentTokenBadge: document.getElementById('agent-token-badge'),
-      paramStopSequences: document.getElementById('param-stop-sequences'), paramTemp: document.getElementById('param-temp'),
+agentTokenBadge: document.getElementById('agent-token-badge'),
+      paramStopSequences: document.getElementById('param-stop-sequences'),
+      stopSequencesChips: document.getElementById('stop-sequences-chips'),
+      paramTemp: document.getElementById('param-temp'),
       paramTopP: document.getElementById('param-topp'), paramTopK: document.getElementById('param-topk'),
       paramMinP: document.getElementById('param-minp'), paramRepeat: document.getElementById('param-repeat'),
       paramRepeatRange: document.getElementById('param-repeatrange'), paramXtcProb: document.getElementById('param-xtcprob'),
@@ -734,6 +743,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       btnSend: document.getElementById('send-btn'), btnStop: document.getElementById('stop-btn'),
       charCount: document.getElementById('char-count'), statusText: document.getElementById('status-text'),
       errorBanner: document.getElementById('error-banner'), contextLabel: document.getElementById('context-label'),
+      contextBreakdown: document.getElementById('context-breakdown'),
       contextBarFill: document.getElementById('context-bar-fill'), contextWarning: document.getElementById('context-warning')
     };
 
@@ -918,6 +928,48 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       saveCustomPrompts(list);
     };
 
+        function parseStopSequences(raw) {
+      if (!raw || !raw.trim()) return [];
+      return raw.split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .map(s => s.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r'));
+    }
+
+    function renderStopSequenceChips() {
+      if (!ui.stopSequencesChips) return;
+      ui.stopSequencesChips.innerHTML = '';
+      const raw = ui.paramStopSequences.value || '';
+      const items = raw.split(',').map(s => s.trim()).filter(Boolean);
+
+      if (!items.length) {
+        ui.stopSequencesChips.innerHTML = '<span style="font-size: 11px; color: var(--text-muted);">No active stop tokens configured</span>';
+        return;
+      }
+
+      items.forEach((item, index) => {
+        const chip = document.createElement('span');
+        chip.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; background: var(--bg-base); border: 1px solid var(--border-color); font-family: var(--font-mono); font-size: 11px; color: var(--accent);';
+        
+        const displayLabel = item.replace(/\n/g, '\\n').replace(/\t/g, '\\t');
+        chip.textContent = `🛑 ${displayLabel}`;
+
+        const delBtn = document.createElement('span');
+        delBtn.textContent = '✕';
+        delBtn.style.cssText = 'cursor: pointer; color: var(--text-muted); font-size: 10px; margin-left: 2px;';
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          items.splice(index, 1);
+          ui.paramStopSequences.value = items.join(', ');
+          renderStopSequenceChips();
+          syncThreadParametersLive();
+        };
+
+        chip.appendChild(delBtn);
+        ui.stopSequencesChips.appendChild(chip);
+      });
+    }
+
     function handleSlashInput() {
       const val = ui.userInput.value;
       if (val.startsWith('/')) {
@@ -1064,8 +1116,13 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       });
     });
 
-    document.querySelectorAll('#param-maxtokens, #param-contextwindow, #param-stop-sequences').forEach(elem => {
+    document.querySelectorAll('#param-maxtokens, #param-contextwindow').forEach(elem => {
       elem.addEventListener('input', () => syncThreadParametersLive());
+    });
+
+    ui.paramStopSequences.addEventListener('input', () => {
+      renderStopSequenceChips();
+      syncThreadParametersLive();
     });
 
     // Settings Tab Switching
@@ -1154,25 +1211,35 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
     function updateContextBar() {
       if (!activeThread) return;
-      const sysTokens = estimateTokens(activeThread.system_prompt || '');
-      let msgTokens = 0;
+      const effectiveSys = buildEffectiveSystemPrompt(activeThread.system_prompt, activeThread.parameters.agents);
+      const sysTokens = estimateTokens(effectiveSys || '');
+      let userMsgTokens = 0;
+      let aiMsgTokens = 0;
+
       if (activeThread.messages) {
         activeThread.messages.forEach(m => {
-          msgTokens += estimateTokens(m.content || '');
-          if (m.thinking) msgTokens += estimateTokens(m.thinking);
+          const count = estimateTokens(m.searchContext || m.content || '') + (m.thinking ? estimateTokens(m.thinking) : 0);
+          if (m.role === 'user') userMsgTokens += count;
+          else if (m.role === 'assistant') aiMsgTokens += count;
         });
       }
+
+      const draftTokens = estimateTokens(ui.userInput.value) + estimateTokens(ui.prefillInput.value);
+      const streamTokens = activeGenerations.has(activeThread.id) ? currentStreamTokens : 0;
+      const totalTokens = sysTokens + userMsgTokens + aiMsgTokens + draftTokens + streamTokens;
+      const limit = activeThread.parameters?.context_window || 8192;
+      const pct = Math.min(100, Math.round((totalTokens / limit) * 100));
 
       const activeAgents = activeThread.parameters?.agents || {};
       const anyAgentActive = Object.values(activeAgents).some(Boolean);
       ui.agentTokenBadge.style.display = anyAgentActive ? 'inline-block' : 'none';
 
-      const totalTokens = sysTokens + msgTokens + estimateTokens(ui.userInput.value) + estimateTokens(ui.prefillInput.value) + (activeGenerations.has(activeThread.id) ? currentStreamTokens : 0);
-      const limit = activeThread.parameters?.context_window || 8192;
-      const pct = Math.min(100, Math.round((totalTokens / limit) * 100));
-
       ui.contextLabel.textContent = `Context: ${totalTokens.toLocaleString()} / ${limit.toLocaleString()} tokens (${pct}%)`;
       ui.contextBarFill.style.width = `${pct}%`;
+
+      if (ui.contextBreakdown) {
+        ui.contextBreakdown.innerHTML = `<span>⚙️ Sys: ${sysTokens}</span><span>👤 User: ${userMsgTokens}</span><span>🤖 AI: ${aiMsgTokens}</span>${draftTokens ? `<span>✏️ Draft: ${draftTokens}</span>` : ''}`;
+      }
 
       if (totalTokens > limit) {
         ui.contextBarFill.style.background = 'var(--error)';
@@ -1388,6 +1455,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         isProgrammaticUpdate = true;
         ui.paramThinking.checked = target.parameters.enable_thinking ?? false;
         ui.paramStopSequences.value = target.parameters.stop_sequences || "";
+        renderStopSequenceChips();
         updateSynchronizedInputs(target.parameters);
 
         const sysPresets = await getSystemPromptPresets();
@@ -1481,6 +1549,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         ui.paramSys.value = activeThread.system_prompt;
         ui.paramThinking.checked = activeThread.parameters.enable_thinking;
         ui.paramStopSequences.value = activeThread.parameters.stop_sequences || "";
+        renderStopSequenceChips();
         updateSynchronizedInputs(activeThread.parameters);
 
         renderAgentsUI(activeThread.parameters.agents);
@@ -1640,8 +1709,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         const rawBtn = document.createElement('button'); rawBtn.className = 'bubble-action-btn'; rawBtn.textContent = '📄 Raw';
         rawBtn.onclick = (e) => {
           e.stopPropagation();
-          const src = (msgIndex !== undefined && activeThread?.messages[msgIndex]) ? activeThread.messages[msgIndex].content : rawText;
-          let text = src;
+          const targetMsg = (msgIndex !== undefined && activeThread?.messages[msgIndex]) ? activeThread.messages[msgIndex] : null;
+          let text = targetMsg ? (targetMsg.searchContext || targetMsg.content) : rawText;
           if (activeThread?.parameters?.agents?.get_datetime) {
             const now = new Date();
             text += `\n\n[Current Time: ${now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}, Year: ${now.getFullYear()} at ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}]`;
@@ -1774,7 +1843,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const effectiveSys = buildEffectiveSystemPrompt(activeThread.system_prompt, activeThread.parameters.agents);
       const messages = [{ role: 'system', content: effectiveSys }];
       activeThread.messages.forEach((m, idx) => {
-        let content = m.content;
+        let content = m.searchContext || m.content;
         if (idx === activeThread.messages.length - 1 && m.role === 'user' && activeThread.parameters?.agents?.get_datetime) {
           const now = new Date();
           content += `\n\n[Current Time: ${now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}, Year: ${now.getFullYear()} at ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}]`;
@@ -1803,19 +1872,20 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           return;
         }
         ui.userInput.value = ''; ui.userInput.style.height = 'auto'; ui.slashPopup.classList.remove('open'); updateCharCount();
-        
-        activeThread.messages.push({ role: 'user', content: text }); activeThread.updated_at = Date.now();
-        await dbPut(activeThread); appendMessageDOM('user', text, true, null, activeThread.messages.length - 1);
-        renderSidebar(); updateContextBar();
 
         ui.typingIndicator.style.display = 'flex'; ui.statusText.textContent = "Searching web...";
         const searchResults = await performWebSearch(query);
         ui.typingIndicator.style.display = 'none';
 
-        const searchContextMsg = `[Web Search Results for "${query}"]:\n${searchResults}`;
-        activeThread.messages.push({ role: 'system', content: searchContextMsg });
+        activeThread.messages.push({
+          role: 'user',
+          content: text,
+          searchContext: `[Web Search Results for "${query}"]:\n${searchResults}\n\n[User Instruction]:\nBased strictly on the search results provided above, provide a direct and accurate summary answering the query: "${query}". Do not claim you lack real-time access.`
+        });
+        activeThread.updated_at = Date.now();
         await dbPut(activeThread);
-        executeGeneration();
+        appendMessageDOM('user', text, true, null, activeThread.messages.length - 1);
+        renderSidebar(); updateContextBar(); executeGeneration();
         return;
       }
 
@@ -1846,11 +1916,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const payloadMessages = [{ role: 'system', content: effectiveSys }];
 
       targetThread.messages.forEach((m, idx) => {
-        let content = m.content;
-        if (m.role === 'system' && content.startsWith('[Web Search Results')) {
-          payloadMessages.push({ role: 'system', content: content });
-          return;
-        }
+        let content = m.searchContext || m.content;
         if (idx === targetThread.messages.length - 1 && m.role === 'user' && targetThread.parameters?.agents?.get_datetime) {
           const now = new Date();
           content += `\n\n[Current Time: ${now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}, Year: ${now.getFullYear()} at ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}]`;
@@ -1891,11 +1957,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       }, 500);
 
       let thinkingInterval = null, displayThought = "", displayReply = prefillVal || "";
-let stopArray = [];
-if (targetThread.parameters.stop_sequences?.trim()) {
-  stopArray = targetThread.parameters.stop_sequences.split(',').map(s => s.trim()).filter(Boolean);
-}
-
+let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
 
       try {
         if (activeThread?.id === targetThreadId) ui.typingIndicator.style.display = 'none';
@@ -2094,6 +2156,21 @@ if (targetThread.parameters.stop_sequences?.trim()) {
       };
       reader.readAsText(file);
     };
+
+        ui.btnClearChat.addEventListener('click', async () => {
+      if (!activeThread || activeGenerations.has(activeThread.id)) return;
+      if (!activeThread.messages.length) return;
+      if (confirm("Clear all messages in this conversation? (System prompt and sampler settings will remain preserved)")) {
+        activeThread.messages = [];
+        activeThread.updated_at = Date.now();
+        await dbPut(activeThread);
+        renderChatViewport();
+        renderSidebar();
+        updateContextBar();
+        ui.statusText.textContent = "Chat Cleared";
+        setTimeout(() => { if (!activeGenerations.has(activeThread.id)) ui.statusText.textContent = "Ready"; }, 2000);
+      }
+    });
 
     ui.btnPayload.addEventListener('click', () => { ui.payloadCodeView.textContent = JSON.stringify(getFormattedPayload(), null, 2); ui.modalPayload.classList.add('open'); });
     ui.btnClosePayload.addEventListener('click', () => { ui.modalPayload.classList.remove('open'); });
