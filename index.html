@@ -8,7 +8,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
-  <title>RawLLM Pro v7.3.0</title>
+  <title>RawLLM Pro</title>
   <script>
     window.onerror = function(message, source, lineno, colno, error) {
       const errorDetails = `[Line ${lineno}:${colno}] ${message}\nStack: ${error?.stack || 'No stack trace'}`;
@@ -500,6 +500,14 @@
       <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; padding: 4px 0 2px;">
         💡 <b>Tip:</b> Web search is triggered explicitly on demand. Start your query with <code>/search [query]</code> in the chat box to retrieve live web data.
       </div>
+      <div class="param-section-title">Keyboard & Input Behavior</div>
+      <div class="param-group">
+        <div class="toggle-group">
+          <label class="toggle-label" for="setting-close-keyboard-on-send">Dismiss Keyboard on Send</label>
+          <input type="checkbox" id="setting-close-keyboard-on-send" class="toggle-checkbox" checked>
+        </div>
+      </div>
+
       <div class="param-section-title">Universal Web Search</div>
       <div class="param-group">
         <label class="param-header">Search Provider Preset</label>
@@ -708,7 +716,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
   <script type="module">
     import { LaylaSDK } from './assets/js/layla-sdk.min.js';
     const layla = new LaylaSDK();
-    const APP_VERSION = '7.3.0';
+    const APP_VERSION = '7.3.1';
     const CONFIG_PATHS = {
       SETTINGS: 'config/settings.json',
       SYS_PROMPTS: 'config/system_prompts.json',
@@ -738,7 +746,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       search_provider: 'tavily',
       search_api_endpoint: 'https://api.tavily.com/search',
       search_api_key: '',
-      enter_sends: true
+      enter_sends: true,
+      close_keyboard_on_send: true
     };
     const ui = {
       sidebar: document.getElementById('sidebar'), overlay: document.getElementById('sidebar-overlay'),
@@ -767,13 +776,14 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       btnToggleEnterSend: document.getElementById('btn-toggle-enter-send'), enterSendLabel: document.getElementById('enter-send-label'),
       prefillInput: document.getElementById('prefill-input'), btnClearPrefill: document.getElementById('btn-clear-prefill'),
       prefillDot: document.getElementById('prefill-dot'), paramSys: document.getElementById('param-system'),
+      settingCloseKeyboardOnSend: document.getElementById('setting-close-keyboard-on-send'),
       settingSearchProvider: document.getElementById('setting-search-provider'),
       settingSearchEndpoint: document.getElementById('setting-search-endpoint'),
       settingSearchKey: document.getElementById('setting-search-key'),
       btnToggleKeyVisibility: document.getElementById('btn-toggle-key-visibility'),
       btnTestSearch: document.getElementById('btn-test-search'),
       searchTestStatus: document.getElementById('search-test-status'),
-agentTokenBadge: document.getElementById('agent-token-badge'),
+      agentTokenBadge: document.getElementById('agent-token-badge'),
       paramStopSequences: document.getElementById('param-stop-sequences'),
       stopSequencesChips: document.getElementById('stop-sequences-chips'),
       paramTemp: document.getElementById('param-temp'),
@@ -1224,6 +1234,12 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         if (targetPage) targetPage.classList.add('active');
       });
     });
+    if (ui.settingCloseKeyboardOnSend) {
+      ui.settingCloseKeyboardOnSend.addEventListener('change', (e) => {
+        saveSettings({ close_keyboard_on_send: e.target.checked });
+      });
+    }
+
     ui.settingSearchProvider.addEventListener('change', (e) => {
       const selected = e.target.value;
       if (SEARCH_PRESETS[selected] && selected !== 'custom') {
@@ -1903,6 +1919,9 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
     async function sendMessage() {
       let text = ui.userInput.value.replace(/^\s+|\s+$/g, '');
       if (!text || !activeThread || activeGenerations.has(activeThread.id)) return;
+      if (loadedSettings.close_keyboard_on_send !== false) {
+        ui.userInput.blur();
+      }
       if (text.startsWith('/search')) {
         const query = text.replace('/search', '').trim();
         if (!query) {
@@ -2112,7 +2131,7 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         activeGenerations.delete(targetThreadId);
         if (activeThread?.id === targetThreadId) {
           currentStreamTokens = 0; ui.btnStop.style.display = 'none'; ui.btnSend.style.display = 'flex';
-          ui.typingIndicator.style.display = 'none'; ui.statusText.textContent = "Ready"; ui.userInput.focus();
+          ui.typingIndicator.style.display = 'none'; ui.statusText.textContent = "Ready";
         }
         if (displayReply.trim() !== "" || displayThought.trim() !== "") {
           const cleanContent = cleanEosTokens(displayReply.replace(/\n\n\*\*\[Error:.*\]\*\*$/, ''));
@@ -2145,6 +2164,9 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         await populatePureParamDropdown();
         await populateSystemPromptDropdown();
         renderCustomPromptsManager();
+        if (ui.settingCloseKeyboardOnSend) {
+          ui.settingCloseKeyboardOnSend.checked = loadedSettings.close_keyboard_on_send !== false;
+        }
         ui.settingSearchProvider.value = loadedSettings.search_provider || 'tavily';
         ui.settingSearchEndpoint.value = loadedSettings.search_api_endpoint || '';
         ui.settingSearchKey.value = loadedSettings.search_api_key || '';
@@ -2152,7 +2174,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         ui.paramsPanel.style.display = 'flex';
       } else {
         ui.paramsPanel.style.display = 'none';
-        ui.userInput.focus();
       }
     });
     ui.btnExportBackup.onclick = async () => {

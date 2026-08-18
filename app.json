@@ -1,7 +1,7 @@
 {
   "title": "RawLLM Pro",
   "name": "RawLLM Pro",
-  "version": "7.3.0",
+  "version": "7.3.1",
   "description": "Uncensored raw LLM interface for direct model execution without wrapper constraints. Features: direct access to base or abliterated models, live response telemetry HUD (t/s, TTFT, total time, token count), real-time context fill bar with truncation warnings, assistant response pre-fill steering for JSON/structured outputs, raw API payload inspector modal with one-tap copy, inline message editing with conversation branching, assistant completion retry, persistent multi-thread state with auto-restore on boot, and granular per-thread sampler parameters (Temp, Top-P, Top-K, Min-P, Repeat Penalty, Max Tokens, Context Limits).",
   "author": "alphapyrro",
   "main": "index.html",
