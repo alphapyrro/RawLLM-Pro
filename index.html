@@ -2,14 +2,29 @@
 <!--
   RawLLM for Layla
   Created by: alphapyrro
-  Feel free to modify, optimize, and share! 
+  Feel free to modify, optimize, and share!
   If you publish a fork, please include a nod back to the original author.
--->
-<html lang="en">
+--><html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RawLLM Pro v7.2.1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+  <title>RawLLM Pro v7.3.0</title>
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      const errorDetails = `[Line ${lineno}:${colno}] ${message}\nStack: ${error?.stack || 'No stack trace'}`;
+      console.error(errorDetails);
+      const banner = document.getElementById('error-banner');
+      if (banner) {
+        banner.textContent = `Error: Line ${lineno} - ${message}`;
+        banner.style.display = 'block';
+      }
+      return false;
+    };
+    window.onunhandledrejection = function(event) {
+      const reason = event.reason;
+      console.error(`Unhandled Promise Rejection: ${reason?.stack || reason?.message || reason}`);
+    };
+  </script>
   <link rel="stylesheet" href="./assets/css/github-dark.min.css">
   <script src="./assets/js/marked.min.js"></script>
   <script src="./assets/js/highlight.min.js"></script>
@@ -22,12 +37,17 @@
       --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    input, textarea, select, .message-content, pre code, .think-content { user-select: text; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body, html {
       height: 100%; width: 100%; font-family: var(--font-sans);
       background-color: var(--bg-base); color: var(--text-main);
       display: flex; flex-direction: column; overflow: hidden; max-width: 100vw;
+      -webkit-user-select: none; user-select: none;
+    }
+    input, textarea, select, .message-content, pre code, .think-content {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      touch-action: manipulation;
     }
     #error-banner {
       display: none; background: rgba(248,81,73,0.1); color: var(--error);
@@ -88,7 +108,6 @@
     }
     .thread-action-btn:hover { color: var(--text-main); background: var(--border-color); }
     .thread-action-btn.del-btn:hover { color: var(--error); }
-    
     #params-panel {
       position: absolute; top: 60px; right: 12px; left: 12px; width: calc(100vw - 24px); max-width: 440px; margin: 0 auto; max-height: calc(100vh - 80px);
       background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;
@@ -98,7 +117,6 @@
       position: sticky; top: 0; background: var(--bg-surface); z-index: 20;
       padding: 12px 0 6px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;
     }
-    
     .settings-tab-bar {
       display: flex; gap: 4px; width: 100%; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
     }
@@ -115,21 +133,23 @@
       display: none; flex-direction: column; gap: 12px; width: 100%;
     }
     .settings-tab-page.active { display: flex; }
-
     .param-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
     .param-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-muted); }
     .param-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--accent); margin-top: 4px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; width: 100%; }
     .toggle-group { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; width: 100%; }
     .toggle-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
     .toggle-checkbox { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
-    
     .sync-row { display: flex; align-items: center; gap: 12px; width: 100%; }
     .slider-touch-guard { position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; }
     .slider-touch-overlay { position: absolute; inset: 0; z-index: 5; background: transparent; cursor: pointer; display: block; }
     .slider-touch-guard.active .slider-touch-overlay { display: none; }
-    
-    input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; touch-action: pan-y; cursor: pointer; pointer-events: auto !important; }
-    input[type="range"].locked { pointer-events: none !important; opacity: 0.5; }
+    input[type="range"] {
+      width: 100%; accent-color: var(--accent); height: 28px;
+      touch-action: pan-y; cursor: pointer; pointer-events: auto !important;
+      opacity: 0.48; transition: opacity 0.2s ease;
+    }
+    .slider-touch-guard.active input[type="range"] { opacity: 1; }
+    input[type="range"].locked { pointer-events: none !important; opacity: 0.22 !important; }    
     .num-input-sync {
       width: 64px !important;
       max-width: 64px !important;
@@ -151,12 +171,10 @@
       margin: 0;
     }
     .num-input-sync:focus { outline: none; border-color: var(--accent); }
-
     .input-with-action {
       display: flex; gap: 6px; width: 100%; align-items: center;
     }
     .input-with-action input { flex-grow: 1; }
-
     input[type="number"], input[type="text"], input[type="password"], textarea, select {
       background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main);
       padding: 10px; border-radius: 8px; font-family: var(--font-sans); font-size: 14px; width: 100%;
@@ -238,7 +256,6 @@
     .dot { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; animation: pulse 1.5s infinite ease-in-out; }
     .dot:nth-child(2) { animation-delay: 0.2s; } .dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes pulse { 0%, 100% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } }
-    
     #context-bar-container { padding: 6px 16px; background: var(--bg-surface); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--text-muted); }
     .context-bar-header { display: flex; justify-content: space-between; align-items: center; }
     .context-bar-left { display: flex; align-items: center; gap: 6px; }
@@ -246,11 +263,38 @@
     .context-bar-track { width: 100%; height: 6px; background: var(--bg-base); border-radius: 3px; overflow: hidden; border: 1px solid var(--border-color); }
     .context-bar-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s ease, background-color 0.3s ease; }
     .context-warning-text { color: var(--error); font-weight: 600; display: none; }
-    
     #prefill-drawer { display: none !important; background: var(--bg-surface); border-top: 1px solid var(--border-color); padding: 8px 16px; flex-direction: column; gap: 6px; }
     #prefill-drawer.open { display: flex !important; }
     .prefill-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; color: var(--text-muted); }
     #prefill-input { width: 100%; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 10px; border-radius: 6px; font-family: var(--font-mono); font-size: 13px; line-height: 1.4; }
+    #scroll-bottom-btn {
+      position: absolute;
+      bottom: calc(100% + 72px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--bg-surface-hover);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 115;
+      transition: opacity 0.2s, background-color 0.2s, transform 0.2s;
+      opacity: 0.95;
+    }
+    #scroll-bottom-btn:hover, #scroll-bottom-btn:active {
+      opacity: 1;
+      background: var(--border-color);
+      color: var(--accent);
+      transform: translateX(-50%) translateY(2px);
+    }
     #slash-popup { position: absolute; bottom: 100%; left: 14px; right: 14px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; box-shadow: 0 -8px 24px rgba(0,0,0,0.6); display: none; flex-direction: column; max-height: 180px; overflow-y: auto; z-index: 120; margin-bottom: 6px; }
     #slash-popup.open { display: flex; }
     .slash-item { padding: 10px 14px; border-bottom: 1px solid var(--border-color); cursor: pointer; display: flex; flex-direction: column; gap: 2px; transition: background 0.2s; }
@@ -284,8 +328,10 @@
       <input type="text" id="search-threads-input" placeholder="🔍 Search conversations...">
     </div>
     <div id="thread-list"></div>
+    <div style="padding: 10px 16px; border-top: 1px solid var(--border-color); font-size: 11px; color: var(--text-muted); text-align: center; font-family: var(--font-mono); flex-shrink: 0;">
+      RawLLM Pro <span id="app-version-display" style="color: var(--accent); font-weight: 700;"></span>
+    </div>
   </div>
-
   <div id="params-panel">
     <div class="params-sticky-header">
       <div class="settings-tab-bar">
@@ -295,21 +341,29 @@
         <button class="settings-tab-btn" data-target="tab-data">💾 Data</button>
       </div>
     </div>
-
-    <!-- TAB 1: SAMPLERS -->
     <div class="settings-tab-page active" id="tab-samplers">
       <div class="param-group">
-        <label class="param-header">Parameter Presets</label>
+        <label class="param-header">🌐 Environment Presets (All Settings & Agents)</label>
         <div class="preset-row">
-          <select id="preset-select"><option value="Default">Default</option></select>
-          <button class="btn-secondary" id="btn-del-preset" title="Delete Preset">🗑️</button>
+          <select id="preset-select"><option value="Default">Default (Full Profile)</option></select>
+          <button class="btn-secondary" id="btn-del-preset" title="Delete Environment Preset">🗑️</button>
         </div>
       </div>
-      <div class="toggle-group" style="padding:0; margin:0;">
+      <div class="param-group" style="margin-top: 4px;">
+        <label class="param-header">🧠 Samplers Only Preset</label>
+        <div class="preset-row">
+          <select id="pure-param-preset-select"><option value="Default Samplers">Default Samplers</option></select>
+          <button class="btn-secondary" id="btn-save-pure-param" title="Save Sampler Preset">💾</button>
+          <button class="btn-secondary" id="btn-del-pure-param" title="Delete Sampler Preset">🗑️</button>
+        </div>
+      </div>
+      <div class="toggle-group" style="padding:4px 0 0 0; margin:0;">
         <label class="toggle-label" for="param-lock-sliders">🔒 Lock Sliders (Prevent Touch Hijack)</label>
         <input type="checkbox" id="param-lock-sliders" class="toggle-checkbox">
       </div>
-      
+      <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; padding: 2px 0 6px;">
+        💡 <b>Tip:</b> Tap any slider once to unlock it for adjustment. Tapping outside relocks it to prevent accidental scrolling changes.
+      </div>
       <div class="param-section-title">Standard Samplers</div>
       <div class="param-group">
         <label class="param-header">Temperature</label>
@@ -353,7 +407,6 @@
           <input type="number" id="num-repeatrange" class="num-input-sync" min="0" max="2048" step="16" value="512">
         </div>
       </div>
-      
       <div class="param-section-title">XTC Sampler</div>
       <div class="param-group">
         <label class="param-header">XTC Probability</label>
@@ -369,24 +422,23 @@
           <input type="number" id="num-xtcthresh" class="num-input-sync" min="0" max="0.5" step="0.01" value="0.10">
         </div>
       </div>
-      
       <div class="param-section-title">DRY Sampler</div>
       <div class="param-group">
-        <label class="param-header">Dry Multiplier</label>
+        <label class="param-header">DRY Multiplier</label>
         <div class="sync-row">
           <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-drymult" class="sync-slider" min="0" max="3" step="0.05" value="0.8"></div>
           <input type="number" id="num-drymult" class="num-input-sync" min="0" max="3" step="0.05" value="0.80">
         </div>
       </div>
       <div class="param-group">
-        <label class="param-header">Dry Base</label>
+        <label class="param-header">DRY Base</label>
         <div class="sync-row">
           <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-drybase" class="sync-slider" min="1" max="3" step="0.05" value="1.75"></div>
           <input type="number" id="num-drybase" class="num-input-sync" min="1" max="3" step="0.05" value="1.75">
         </div>
       </div>
       <div class="param-group">
-        <label class="param-header">Dry Allowed Length</label>
+        <label class="param-header">DRY Allowed Length</label>
         <div class="sync-row">
           <div class="slider-touch-guard"><div class="slider-touch-overlay"></div><input type="range" id="param-dryallowed" class="sync-slider" min="0" max="10" step="1" value="2"></div>
           <input type="number" id="num-dryallowed" class="num-input-sync" min="0" max="10" step="1" value="2">
@@ -399,7 +451,6 @@
           <input type="number" id="num-dryrange" class="num-input-sync" min="0" max="4096" step="64" value="1024">
         </div>
       </div>
-      
       <div class="param-section-title">Context & Limits</div>
       <div class="param-group">
         <label class="param-header">Max Tokens</label>
@@ -409,13 +460,10 @@
         <label class="param-header">Context Window (Tokens)</label>
         <input type="number" id="param-contextwindow" value="8192" min="512" step="512">
       </div>
-
-      <button class="new-chat-btn" id="btn-save-custom-default" style="background: var(--bg-surface-hover); border: 1px solid var(--accent); color: var(--accent); margin-top: 8px;">Save Custom Defaults</button>
-      <button class="btn-overwrite" id="btn-overwrite-preset">Overwrite Custom Defaults</button>
-      <button class="btn-danger-outline" id="btn-reset-custom-default">Reset to Preset Defaults</button>
+      <button class="new-chat-btn" id="btn-save-custom-default" style="background: var(--bg-surface-hover); border: 1px solid var(--accent); color: var(--accent); margin-top: 8px;">Save Full Environment Preset</button>
+      <button class="btn-overwrite" id="btn-overwrite-preset">Overwrite Full Environment Preset</button>
+      <button class="btn-danger-outline" id="btn-reset-custom-default">Reset Panel to Environment Preset</button>
     </div>
-
-    <!-- TAB 2: PROMPTS -->
     <div class="settings-tab-page" id="tab-prompts">
       <div class="param-group">
         <label class="param-header">System Prompt Presets</label>
@@ -447,8 +495,6 @@
         <div id="custom-prompts-list" style="display:flex; flex-direction:column; gap:6px; margin-top:6px;"></div>
       </div>
     </div>
-
-    <!-- TAB 3: WEB & AGENTS -->
     <div class="settings-tab-page" id="tab-agents">
       <div id="agents-container" class="param-group"></div>
       <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; padding: 4px 0 2px;">
@@ -478,20 +524,25 @@
       <button class="btn-secondary" id="btn-test-search" style="margin-top: 4px;">🔍 Test Search Connection</button>
       <div id="search-test-status" style="font-size: 11px; font-family: var(--font-mono); display: none;"></div>
     </div>
-
-    <!-- TAB 4: DATA & BACKUP -->
     <div class="settings-tab-page" id="tab-data">
-      <div class="param-section-title">Full System Backup & Restore</div>
+      <div class="param-section-title">Support & Feedback</div>
+      <div style="background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.5; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px;">
+        <span style="color: var(--text-main); font-weight: 600;">Feedback & Inquiries</span>
+        <span>For bug reports, feature requests, general questions, or feedback regarding RawLLM Pro, please contact:</span>
+        <code id="contact-email-badge" style="font-family: var(--font-mono); color: var(--accent); font-size: 12px; user-select: text; -webkit-user-select: text; cursor: pointer; display: inline-block; width: fit-content;" title="Click to copy">alphapyrro@proton.me</code>
+      </div>
+
+      <div class="param-section-title" style="margin-top: 4px;">Full System Backup & Restore</div>
       <div class="param-group" style="display:flex; gap:8px;">
         <button class="btn-secondary" id="btn-export-backup" style="flex:1;">💾 Backup All Data</button>
         <button class="btn-secondary" id="btn-import-backup" style="flex:1;">📂 Restore Data</button>
         <input type="file" id="file-import-input" accept=".json" style="display:none;">
       </div>
+
       <div class="param-section-title" style="color:var(--error); margin-top:10px;">Danger Zone</div>
       <button class="btn-danger-outline" id="btn-reset-params">Reset All Parameters to Factory Defaults</button>
     </div>
   </div>
-
   <div class="modal" id="modal-payload">
     <div class="modal-content">
       <div class="modal-header">
@@ -502,7 +553,6 @@
       <div class="modal-footer"><button class="bubble-action-btn" id="btn-copy-payload" style="min-height:36px; padding:0 16px; background:var(--bg-surface-hover); color:var(--text-main);">Copy Payload</button></div>
     </div>
   </div>
-
   <header>
     <div class="header-left">
       <button class="icon-btn" id="btn-menu" aria-label="Menu">☰</button>
@@ -514,11 +564,9 @@
       <button class="icon-btn" id="btn-params" aria-label="Settings">⚙️</button>
     </div>
   </header>
-
   <div id="chat-viewport">
     <div class="typing-indicator" id="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
   </div>
-
   <div id="context-bar-container">
     <div class="context-bar-header">
       <div class="context-bar-left">
@@ -530,20 +578,25 @@
     <div class="context-bar-track"><div class="context-bar-fill" id="context-bar-fill"></div></div>
     <div id="context-breakdown" style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); display: flex; gap: 8px; justify-content: flex-start; overflow-x: auto; white-space: nowrap;"></div>
   </div>
-
   <div id="prefill-drawer">
     <div class="prefill-header">
-      <span>Assistant Pre-fill (Steering)</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>Assistant Pre-fill (Steering)</span>
+        <label style="font-size: 11px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; cursor: pointer;">
+          <input type="checkbox" id="cb-auto-clear-prefill" style="accent-color: var(--accent); width: 14px; height: 14px;" checked>
+          Clear & close on send
+        </label>
+      </div>
       <button class="bubble-action-btn" id="btn-clear-prefill" style="padding: 4px 8px;">Clear</button>
     </div>
     <textarea id="prefill-input" rows="2" placeholder="e.g., Positive Prompt:
 Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"></textarea>
   </div>
-
   <div id="input-dock">
+    <button id="scroll-bottom-btn" title="Scroll to bottom">↓</button>
     <div id="slash-popup"></div>
     <div class="input-wrapper">
-      <textarea id="user-input" rows="1" placeholder="Type a message or / for templates..."></textarea>
+      <textarea id="user-input" rows="1" placeholder="Type a message or / for templates..." enterkeyhint="send" spellcheck="true" autocapitalize="sentences" autocomplete="on"></textarea>
       <button class="action-btn" id="send-btn">➤</button>
       <button class="action-btn" id="stop-btn">⏹</button>
     </div>
@@ -557,8 +610,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       <span id="char-count">0 / 4000 chars • ~0 tokens</span>
     </div>
   </div>
-
-  <!-- FORGE_BRIDGE_LIB_V1_START -->
   <script>
   (function(){
     if (window.Bridge && window.Bridge.__makeitBridgeLib) return;
@@ -654,16 +705,15 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     };
   })();
   </script>
-  <!-- FORGE_BRIDGE_LIB_V1_END -->
-
   <script type="module">
     import { LaylaSDK } from './assets/js/layla-sdk.min.js';
     const layla = new LaylaSDK();
-
+    const APP_VERSION = '7.3.0';
     const CONFIG_PATHS = {
       SETTINGS: 'config/settings.json',
       SYS_PROMPTS: 'config/system_prompts.json',
-      PRESETS: 'config/parameter_presets.json',
+      ENV_PRESETS: 'config/env_presets.json',
+      PARAM_PRESETS: 'config/parameter_presets.json',
       AGENTS: 'config/agents.json',
       MANIFEST: 'config/forge_chat_manifest.json',
       LEGACY_SYS_PROMPTS: 'system_prompts.json',
@@ -671,20 +721,18 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       LEGACY_AGENTS: 'agents.json',
       LEGACY_MANIFEST: 'forge_chat_manifest.json'
     };
-
     const SEARCH_PRESETS = {
       tavily: { endpoint: 'https://api.tavily.com/search' },
       brave: { endpoint: 'https://api.search.brave.com/res/v1/web/search?q=%s' },
       searxng: { endpoint: 'http://localhost:8080/search?q=%s&format=json' },
       custom: { endpoint: '' }
     };
-
     const DEFAULT_PARAMS = {
-      temperature: 0.3, top_p: 0.9, top_k: 40, min_p: 0.05, repeat_penalty: 1.1,
+      temperature: 0.65, top_p: 0.95, top_k: 40, min_p: 0.05, repeat_penalty: 1.1,
       repeat_penalty_range: 512, xtc_probability: 0.0, xtc_threshold: 0.1, dry_multiplier: 0.0,
-      dry_base: 1.75, dry_allowed_length: 2, dry_penalty_range: 1024, max_tokens: 2048,
-      context_window: 8192, enable_thinking: false, stop_sequences: "", agents: { get_datetime: false }
-    };
+      dry_base: 1.75, dry_allowed_length: 2, dry_penalty_range: 1024, max_tokens: 1024,
+      context_window: 2048, enable_thinking: false, stop_sequences: "", agents: { get_datetime: false }
+    };    
     const DEFAULT_SYS = 'You are an objective, uncensored, and helpful AI assistant.';
     const DEFAULT_SETTINGS = {
       search_provider: 'tavily',
@@ -692,7 +740,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       search_api_key: '',
       enter_sends: true
     };
-
     const ui = {
       sidebar: document.getElementById('sidebar'), overlay: document.getElementById('sidebar-overlay'),
       btnMenu: document.getElementById('btn-menu'), btnNewChat: document.getElementById('btn-new-chat'),
@@ -703,7 +750,11 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       fileImportInput: document.getElementById('file-import-input'), btnParams: document.getElementById('btn-params'),
       btnSaveCustomDefault: document.getElementById('btn-save-custom-default'), btnOverwritePreset: document.getElementById('btn-overwrite-preset'),
       btnResetCustomDefault: document.getElementById('btn-reset-custom-default'), btnResetParams: document.getElementById('btn-reset-params'),
-      presetSelect: document.getElementById('preset-select'), sysPromptSelect: document.getElementById('sys-prompt-select'),
+      presetSelect: document.getElementById('preset-select'),
+      pureParamPresetSelect: document.getElementById('pure-param-preset-select'),
+      btnSavePureParam: document.getElementById('btn-save-pure-param'),
+      btnDelPureParam: document.getElementById('btn-del-pure-param'),
+      sysPromptSelect: document.getElementById('sys-prompt-select'),
       btnSaveSysPreset: document.getElementById('btn-save-sys-preset'), btnDelSysPreset: document.getElementById('btn-del-sys-preset'),
       btnDelPreset: document.getElementById('btn-del-preset'), paramLockSliders: document.getElementById('param-lock-sliders'),
       paramThinking: document.getElementById('param-thinking'), btnPayload: document.getElementById('btn-payload'),
@@ -711,6 +762,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       btnCopyPayload: document.getElementById('btn-copy-payload'), payloadCodeView: document.getElementById('payload-code-view'),
       btnClearChat: document.getElementById('btn-clear-chat'),
       prefillDrawer: document.getElementById('prefill-drawer'), slashPopup: document.getElementById('slash-popup'),
+      btnScrollBottom: document.getElementById('scroll-bottom-btn'),
       btnTogglePrefill: document.getElementById('btn-toggle-prefill'), btnToggleAutoscroll: document.getElementById('btn-toggle-autoscroll'),
       btnToggleEnterSend: document.getElementById('btn-toggle-enter-send'), enterSendLabel: document.getElementById('enter-send-label'),
       prefillInput: document.getElementById('prefill-input'), btnClearPrefill: document.getElementById('btn-clear-prefill'),
@@ -746,7 +798,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       contextBreakdown: document.getElementById('context-breakdown'),
       contextBarFill: document.getElementById('context-bar-fill'), contextWarning: document.getElementById('context-warning')
     };
-
     let activeThread = null, isAutoScrolling = true, isUserInteracting = false, currentStreamTokens = 0, isProgrammaticUpdate = false;
     const activeGenerations = new Map();
     let loadedSettings = { ...DEFAULT_SETTINGS };
@@ -755,7 +806,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       { id: 'get_datetime', name: 'Date & Time Agent', system_prompt_addon: 'You have access to the system clock.' },
       { id: 'web_search', name: 'Web Search Agent', system_prompt_addon: 'You have access to real-time web search capabilities.' }
     ];
-
     function toB64(str) { return btoa(unescape(encodeURIComponent(str))); }
     function fromB64(str) { return decodeURIComponent(escape(atob(str))); }
     function stripB64Prefix(str) {
@@ -763,7 +813,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       const idx = str.indexOf('base64,');
       return idx >= 0 ? str.slice(idx + 7) : str;
     }
-
     async function loadSettings() {
       try {
         const res = await window.Bridge.files.read(CONFIG_PATHS.SETTINGS);
@@ -782,7 +831,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       await saveSettings(loadedSettings);
       return loadedSettings;
     }
-
     async function saveSettings(settings) {
       loadedSettings = { ...loadedSettings, ...settings };
       try {
@@ -792,7 +840,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       localStorage.setItem('tavily_api_endpoint', loadedSettings.search_api_endpoint);
       localStorage.setItem('enter_sends', loadedSettings.enter_sends);
     }
-
     async function getSystemPromptPresets() {
       try {
         const res = await window.Bridge.files.read(CONFIG_PATHS.SYS_PROMPTS);
@@ -810,33 +857,97 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       await saveSystemPromptPresets(initial);
       return initial;
     }
-
     async function saveSystemPromptPresets(p) {
       await window.Bridge.files.save(CONFIG_PATHS.SYS_PROMPTS, toB64(JSON.stringify(p, null, 2)), false);
     }
-
     async function loadPresets() {
       try {
-        const res = await window.Bridge.files.read(CONFIG_PATHS.PRESETS);
+        const res = await window.Bridge.files.read(CONFIG_PATHS.ENV_PRESETS);
         if (res && res.content_base64) return JSON.parse(fromB64(stripB64Prefix(res.content_base64)));
-      } catch (e) {}
-      try {
-        const legacyRes = await window.Bridge.files.read(CONFIG_PATHS.LEGACY_PRESETS);
-        if (legacyRes && legacyRes.content_base64) {
-          const legacyData = JSON.parse(fromB64(stripB64Prefix(legacyRes.content_base64)));
-          await savePresets(legacyData);
-          return legacyData;
-        }
       } catch (e) {}
       const initial = { "Default": { system_prompt: DEFAULT_SYS, parameters: { ...DEFAULT_PARAMS } } };
       await savePresets(initial);
       return initial;
     }
-
     async function savePresets(p) {
-      await window.Bridge.files.save(CONFIG_PATHS.PRESETS, toB64(JSON.stringify(p, null, 2)), false);
+      await window.Bridge.files.save(CONFIG_PATHS.ENV_PRESETS, toB64(JSON.stringify(p, null, 2)), false);
     }
-
+    async function loadPureParamPresets() {
+      try {
+        const res = await window.Bridge.files.read(CONFIG_PATHS.PARAM_PRESETS);
+        if (res && res.content_base64) return JSON.parse(fromB64(stripB64Prefix(res.content_base64)));
+      } catch (e) {}
+      const initial = {
+        "Default Samplers": {
+          temperature: DEFAULT_PARAMS.temperature,
+          top_p: DEFAULT_PARAMS.top_p,
+          top_k: DEFAULT_PARAMS.top_k,
+          min_p: DEFAULT_PARAMS.min_p,
+          repeat_penalty: DEFAULT_PARAMS.repeat_penalty,
+          repeat_penalty_range: DEFAULT_PARAMS.repeat_penalty_range,
+          xtc_probability: DEFAULT_PARAMS.xtc_probability,
+          xtc_threshold: DEFAULT_PARAMS.xtc_threshold,
+          dry_multiplier: DEFAULT_PARAMS.dry_multiplier,
+          dry_base: DEFAULT_PARAMS.dry_base,
+          dry_allowed_length: DEFAULT_PARAMS.dry_allowed_length,
+          dry_penalty_range: DEFAULT_PARAMS.dry_penalty_range
+        }
+      };
+      await savePureParamPresets(initial);
+      return initial;
+    }
+    async function savePureParamPresets(p) {
+      await window.Bridge.files.save(CONFIG_PATHS.PARAM_PRESETS, toB64(JSON.stringify(p, null, 2)), false);
+    }
+    async function getPureParamPresetKeyForValues(params) {
+      if (!params) return null;
+      const presets = await loadPureParamPresets();
+      return Object.keys(presets).find(key => {
+        const p = presets[key];
+        return (
+          p.temperature === params.temperature &&
+          p.top_p === params.top_p &&
+          p.top_k === params.top_k &&
+          p.min_p === params.min_p &&
+          p.repeat_penalty === params.repeat_penalty &&
+          p.repeat_penalty_range === params.repeat_penalty_range &&
+          p.xtc_probability === params.xtc_probability &&
+          p.xtc_threshold === params.xtc_threshold &&
+          p.dry_multiplier === params.dry_multiplier &&
+          p.dry_base === params.dry_base &&
+          p.dry_allowed_length === params.dry_allowed_length &&
+          p.dry_penalty_range === params.dry_penalty_range
+        );
+      }) || null;
+    }
+    async function populatePureParamDropdown(selectedName) {
+      const presets = await loadPureParamPresets();
+      ui.pureParamPresetSelect.innerHTML = '<option value="custom_modified">✏️ Custom / Unlinked Samplers</option>';
+      Object.keys(presets).forEach(name => {
+        const opt = document.createElement('option'); opt.value = name; opt.textContent = name;
+        ui.pureParamPresetSelect.appendChild(opt);
+      });
+      let target = selectedName;
+      if (!target || target === 'custom_modified') {
+        const currentSamplers = {
+          temperature: parseFloat(ui.paramTemp.value),
+          top_p: parseFloat(ui.paramTopP.value),
+          top_k: parseInt(ui.paramTopK.value, 10),
+          min_p: parseFloat(ui.paramMinP.value),
+          repeat_penalty: parseFloat(ui.paramRepeat.value),
+          repeat_penalty_range: parseInt(ui.paramRepeatRange.value, 10) || 512,
+          xtc_probability: parseFloat(ui.paramXtcProb.value),
+          xtc_threshold: parseFloat(ui.paramXtcThresh.value),
+          dry_multiplier: parseFloat(ui.paramDryMult.value),
+          dry_base: parseFloat(ui.paramDryBase.value),
+          dry_allowed_length: parseInt(ui.paramDryAllowed.value, 10) || 2,
+          dry_penalty_range: parseInt(ui.paramDryRange.value, 10) || 1024
+        };
+        const matched = await getPureParamPresetKeyForValues(currentSamplers);
+        if (matched) target = matched;
+      }
+      ui.pureParamPresetSelect.value = (presets[target] || target === 'custom_modified') ? target : 'custom_modified';
+    }
     async function loadManifest() {
       try {
         const res = await window.Bridge.files.read(CONFIG_PATHS.MANIFEST);
@@ -852,11 +963,9 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       } catch (e) {}
       return [];
     }
-
     async function saveManifest(m) {
       await window.Bridge.files.save(CONFIG_PATHS.MANIFEST, toB64(JSON.stringify(m)), false);
     }
-
     async function fetchAgents() {
       try {
         const res = await window.Bridge.files.read(CONFIG_PATHS.AGENTS);
@@ -884,7 +993,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         loadedAgents.push({ id: 'web_search', name: 'Web Search Agent', system_prompt_addon: 'You have access to real-time web search capabilities.' });
       }
     }
-
     const DEFAULT_PROMPT_TEMPLATES = [
       { cmd: '/code', desc: 'Code Generator', text: 'Provide clean, well-commented, production-ready code with no conversational filler.' },
       { cmd: '/summarize', desc: 'Executive Summary', text: 'Summarize the core takeaways into 3 clear, bulleted insights.' },
@@ -892,12 +1000,10 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       { cmd: '/fix', desc: 'Debug & Fix Code', text: 'Review the following code, explain any errors, and provide a corrected refactor:' },
       { cmd: '/search', desc: 'Web Search', text: '/search ' }
     ];
-
     function getCustomPrompts() {
       try { return JSON.parse(localStorage.getItem('custom_slash_prompts') || '[]'); } catch (e) { return []; }
     }
     function saveCustomPrompts(p) { localStorage.setItem('custom_slash_prompts', JSON.stringify(p)); renderCustomPromptsManager(); }
-
     function renderCustomPromptsManager() {
       ui.customPromptsList.innerHTML = '';
       const list = getCustomPrompts();
@@ -915,7 +1021,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         ui.customPromptsList.appendChild(div);
       });
     }
-
     ui.btnAddPromptTemplate.onclick = () => {
       const cmd = prompt("Enter command shortcut (e.g. /review):");
       if (!cmd || !cmd.trim()) return;
@@ -927,33 +1032,28 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       const list = getCustomPrompts(); list.push({ cmd: cleanCmd, desc: desc.trim(), text: text.trim() });
       saveCustomPrompts(list);
     };
-
-        function parseStopSequences(raw) {
-      if (!raw || !raw.trim()) return [];
+    function parseStopSequences(raw) {
+      if (!raw || typeof raw !== 'string' || !raw.trim()) return [];
       return raw.split(',')
         .map(s => s.trim())
         .filter(Boolean)
-        .map(s => s.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r'));
+        .map(s => s.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r'))
+        .filter(s => s.length > 0);
     }
-
     function renderStopSequenceChips() {
       if (!ui.stopSequencesChips) return;
       ui.stopSequencesChips.innerHTML = '';
       const raw = ui.paramStopSequences.value || '';
       const items = raw.split(',').map(s => s.trim()).filter(Boolean);
-
       if (!items.length) {
         ui.stopSequencesChips.innerHTML = '<span style="font-size: 11px; color: var(--text-muted);">No active stop tokens configured</span>';
         return;
       }
-
       items.forEach((item, index) => {
         const chip = document.createElement('span');
         chip.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; background: var(--bg-base); border: 1px solid var(--border-color); font-family: var(--font-mono); font-size: 11px; color: var(--accent);';
-        
         const displayLabel = item.replace(/\n/g, '\\n').replace(/\t/g, '\\t');
         chip.textContent = `🛑 ${displayLabel}`;
-
         const delBtn = document.createElement('span');
         delBtn.textContent = '✕';
         delBtn.style.cssText = 'cursor: pointer; color: var(--text-muted); font-size: 10px; margin-left: 2px;';
@@ -964,12 +1064,10 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           renderStopSequenceChips();
           syncThreadParametersLive();
         };
-
         chip.appendChild(delBtn);
         ui.stopSequencesChips.appendChild(chip);
       });
     }
-
     function handleSlashInput() {
       const val = ui.userInput.value;
       if (val.startsWith('/')) {
@@ -990,13 +1088,11 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       }
       ui.slashPopup.classList.remove('open');
     }
-
     async function getSystemPromptKeyForText(text) {
       if (!text) return null;
       const p = await getSystemPromptPresets();
       return Object.keys(p).find(k => p[k].trim() === text.trim()) || null;
     }
-
     async function populateSystemPromptDropdown(selectedName) {
       const presets = await getSystemPromptPresets();
       ui.sysPromptSelect.innerHTML = '<option value="custom_modified">✏️ Custom / Unlinked Prompt</option>';
@@ -1011,7 +1107,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       }
       ui.sysPromptSelect.value = (target && (presets[target] || target === 'custom_modified')) ? target : 'custom_modified';
     }
-
     ui.sysPromptSelect.addEventListener('change', async (e) => {
       const presets = await getSystemPromptPresets();
       if (presets[e.target.value]) {
@@ -1020,14 +1115,12 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         syncThreadParametersLive();
       }
     });
-
     ui.paramSys.addEventListener('input', () => {
       if (isProgrammaticUpdate) return;
       ui.sysPromptSelect.value = 'custom_modified';
       if (activeThread) activeThread.sys_prompt_preset_name = 'custom_modified';
       syncThreadParametersLive();
     });
-
     ui.btnSaveSysPreset.onclick = async () => {
       const name = prompt("Enter a name for this System Prompt preset:");
       if (!name || !name.trim()) return;
@@ -1039,20 +1132,20 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       if (activeThread) { activeThread.sys_prompt_preset_name = clean; await dbPut(activeThread); }
       alert(`System Prompt "${clean}" saved permanently to disk!`);
     };
-
     ui.btnDelSysPreset.onclick = async () => {
       const selected = ui.sysPromptSelect.value;
       if (selected === 'Default Prompt' || selected === 'custom_modified') { alert("Cannot delete this System Prompt option!"); return; }
       if (confirm(`Delete System Prompt preset "${selected}"?`)) {
-        const presets = await getSystemPromptPresets(); delete presets[selected];
+        const presets = await getSystemPromptPresets();
+        delete presets[selected];
         await saveSystemPromptPresets(presets);
-        isProgrammaticUpdate = true; ui.paramSys.value = DEFAULT_SYS; isProgrammaticUpdate = false;
-        await populateSystemPromptDropdown('Default Prompt');
-        if (activeThread) activeThread.sys_prompt_preset_name = 'Default Prompt';
+        await populateSystemPromptDropdown('custom_modified');
+        if (activeThread) {
+          activeThread.sys_prompt_preset_name = 'custom_modified';
+        }
         syncThreadParametersLive();
       }
     };
-
     async function syncThreadParametersLive() {
       if (!activeThread) return;
       activeThread.system_prompt = ui.paramSys.value;
@@ -1073,7 +1166,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       await dbPut(activeThread);
       updateContextBar();
     }
-
     const numericControlPairs = [
       { range: ui.paramTemp, num: ui.numTemp, decimals: 2 },
       { range: ui.paramTopP, num: ui.numTopP, decimals: 2 },
@@ -1088,11 +1180,11 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       { range: ui.paramDryAllowed, num: ui.numDryAllowed, decimals: 0 },
       { range: ui.paramDryRange, num: ui.numDryRange, decimals: 0 }
     ];
-
     numericControlPairs.forEach(({ range, num, decimals }) => {
       range.addEventListener('input', () => {
         if (isProgrammaticUpdate) return;
         num.value = decimals > 0 ? parseFloat(range.value).toFixed(decimals) : range.value;
+        if (ui.pureParamPresetSelect) ui.pureParamPresetSelect.value = 'custom_modified';
         syncThreadParametersLive();
       });
       num.addEventListener('input', () => {
@@ -1103,6 +1195,7 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         if (v < min) v = min;
         if (v > max) v = max;
         range.value = v;
+        if (ui.pureParamPresetSelect) ui.pureParamPresetSelect.value = 'custom_modified';
         syncThreadParametersLive();
       });
       num.addEventListener('blur', () => {
@@ -1115,17 +1208,13 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         syncThreadParametersLive();
       });
     });
-
     document.querySelectorAll('#param-maxtokens, #param-contextwindow').forEach(elem => {
       elem.addEventListener('input', () => syncThreadParametersLive());
     });
-
     ui.paramStopSequences.addEventListener('input', () => {
       renderStopSequenceChips();
       syncThreadParametersLive();
     });
-
-    // Settings Tab Switching
     document.querySelectorAll('.settings-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
@@ -1135,8 +1224,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         if (targetPage) targetPage.classList.add('active');
       });
     });
-
-    // Web Search Settings & Actions
     ui.settingSearchProvider.addEventListener('change', (e) => {
       const selected = e.target.value;
       if (SEARCH_PRESETS[selected] && selected !== 'custom') {
@@ -1147,21 +1234,17 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         search_api_endpoint: ui.settingSearchEndpoint.value.trim()
       });
     });
-
     ui.settingSearchEndpoint.addEventListener('change', () => {
       saveSettings({ search_api_endpoint: ui.settingSearchEndpoint.value.trim() });
     });
-
     ui.settingSearchKey.addEventListener('change', () => {
       saveSettings({ search_api_key: ui.settingSearchKey.value.trim() });
     });
-
     ui.btnToggleKeyVisibility.addEventListener('click', () => {
       const isPassword = ui.settingSearchKey.type === 'password';
       ui.settingSearchKey.type = isPassword ? 'text' : 'password';
       ui.btnToggleKeyVisibility.textContent = isPassword ? '🙈' : '👁️';
     });
-
     ui.btnTestSearch.addEventListener('click', async () => {
       ui.searchTestStatus.style.display = 'block';
       ui.searchTestStatus.style.color = 'var(--text-muted)';
@@ -1175,72 +1258,68 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         ui.searchTestStatus.textContent = `✓ Success! Response snippet: ${result.slice(0, 100)}...`;
       }
     });
-
     document.querySelectorAll('.slider-touch-guard').forEach(guard => {
       guard.addEventListener('click', () => {
+        if (ui.paramLockSliders.checked) return;
         document.querySelectorAll('.slider-touch-guard').forEach(g => g.classList.remove('active'));
         guard.classList.add('active');
         const range = guard.querySelector('input[type="range"]');
         if (range) range.focus();
       });
     });
-
-    document.addEventListener('touchstart', (e) => {
+    const deactivateSliderGuards = (e) => {
       if (!e.target.closest('.slider-touch-guard')) {
         document.querySelectorAll('.slider-touch-guard').forEach(g => g.classList.remove('active'));
       }
-    }, { passive: true });
-
+    };
+    document.addEventListener('touchstart', deactivateSliderGuards, { passive: true });
+    document.addEventListener('pointerdown', deactivateSliderGuards, { passive: true });
     ui.paramLockSliders.addEventListener('change', (e) => {
       const locked = e.target.checked;
+      if (locked) document.querySelectorAll('.slider-touch-guard').forEach(g => g.classList.remove('active'));
       document.querySelectorAll('input[type="range"]').forEach(s => s.classList.toggle('locked', locked));
     });
-
     function updateEnterSendUI() {
       ui.enterSendLabel.textContent = enterSends ? '↩️ Enter Sends' : '↩️ Enter = Newline';
       ui.btnToggleEnterSend.style.opacity = enterSends ? '1' : '0.6';
     }
-
     ui.btnToggleEnterSend.addEventListener('click', () => {
       enterSends = !enterSends;
       saveSettings({ enter_sends: enterSends });
       updateEnterSendUI();
     });
-
-    function estimateTokens(text) { return text ? Math.ceil(text.length / 4) + 3 : 0; }
-
+    function estimateTokens(text) { return text ? Math.ceil(text.length / 4) : 0; }
     function updateContextBar() {
       if (!activeThread) return;
       const effectiveSys = buildEffectiveSystemPrompt(activeThread.system_prompt, activeThread.parameters.agents);
       const sysTokens = estimateTokens(effectiveSys || '');
       let userMsgTokens = 0;
       let aiMsgTokens = 0;
-
       if (activeThread.messages) {
         activeThread.messages.forEach(m => {
-          const count = estimateTokens(m.searchContext || m.content || '') + (m.thinking ? estimateTokens(m.thinking) : 0);
-          if (m.role === 'user') userMsgTokens += count;
-          else if (m.role === 'assistant') aiMsgTokens += count;
+          if (m.role === 'user') {
+            userMsgTokens += estimateTokens(m.searchContext || m.content || '');
+          } else if (m.role === 'assistant') {
+            aiMsgTokens += (m.stats && typeof m.stats.tokens === 'number')
+              ? m.stats.tokens
+              : (estimateTokens(m.content || '') + (m.thinking ? estimateTokens(m.thinking) : 0));
+          }
         });
       }
-
-      const draftTokens = estimateTokens(ui.userInput.value) + estimateTokens(ui.prefillInput.value);
+      const draftTokens = estimateTokens(ui.userInput?.value || '') + estimateTokens(ui.prefillInput?.value || '');
       const streamTokens = activeGenerations.has(activeThread.id) ? currentStreamTokens : 0;
-      const totalTokens = sysTokens + userMsgTokens + aiMsgTokens + draftTokens + streamTokens;
+      const effectiveAiTokens = aiMsgTokens + streamTokens;
+      const totalTokens = sysTokens + userMsgTokens + effectiveAiTokens + draftTokens;
       const limit = activeThread.parameters?.context_window || 8192;
       const pct = Math.min(100, Math.round((totalTokens / limit) * 100));
-
       const activeAgents = activeThread.parameters?.agents || {};
       const anyAgentActive = Object.values(activeAgents).some(Boolean);
       ui.agentTokenBadge.style.display = anyAgentActive ? 'inline-block' : 'none';
-
       ui.contextLabel.textContent = `Context: ${totalTokens.toLocaleString()} / ${limit.toLocaleString()} tokens (${pct}%)`;
       ui.contextBarFill.style.width = `${pct}%`;
-
       if (ui.contextBreakdown) {
-        ui.contextBreakdown.innerHTML = `<span>⚙️ Sys: ${sysTokens}</span><span>👤 User: ${userMsgTokens}</span><span>🤖 AI: ${aiMsgTokens}</span>${draftTokens ? `<span>✏️ Draft: ${draftTokens}</span>` : ''}`;
+        ui.contextBreakdown.innerHTML = `<span>⚙️ Sys: ${sysTokens}</span><span>👤 User: ${userMsgTokens}</span><span>🤖 AI: ${effectiveAiTokens}</span>${draftTokens ? `<span>✏️ Draft: ${draftTokens}</span>` : ''}`;
       }
-
       if (totalTokens > limit) {
         ui.contextBarFill.style.background = 'var(--error)';
         ui.contextWarning.style.display = 'inline'; ui.contextWarning.textContent = "Context Truncated (Older messages trimmed)";
@@ -1253,29 +1332,24 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         ui.contextBarFill.style.background = 'var(--accent)'; ui.contextWarning.style.display = 'none';
       }
     }
-
     function renderAgentsUI(states = {}) {
       if (!ui.agentsContainer) return;
       ui.agentsContainer.innerHTML = '';
       if (!loadedAgents.length) { ui.agentsContainer.style.display = 'none'; return; }
       ui.agentsContainer.style.display = 'flex';
-      
       const title = document.createElement('div'); title.className = 'param-section-title'; title.textContent = 'Agents Configuration';
       ui.agentsContainer.appendChild(title);
-
       loadedAgents.forEach(agent => {
         const group = document.createElement('div'); group.className = 'toggle-group';
         const checked = states[agent.id] !== undefined ? states[agent.id] : (DEFAULT_PARAMS.agents[agent.id] || false);
         group.innerHTML = `<label class="toggle-label" for="agent-toggle-${agent.id}">${agent.name}</label><input type="checkbox" id="agent-toggle-${agent.id}" class="toggle-checkbox agent-toggle-cb" data-agent-id="${agent.id}" ${checked ? 'checked' : ''}>`;
         ui.agentsContainer.appendChild(group);
-
         if (agent.id === 'get_datetime') {
           const note = document.createElement('div');
           note.style.cssText = 'font-size: 10px; color: var(--text-muted); margin: -4px 0 6px 0; line-height: 1.3;';
           note.innerHTML = '⚡ <em>Single-pass system context injection (zero latency; no 2-pass tool calling).</em>';
           ui.agentsContainer.appendChild(note);
         }
-
         group.querySelector('.agent-toggle-cb').addEventListener('change', (e) => {
           if (activeThread) {
             if (!activeThread.parameters.agents) activeThread.parameters.agents = {};
@@ -1285,7 +1359,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         });
       });
     }
-
     function getAgentToggleStates() {
       const states = {};
       document.querySelectorAll('.agent-toggle-cb').forEach(cb => {
@@ -1293,7 +1366,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       });
       return states;
     }
-
     function buildEffectiveSystemPrompt(base, agentsMap) {
       let eff = base || DEFAULT_SYS;
       if (!agentsMap) return eff;
@@ -1314,22 +1386,17 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       });
       return eff;
     }
-
-    // Universal Web Search Adapter
     async function performWebSearch(query) {
       const provider = loadedSettings.search_provider || 'tavily';
       let endpoint = (loadedSettings.search_api_endpoint || '').trim();
       const apiKey = (loadedSettings.search_api_key || '').trim();
-
       if (!endpoint && SEARCH_PRESETS[provider]) {
         endpoint = SEARCH_PRESETS[provider].endpoint;
       }
       if (!endpoint) return "[Search Error: Missing search endpoint URL in Settings]";
-
       try {
         let res, data;
         const cleanQuery = encodeURIComponent(query);
-
         if (provider === 'tavily' || (!endpoint.includes('%s') && provider !== 'searxng' && provider !== 'brave')) {
           if (!apiKey && provider === 'tavily') return "[Search Error: API key required for Tavily in Settings]";
           res = await fetch(endpoint, {
@@ -1351,7 +1418,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           }
           return "No search results returned.";
         }
-
         if (provider === 'brave') {
           if (!apiKey) return "[Search Error: API token required for Brave Search in Settings]";
           const targetUrl = endpoint.includes('%s') ? endpoint.replace('%s', cleanQuery) : `${endpoint}${endpoint.includes('?') ? '&' : '?'}q=${cleanQuery}`;
@@ -1369,7 +1435,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           }
           return "No search results returned.";
         }
-
         if (provider === 'searxng') {
           const targetUrl = endpoint.includes('%s') ? endpoint.replace('%s', cleanQuery) : `${endpoint}${endpoint.includes('?') ? '&' : '?'}q=${cleanQuery}&format=json`;
           res = await fetch(targetUrl, {
@@ -1384,8 +1449,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           if (data.answers && data.answers.length) return data.answers.join('\n');
           return "No search results returned.";
         }
-
-        // Custom / Generic GET or POST Fallback
         if (endpoint.includes('%s')) {
           const headers = { 'Accept': 'application/json' };
           if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
@@ -1399,7 +1462,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
             body: JSON.stringify({ query: query, api_key: apiKey })
           });
         }
-
         if (!res.ok) return `[Search Failed: HTTP Status ${res.status}]`;
         data = await res.json();
         const extracted = data.answer || data.text || data.snippet || data.content || (data.results?.[0]?.content || data.results?.[0]?.snippet);
@@ -1408,27 +1470,24 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         return `[Fetch Exception: ${err.message}]`;
       }
     }
-
     function cleanEosTokens(str) {
       if (!str) return str;
       return str.replace(/<\|[\s\S]*?\|>/g, '').replace(/<\|im_end\|>|<\|im_start\|>|<\|endoftext\|>|\[END_THOUGHT\]/gi, '').replace(/\|>\|?>?/g, '').trim();
     }
-
     async function populatePresetDropdown(selectedName) {
       const presets = await loadPresets();
-      ui.presetSelect.innerHTML = '<option value="Default">Default (Factory)</option>';
+      ui.presetSelect.innerHTML = '<option value="Default">Default (Factory)</option><option value="custom_modified">✏️ Custom / Unlinked Preset</option>';
       Object.keys(presets).forEach(name => {
         if (name !== 'Default') { const opt = document.createElement('option'); opt.value = name; opt.textContent = name; ui.presetSelect.appendChild(opt); }
       });
       const target = selectedName || activeThread?.preset_name || localStorage.getItem('last_selected_preset') || 'Default';
-      ui.presetSelect.value = (presets[target] || target === 'Default') ? target : 'Default';
+      ui.presetSelect.value = (presets[target] || target === 'custom_modified' || target === 'Default') ? target : 'custom_modified';
     }
-
     function updateSynchronizedInputs(params) {
       isProgrammaticUpdate = true;
-      ui.paramTemp.value = params.temperature ?? 0.3;
+      ui.paramTemp.value = params.temperature ?? 0.65;
       ui.numTemp.value = parseFloat(ui.paramTemp.value).toFixed(2);
-      ui.paramTopP.value = params.top_p ?? 0.9;
+      ui.paramTopP.value = params.top_p ?? 0.95;
       ui.numTopP.value = parseFloat(ui.paramTopP.value).toFixed(2);
       ui.paramTopK.value = params.top_k ?? 40;
       ui.numTopK.value = ui.paramTopK.value;
@@ -1454,7 +1513,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       ui.paramContextWindow.value = params.context_window ?? 8192;
       isProgrammaticUpdate = false;
     }
-
     async function applyPresetToPanel(name) {
       const presets = await loadPresets();
       const target = presets[name] || (name === 'Default' ? { system_prompt: DEFAULT_SYS, parameters: { ...DEFAULT_PARAMS } } : null);
@@ -1464,20 +1522,19 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         ui.paramStopSequences.value = target.parameters.stop_sequences || "";
         renderStopSequenceChips();
         updateSynchronizedInputs(target.parameters);
-
         const sysPresets = await getSystemPromptPresets();
         let sysPrompt = target.system_prompt || DEFAULT_SYS;
         let sysKey = target.linked_sys_prompt || (sysPresets[target.system_prompt] ? null : await getSystemPromptKeyForText(sysPrompt));
         ui.paramSys.value = sysPrompt;
         await populateSystemPromptDropdown(sysKey || 'custom_modified');
+        let paramKey = target.linked_param_preset || await getPureParamPresetKeyForValues(target.parameters);
+        await populatePureParamDropdown(paramKey || 'custom_modified');
         isProgrammaticUpdate = false;
-
         renderAgentsUI(target.parameters.agents || DEFAULT_PARAMS.agents);
         localStorage.setItem('last_selected_preset', name);
         syncThreadParametersLive();
       }
     }
-
     async function dbGetAll() {
       const manifest = await loadManifest();
       const threads = [];
@@ -1507,13 +1564,11 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         let manifest = await loadManifest(); manifest = manifest.filter(m => m.id !== id); await saveManifest(manifest);
       } catch (e) {}
     }
-
     function showError(msg) {
       ui.errorBanner.textContent = msg; ui.errorBanner.style.display = 'block';
       setTimeout(() => { ui.errorBanner.style.display = 'none'; }, 5000);
     }
     function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
-
     async function createNewThread() {
       const lastPreset = localStorage.getItem('last_selected_preset') || 'Default';
       const presets = await loadPresets();
@@ -1528,7 +1583,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       };
       await dbPut(newThread); await loadThread(newThread.id); await renderSidebar();
     }
-
     async function branchChat(msgIndex) {
       if (!activeThread || activeGenerations.has(activeThread.id)) return;
       const newThread = {
@@ -1540,7 +1594,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       await dbPut(newThread); await loadThread(newThread.id); await renderSidebar();
     }
     window.branchChat = branchChat;
-
     async function loadThread(id) {
       try {
         const thread = await dbGet(id);
@@ -1550,7 +1603,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         activeThread.parameters = { ...DEFAULT_PARAMS, ...activeThread.parameters };
         if (!activeThread.parameters.agents) activeThread.parameters.agents = { ...DEFAULT_PARAMS.agents };
         localStorage.setItem('last_active_thread_id', activeThread.id);
-
         isProgrammaticUpdate = true;
         ui.activeTitle.textContent = activeThread.title;
         ui.paramSys.value = activeThread.system_prompt;
@@ -1558,18 +1610,14 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         ui.paramStopSequences.value = activeThread.parameters.stop_sequences || "";
         renderStopSequenceChips();
         updateSynchronizedInputs(activeThread.parameters);
-
         renderAgentsUI(activeThread.parameters.agents);
-
         if (activeThread.preset_name) localStorage.setItem('last_selected_preset', activeThread.preset_name);
         await populatePresetDropdown(activeThread.preset_name);
         let targetSysPreset = activeThread.sys_prompt_preset_name;
         if (!targetSysPreset || targetSysPreset === 'custom_modified') targetSysPreset = await getSystemPromptKeyForText(activeThread.system_prompt);
         await populateSystemPromptDropdown(targetSysPreset || 'custom_modified');
         isProgrammaticUpdate = false;
-
         renderChatViewport(); updateSidebarActiveState(); updateContextBar();
-
         if (activeGenerations.has(id)) {
           const genState = activeGenerations.get(id);
           ui.chatViewport.insertBefore(genState.bubble, ui.typingIndicator);
@@ -1582,7 +1630,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         }
       } catch (err) { isProgrammaticUpdate = false; showError("Failed to load thread: " + err.message); }
     }
-
     async function renderSidebar() {
       try {
         let threads = await dbGetAll();
@@ -1595,12 +1642,10 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           const dateOpts = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: false };
           let dateStr = new Date(t.updated_at).toLocaleString(undefined, dateOpts);
           if (t.is_forked) dateStr += ' 🔀';
-
           const div = document.createElement('div');
           div.className = `thread-item ${activeThread && activeThread.id === t.id ? 'active' : ''} ${t.is_pinned ? 'pinned' : ''}`;
           div.dataset.id = t.id;
           div.innerHTML = `<div class="thread-info"><span class="thread-title">${t.is_pinned ? '📌 ' : ''}${t.title}</span><span class="thread-date">${dateStr}</span></div><div class="thread-actions"><button class="thread-action-btn pin-btn" title="${t.is_pinned ? 'Unpin' : 'Pin'}">${t.is_pinned ? '📌' : '📍'}</button><button class="thread-action-btn rename-btn" title="Rename">✏️</button><button class="thread-action-btn del-btn" title="Delete">🗑</button></div>`;
-          
           div.addEventListener('click', (e) => {
             if (!e.target.closest('.del-btn') && !e.target.closest('.rename-btn') && !e.target.closest('.pin-btn')) {
               loadThread(t.id); closeSidebar();
@@ -1633,24 +1678,19 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         });
       } catch (err) { showError("Failed to render sidebar: " + err.message); }
     }
-
     if (ui.searchThreadsInput) ui.searchThreadsInput.addEventListener('input', () => renderSidebar());
-
     function updateSidebarActiveState() {
       document.querySelectorAll('.thread-item').forEach(el => {
         if (activeThread && el.dataset.id === activeThread.id) el.classList.add('active'); else el.classList.remove('active');
       });
     }
-
     marked.setOptions({ breaks: true, gfm: true });
-
     function renderStatsHUD(container, stats) {
       if (!stats) return;
       let hud = container.querySelector('.stats-hud');
       if (!hud) { hud = document.createElement('div'); hud.className = 'stats-hud'; container.appendChild(hud); }
       hud.innerHTML = `<span>⚡ ${stats.tps.toFixed(1)} t/s</span><span>⏱️ ${(stats.ttft/1000).toFixed(2)}s</span><span>⌛ ${(stats.totalTime/1000).toFixed(2)}s</span><span>📊 ${stats.tokens}t</span>`;
     }
-
     function exportThreadMarkdown() {
       if (!activeThread || !activeThread.messages) return;
       let md = `# ${activeThread.title}\n\n*Exported on ${new Date().toLocaleString()}*\n\n---\n\n`;
@@ -1663,7 +1703,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         .then(() => alert("Exported Markdown file!"))
         .catch(err => showError("Export failed: " + err.message));
     }
-
     function applyHighlightAndCopy(container, rawText, role, msgIndex, rawStream = '') {
       container.querySelectorAll('pre').forEach(pre => {
         if (!pre.querySelector('.copy-btn')) {
@@ -1675,7 +1714,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           pre.appendChild(copyBtn);
         }
       });
-
       let actionsWrapper = container.querySelector('.msg-actions-wrapper'), actionsDiv = container.querySelector('.msg-actions'), headerDiv = container.querySelector('.msg-header');
       if (!actionsWrapper) {
         actionsWrapper = document.createElement('div'); actionsWrapper.className = 'msg-actions-wrapper';
@@ -1683,13 +1721,11 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         actionsWrapper.appendChild(actionsDiv);
         if (headerDiv) container.insertBefore(actionsWrapper, headerDiv.nextSibling); else container.insertBefore(actionsWrapper, container.firstChild);
       } else { actionsDiv.innerHTML = ''; }
-
       let constantDiv = headerDiv ? headerDiv.querySelector('.msg-actions-constant') : null;
       if (!constantDiv && headerDiv) {
         constantDiv = document.createElement('div'); constantDiv.className = 'msg-actions-constant';
         headerDiv.insertBefore(constantDiv, headerDiv.querySelector('.gear-toggle-btn'));
       } else if (constantDiv) { constantDiv.innerHTML = ''; }
-
       if (constantDiv) {
         const copyBtn = document.createElement('button'); copyBtn.className = 'bubble-action-btn'; copyBtn.textContent = '📋 Copy';
         copyBtn.onclick = (e) => {
@@ -1699,7 +1735,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           navigator.clipboard.writeText(plain.trim()); copyBtn.textContent = 'Copied!'; setTimeout(() => { copyBtn.textContent = '📋 Copy'; }, 2000);
         };
         constantDiv.appendChild(copyBtn);
-
         if (msgIndex !== undefined) {
           const branchBtn = document.createElement('button'); branchBtn.className = 'bubble-action-btn'; branchBtn.textContent = '🔀 Branch';
           branchBtn.onclick = (e) => { e.stopPropagation(); window.branchChat(msgIndex); };
@@ -1711,7 +1746,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           constantDiv.appendChild(regenBtn);
         }
       }
-
       if (role === 'user') {
         const rawBtn = document.createElement('button'); rawBtn.className = 'bubble-action-btn'; rawBtn.textContent = '📄 Raw';
         rawBtn.onclick = (e) => {
@@ -1731,7 +1765,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           actionsDiv.appendChild(editBtn);
         }
       }
-
       if (role === 'assistant') {
         const rawBtn = document.createElement('button'); rawBtn.className = 'bubble-action-btn'; rawBtn.textContent = '📄 Raw';
         rawBtn.onclick = (e) => {
@@ -1740,7 +1773,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           navigator.clipboard.writeText(text); rawBtn.textContent = 'Copied Raw!'; setTimeout(() => { rawBtn.textContent = '📄 Raw'; }, 2000);
         };
         actionsDiv.appendChild(rawBtn);
-
         const cleanBtn = document.createElement('button'); cleanBtn.className = 'bubble-action-btn'; cleanBtn.textContent = '🧹 Clean';
         cleanBtn.onclick = (e) => {
           e.stopPropagation();
@@ -1749,7 +1781,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           cleanBtn.textContent = 'Clean Copied!'; setTimeout(() => { cleanBtn.textContent = '🧹 Clean'; }, 2000);
         };
         actionsDiv.appendChild(cleanBtn);
-
         const codeBtn = document.createElement('button'); codeBtn.className = 'bubble-action-btn'; codeBtn.textContent = '💻 Code Only';
         codeBtn.onclick = (e) => {
           e.stopPropagation();
@@ -1760,13 +1791,11 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           setTimeout(() => { codeBtn.textContent = '💻 Code Only'; }, 2000);
         };
         actionsDiv.appendChild(codeBtn);
-
         const expBtn = document.createElement('button'); expBtn.className = 'bubble-action-btn'; expBtn.textContent = '📥 Export';
         expBtn.onclick = (e) => { e.stopPropagation(); exportThreadMarkdown(); };
         actionsDiv.appendChild(expBtn);
       }
     }
-
     function enableMessageEditing(container, msgIndex) {
       if (!activeThread || activeGenerations.has(activeThread.id)) return;
       const original = activeThread.messages[msgIndex].content;
@@ -1781,16 +1810,13 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         renderChatViewport(); executeGeneration();
       };
     }
-
     function renderChatViewport() {
       Array.from(ui.chatViewport.children).forEach(child => { if (child.id !== 'typing-indicator') child.remove(); });
       if (activeThread?.messages) activeThread.messages.forEach((msg, idx) => appendMessageDOM(msg.role, msg.content, false, msg.stats, idx, msg.thinking, msg.rawStream));
       scrollToBottom(true);
     }
-
     function appendMessageDOM(role, content, animated = true, stats = null, msgIndex = undefined, thinking = null, rawStream = '') {
       const div = document.createElement('div'); div.className = `message ${role === 'user' ? 'msg-user' : 'msg-ai'}`;
-      
       const headerDiv = document.createElement('div'); headerDiv.className = 'msg-header';
       const gearBtn = document.createElement('button'); gearBtn.className = 'gear-toggle-btn'; gearBtn.innerHTML = '⚙️'; gearBtn.title = 'More Options';
       gearBtn.onclick = (e) => {
@@ -1799,7 +1825,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         if (!shown) div.classList.add('show-actions');
       };
       headerDiv.appendChild(gearBtn); div.appendChild(headerDiv);
-
       const contentSpan = document.createElement('div'); contentSpan.className = 'message-content';
       if (role === 'user') {
         contentSpan.textContent = content; div.appendChild(contentSpan);
@@ -1814,36 +1839,45 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       if (animated) scrollToBottom();
       return div;
     }
-
     ui.chatViewport.addEventListener('click', (e) => {
       if (!e.target.closest('.gear-toggle-btn') && !e.target.closest('.bubble-action-btn')) {
         document.querySelectorAll('.message.show-actions').forEach(m => m.classList.remove('show-actions'));
       }
     });
-
-    ui.chatViewport.addEventListener('pointerdown', () => { isUserInteracting = true; });
-    ui.chatViewport.addEventListener('touchstart', () => { isUserInteracting = true; });
-    ui.chatViewport.addEventListener('touchend', () => { isUserInteracting = false; });
-    ui.chatViewport.addEventListener('pointerup', () => { isUserInteracting = false; });
+    ui.chatViewport.addEventListener('pointerdown', () => { isUserInteracting = true; }, { passive: true });
+    ui.chatViewport.addEventListener('touchstart', () => { isUserInteracting = true; }, { passive: true });
+    ui.chatViewport.addEventListener('touchend', () => { isUserInteracting = false; }, { passive: true });
+    ui.chatViewport.addEventListener('pointerup', () => { isUserInteracting = false; }, { passive: true });    
     ui.chatViewport.addEventListener('wheel', (e) => {
       if (e.deltaY < 0 && isAutoScrolling) { isAutoScrolling = false; ui.btnToggleAutoscroll.innerHTML = '<span>🔓 Auto-Scroll</span>'; }
     });
     ui.chatViewport.addEventListener('scroll', () => {
-      if (isUserInteracting && isAutoScrolling) {
-        const { scrollTop, scrollHeight, clientHeight } = ui.chatViewport;
-        if (scrollHeight - scrollTop - clientHeight > 80) { isAutoScrolling = false; ui.btnToggleAutoscroll.innerHTML = '<span>🔓 Auto-Scroll</span>'; }
+      const { scrollTop, scrollHeight, clientHeight } = ui.chatViewport;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight <= 80;
+      if (isUserInteracting && isAutoScrolling && !isNearBottom) {
+        isAutoScrolling = false;
+        ui.btnToggleAutoscroll.innerHTML = '<span>🔓 Auto-Scroll</span>';
+      }
+      if (ui.btnScrollBottom) {
+        ui.btnScrollBottom.style.display = isNearBottom ? 'none' : 'flex';
       }
     });
+    if (ui.btnScrollBottom) {
+      ui.btnScrollBottom.addEventListener('click', () => {
+        isAutoScrolling = true;
+        ui.btnToggleAutoscroll.innerHTML = '<span>🔒 Auto-Scroll</span>';
+        ui.chatViewport.scrollTo({ top: ui.chatViewport.scrollHeight, behavior: 'smooth' });
+        ui.btnScrollBottom.style.display = 'none';
+      });
+    }
     ui.btnToggleAutoscroll.addEventListener('click', () => {
       isAutoScrolling = !isAutoScrolling;
       ui.btnToggleAutoscroll.innerHTML = isAutoScrolling ? '<span>🔒 Auto-Scroll</span>' : '<span>🔓 Auto-Scroll</span>';
       if (isAutoScrolling) scrollToBottom(true);
     });
-
     function scrollToBottom(force = false) {
       if (isAutoScrolling || force) requestAnimationFrame(() => { ui.chatViewport.scrollTop = ui.chatViewport.scrollHeight; });
     }
-
     function getFormattedPayload() {
       if (!activeThread) return {};
       const prefillVal = ui.prefillInput.value;
@@ -1860,18 +1894,15 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       if (prefillVal) messages.push({ role: 'assistant', content: prefillVal });
       return { messages, parameters: activeThread.parameters };
     }
-
     async function regenerateLastResponse() {
       if (!activeThread || activeGenerations.has(activeThread.id)) return;
       if (activeThread.messages.length && activeThread.messages[activeThread.messages.length - 1].role === 'assistant') {
         activeThread.messages.pop(); await dbPut(activeThread); renderChatViewport(); executeGeneration();
       }
     }
-
     async function sendMessage() {
       let text = ui.userInput.value.replace(/^\s+|\s+$/g, '');
       if (!text || !activeThread || activeGenerations.has(activeThread.id)) return;
-
       if (text.startsWith('/search')) {
         const query = text.replace('/search', '').trim();
         if (!query) {
@@ -1879,11 +1910,9 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
           return;
         }
         ui.userInput.value = ''; ui.userInput.style.height = 'auto'; ui.slashPopup.classList.remove('open'); updateCharCount();
-
         ui.typingIndicator.style.display = 'flex'; ui.statusText.textContent = "Searching web...";
         const searchResults = await performWebSearch(query);
         ui.typingIndicator.style.display = 'none';
-
         activeThread.messages.push({
           role: 'user',
           content: text,
@@ -1895,7 +1924,6 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         renderSidebar(); updateContextBar(); executeGeneration();
         return;
       }
-
       if (activeThread.messages.length === 0) {
         activeThread.title = text.length > 25 ? text.substring(0, 25) + '...' : text;
         ui.activeTitle.textContent = activeThread.title;
@@ -1905,23 +1933,27 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
       await dbPut(activeThread); appendMessageDOM('user', text, true, null, activeThread.messages.length - 1);
       renderSidebar(); updateContextBar(); executeGeneration();
     }
-
     async function executeGeneration() {
       if (!activeThread) return;
       const targetThreadId = activeThread.id;
       const targetThread = await dbGet(targetThreadId);
       if (!targetThread) return;
-
       if (activeThread?.id === targetThreadId) {
         ui.btnSend.style.display = 'none'; ui.btnStop.style.display = 'flex';
         ui.typingIndicator.style.display = 'flex'; ui.statusText.textContent = "Loading model...";
       }
-
       const abortCtrl = new AbortController();
       const prefillVal = ui.prefillInput.value;
+
+      const autoClearPrefill = document.getElementById('cb-auto-clear-prefill')?.checked;
+      if (autoClearPrefill) {
+        ui.prefillInput.value = '';
+        ui.prefillDot.style.display = 'none';
+        ui.prefillDrawer.classList.remove('open');
+      }
+
       const effectiveSys = buildEffectiveSystemPrompt(targetThread.system_prompt, targetThread.parameters.agents);
       const payloadMessages = [{ role: 'system', content: effectiveSys }];
-
       targetThread.messages.forEach((m, idx) => {
         let content = m.searchContext || m.content;
         if (idx === targetThread.messages.length - 1 && m.role === 'user' && targetThread.parameters?.agents?.get_datetime) {
@@ -1930,9 +1962,7 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         }
         payloadMessages.push({ role: m.role, content });
       });
-
       if (prefillVal) payloadMessages.push({ role: 'assistant', content: prefillVal });
-
       const aiBubble = document.createElement('div'); aiBubble.className = 'message msg-ai';
       const headerDiv = document.createElement('div'); headerDiv.className = 'msg-header';
       const gearBtn = document.createElement('button'); gearBtn.className = 'gear-toggle-btn'; gearBtn.innerHTML = '⚙️'; gearBtn.title = 'More Options';
@@ -1942,43 +1972,45 @@ agentTokenBadge: document.getElementById('agent-token-badge'),
         if (!shown) aiBubble.classList.add('show-actions');
       };
       headerDiv.appendChild(gearBtn); aiBubble.appendChild(headerDiv);
-
       activeGenerations.set(targetThreadId, { bubble: aiBubble, abortController: abortCtrl, thinkingInterval: null, targetThreadId });
-
       if (activeThread?.id === targetThreadId) {
         ui.chatViewport.insertBefore(aiBubble, ui.typingIndicator);
         isAutoScrolling = true; ui.btnToggleAutoscroll.innerHTML = '<span>🔒 Auto-Scroll</span>'; scrollToBottom(true);
       }
-
       let rawGeneratedText = "", aiResponseContent = prefillVal || "", tokenCount = estimateTokens(aiResponseContent);
+      let streamChunkCount = 0;
       const startTime = performance.now();
       let firstTokenTime = null, computedStats = null;
-
       if (activeThread?.id === targetThreadId) currentStreamTokens = tokenCount;
-
       let loadingDots = 1;
       let loadingInterval = setInterval(() => {
         if (activeThread?.id === targetThreadId && !firstTokenTime) {
           loadingDots = (loadingDots % 3) + 1; ui.statusText.textContent = `Loading model${'.'.repeat(loadingDots)}`;
         }
       }, 500);
-
       let thinkingInterval = null, displayThought = "", displayReply = prefillVal || "";
-let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
-
+      const stopArray = parseStopSequences(targetThread.parameters?.stop_sequences);
       try {
         if (activeThread?.id === targetThreadId) ui.typingIndicator.style.display = 'none';
         const stream = await layla.chat.completions.create({
-          messages: payloadMessages, temperature: targetThread.parameters.temperature,
-          top_p: targetThread.parameters.top_p, top_k: targetThread.parameters.top_k, min_p: targetThread.parameters.min_p,
-          repeat_penalty: targetThread.parameters.repeat_penalty, repeat_penalty_range: targetThread.parameters.repeat_penalty_range,
-          xtc_probability: targetThread.parameters.xtc_probability, xtc_threshold: targetThread.parameters.xtc_threshold,
-          dry_multiplier: targetThread.parameters.dry_multiplier, dry_base: targetThread.parameters.dry_base,
-          dry_allowed_length: targetThread.parameters.dry_allowed_length, dry_penalty_range: targetThread.parameters.dry_penalty_range,
-          max_tokens: targetThread.parameters.max_tokens, enable_thinking: targetThread.parameters.enable_thinking,
-          stop: stopArray, stream: true
+          messages: payloadMessages,
+          temperature: targetThread.parameters.temperature,
+          top_p: targetThread.parameters.top_p,
+          top_k: targetThread.parameters.top_k,
+          min_p: targetThread.parameters.min_p,
+          repeat_penalty: targetThread.parameters.repeat_penalty,
+          repeat_penalty_range: targetThread.parameters.repeat_penalty_range,
+          xtc_probability: targetThread.parameters.xtc_probability,
+          xtc_threshold: targetThread.parameters.xtc_threshold,
+          dry_multiplier: targetThread.parameters.dry_multiplier,
+          dry_base: targetThread.parameters.dry_base,
+          dry_allowed_length: targetThread.parameters.dry_allowed_length,
+          dry_penalty_range: targetThread.parameters.dry_penalty_range,
+          max_tokens: targetThread.parameters.max_tokens,
+          enable_thinking: targetThread.parameters.enable_thinking,
+          stop: stopArray,
+          stream: true
         });
-
         for await (const chunk of stream) {
           if (!activeGenerations.has(targetThreadId)) break;
           const delta = chunk.choices[0]?.delta?.content || "";
@@ -1993,11 +2025,10 @@ let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
                 }, 500);
               } else { if (activeThread?.id === targetThreadId) ui.statusText.textContent = "Generating..."; }
             }
-
-            const deltaTokens = estimateTokens(delta); tokenCount += deltaTokens;
+            const deltaTokens = estimateTokens(delta);
+            tokenCount += deltaTokens;
             if (activeThread?.id === targetThreadId) currentStreamTokens += deltaTokens;
             rawGeneratedText += delta;
-
             if (prefillVal) {
               const cleanP = prefillVal.trim(), cleanG = rawGeneratedText.trim();
               if (cleanG.startsWith(cleanP)) aiResponseContent = rawGeneratedText;
@@ -2005,17 +2036,14 @@ let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
                 aiResponseContent = prefillVal + rawGeneratedText.slice(rawGeneratedText.indexOf(cleanG.slice(0, 10)));
               } else { aiResponseContent = prefillVal + rawGeneratedText; }
             } else { aiResponseContent = rawGeneratedText; }
-
             let isOpen = false;
             if (targetThread.parameters.enable_thinking) {
               const startMatch = /<(?:think\d*|thought\d*)>/i.exec(aiResponseContent);
               let startIdx = 0, startTagLen = 0;
               if (startMatch) { startIdx = startMatch.index; startTagLen = startMatch[0].length; }
               else if (/^<(?:think\d*|thought\d*)>/i.test(aiResponseContent)) { startTagLen = 7; }
-
               const afterStart = aiResponseContent.substring(startIdx + startTagLen);
               const endMatch = /<\/(?:think\d*|thought\d*)>|<\|end_of_thought\|>|\[\/?END_THOUGHT\]/i.exec(afterStart);
-
               if (endMatch) {
                 const endIdx = startIdx + startTagLen + endMatch.index;
                 displayThought = aiResponseContent.substring(startIdx + startTagLen, endIdx).trim();
@@ -2037,16 +2065,13 @@ let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
               displayThought = displayThought.replace(/<\/?(?:think\d*|thought\d*|endthink\d*)>/gi, '').replace(/<\|end_of_thought\|>|\[\/?END_THOUGHT\]/gi, '').trim();
               displayReply = displayReply.replace(/<\/?(?:think\d*|thought\d*|endthink\d*)>/gi, '').replace(/<\|end_of_thought\|>|\[\/?END_THOUGHT\]/gi, '').trim();
             } else { displayReply = aiResponseContent; }
-
             displayReply = cleanEosTokens(displayReply);
-
             if (activeThread?.id === targetThreadId) {
               const existingDetails = aiBubble.querySelector('details.think-block');
               const finalIsOpen = existingDetails ? existingDetails.open : isOpen;
               let html = '<div class="message-content">';
               if (displayThought) html += `<details class="think-block" ${finalIsOpen ? 'open' : ''}><summary>🧠 View Thinking Process</summary><div class="think-content">${displayThought.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div></details>`;
               html += marked.parse(displayReply) + '</div>';
-
               const msgContent = aiBubble.querySelector('.message-content');
               if (msgContent) {
                 msgContent.innerHTML = (displayThought ? `<details class="think-block" ${finalIsOpen ? 'open' : ''}><summary>🧠 View Thinking Process</summary><div class="think-content">${displayThought.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div></details>` : '') + marked.parse(displayReply);
@@ -2059,10 +2084,13 @@ let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
                 };
               }
               renderStatsHUD(aiBubble, { tps: tokenCount / Math.max(0.001, (performance.now() - firstTokenTime) / 1000), ttft: firstTokenTime - startTime, totalTime: performance.now() - startTime, tokens: tokenCount });
-              applyHighlightAndCopy(aiBubble, displayReply, 'assistant', targetThread.messages.length, aiResponseContent);
-              updateContextBar(); scrollToBottom();
+              updateContextBar();
+              scrollToBottom();
             }
           }
+        }
+        if (activeThread?.id === targetThreadId) {
+          applyHighlightAndCopy(aiBubble, displayReply, 'assistant', targetThread.messages.length, aiResponseContent);
         }
         if (firstTokenTime && tokenCount > 0) {
           computedStats = { tps: tokenCount / Math.max(0.001, (performance.now() - firstTokenTime) / 1000), ttft: firstTokenTime - startTime, totalTime: performance.now() - startTime, tokens: tokenCount };
@@ -2100,51 +2128,50 @@ let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
         }
       }
     }
-
     function toggleSidebar() { ui.sidebar.classList.toggle('open'); ui.overlay.classList.toggle('open'); }
     function closeSidebar() { ui.sidebar.classList.remove('open'); ui.overlay.classList.remove('open'); }
-
     ui.btnMenu.addEventListener('click', toggleSidebar);
     ui.overlay.addEventListener('click', closeSidebar);
     ui.btnNewChat.addEventListener('click', () => { createNewThread(); closeSidebar(); });
-
     ui.activeTitle.addEventListener('click', async () => {
       if (!activeThread) return;
       const title = prompt("Rename current conversation:", activeThread.title);
       if (title && title.trim()) { activeThread.title = title.trim(); activeThread.updated_at = Date.now(); ui.activeTitle.textContent = activeThread.title; await dbPut(activeThread); await renderSidebar(); }
     });
-
     ui.btnParams.addEventListener('click', async () => {
       const visible = ui.paramsPanel.style.display === 'flex';
       if (!visible) {
         await populatePresetDropdown();
+        await populatePureParamDropdown();
         await populateSystemPromptDropdown();
         renderCustomPromptsManager();
         ui.settingSearchProvider.value = loadedSettings.search_provider || 'tavily';
         ui.settingSearchEndpoint.value = loadedSettings.search_api_endpoint || '';
         ui.settingSearchKey.value = loadedSettings.search_api_key || '';
         ui.searchTestStatus.style.display = 'none';
+        ui.paramsPanel.style.display = 'flex';
+      } else {
+        ui.paramsPanel.style.display = 'none';
+        ui.userInput.focus();
       }
-      ui.paramsPanel.style.display = visible ? 'none' : 'flex';
     });
-
     ui.btnExportBackup.onclick = async () => {
       try {
         const backup = {
-          version: '7.1.0',
+          version: APP_VERSION,
           exported_at: Date.now(),
           manifest: await loadManifest(),
           threads: await dbGetAll(),
-          presets: await loadPresets(),
+          env_presets: await loadPresets(),
+          parameter_presets: await loadPureParamPresets(),
           custom_prompts: getCustomPrompts(),
           system_prompts: await getSystemPromptPresets(),
           settings: loadedSettings
         };
-        await window.Bridge.files.save(`rawllm_pro_backup_${Date.now()}.json`, toB64(JSON.stringify(backup, null, 2)), true);
+        await window.Bridge.files.save(`rawllm_pro_v${APP_VERSION}_backup_${Date.now()}.json`, toB64(JSON.stringify(backup, null, 2)), true);
         alert("Full backup exported successfully!");
       } catch (e) { showError("Backup Failed: " + e.message); }
     };
-
     ui.btnImportBackup.onclick = () => ui.fileImportInput.click();
     ui.fileImportInput.onchange = (e) => {
       const file = e.target.files[0]; if (!file) return;
@@ -2154,7 +2181,8 @@ let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
           const parsed = JSON.parse(evt.target.result);
           if (parsed.threads) for (const t of parsed.threads) await dbPut(t);
           if (parsed.manifest) await saveManifest(parsed.manifest);
-          if (parsed.presets) await savePresets(parsed.presets);
+          if (parsed.env_presets || parsed.presets) await savePresets(parsed.env_presets || parsed.presets);
+          if (parsed.parameter_presets) await savePureParamPresets(parsed.parameter_presets);
           if (parsed.custom_prompts) saveCustomPrompts(parsed.custom_prompts);
           if (parsed.system_prompts) await saveSystemPromptPresets(parsed.system_prompts);
           if (parsed.settings) await saveSettings(parsed.settings);
@@ -2163,7 +2191,6 @@ let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
       };
       reader.readAsText(file);
     };
-
         ui.btnClearChat.addEventListener('click', async () => {
       if (!activeThread || activeGenerations.has(activeThread.id)) return;
       if (!activeThread.messages.length) return;
@@ -2178,69 +2205,100 @@ let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
         setTimeout(() => { if (!activeGenerations.has(activeThread.id)) ui.statusText.textContent = "Ready"; }, 2000);
       }
     });
-
     ui.btnPayload.addEventListener('click', () => { ui.payloadCodeView.textContent = JSON.stringify(getFormattedPayload(), null, 2); ui.modalPayload.classList.add('open'); });
     ui.btnClosePayload.addEventListener('click', () => { ui.modalPayload.classList.remove('open'); });
     ui.btnCopyPayload.addEventListener('click', () => { navigator.clipboard.writeText(ui.payloadCodeView.textContent); ui.btnCopyPayload.textContent = "Copied!"; setTimeout(() => ui.btnCopyPayload.textContent = "Copy Payload", 2000); });
-
     ui.btnTogglePrefill.addEventListener('click', () => { ui.prefillDrawer.classList.toggle('open'); });
     ui.prefillInput.addEventListener('input', () => { ui.prefillDot.style.display = ui.prefillInput.value.trim() ? 'inline-block' : 'none'; updateContextBar(); });
     ui.btnClearPrefill.addEventListener('click', () => { ui.prefillInput.value = ''; ui.prefillDot.style.display = 'none'; updateContextBar(); });
-
     ui.paramThinking.addEventListener('change', async (e) => { if (activeThread) { activeThread.parameters.enable_thinking = e.target.checked; syncThreadParametersLive(); } });
     ui.presetSelect.addEventListener('change', async (e) => { const p = await loadPresets(); if (p[e.target.value] || e.target.value === 'Default') applyPresetToPanel(e.target.value); });
-
     ui.btnDelPreset.addEventListener('click', async () => {
       const cur = ui.presetSelect.value;
-      if (cur === 'Default') { alert("Cannot delete the Default preset!"); return; }
-      if (confirm(`Delete custom preset "${cur}"?`)) {
-        const p = await loadPresets(); delete p[cur]; await savePresets(p);
-        await populatePresetDropdown('Default'); await applyPresetToPanel('Default');
+      if (cur === 'Default' || cur === 'custom_modified') { alert("Cannot delete this option!"); return; }
+      if (confirm(`Delete environment preset "${cur}"?`)) {
+        const p = await loadPresets();
+        delete p[cur];
+        await savePresets(p);
+        await populatePresetDropdown('custom_modified');
+        if (activeThread) {
+          activeThread.preset_name = 'custom_modified';
+          await dbPut(activeThread);
+        }
       }
     });
-
-    ui.btnSaveCustomDefault.addEventListener('click', async () => {
-      const name = prompt("Enter a name for your custom preset:"); if (!name || !name.trim()) return;
-      const clean = name.trim(); if (clean.toLowerCase() === 'default') { alert("Cannot overwrite 'Default' preset name this way."); return; }
-      let sysKey = ui.sysPromptSelect.value; if (sysKey === 'custom_modified') sysKey = await getSystemPromptKeyForText(ui.paramSys.value);
-      const presets = await loadPresets();
-      presets[clean] = {
-        system_prompt: ui.paramSys.value, linked_sys_prompt: (sysKey && sysKey !== 'custom_modified') ? sysKey : null,
+    ui.pureParamPresetSelect.addEventListener('change', async (e) => {
+      const presets = await loadPureParamPresets();
+      const val = e.target.value;
+      if (presets[val]) {
+        isProgrammaticUpdate = true;
+        const currentLimits = {
+          max_tokens: parseInt(ui.paramMax.value, 10),
+          context_window: parseInt(ui.paramContextWindow.value, 10)
+        };
+        updateSynchronizedInputs({ ...presets[val], ...currentLimits });
+        isProgrammaticUpdate = false;
+        syncThreadParametersLive();
+      }
+    });
+    function getCurrentSamplerParams() {
+      return {
+        temperature: parseFloat(ui.paramTemp.value), top_p: parseFloat(ui.paramTopP.value), top_k: parseInt(ui.paramTopK.value, 10),
+        min_p: parseFloat(ui.paramMinP.value), repeat_penalty: parseFloat(ui.paramRepeat.value), repeat_penalty_range: parseInt(ui.paramRepeatRange.value, 10) || 512,
+        xtc_probability: parseFloat(ui.paramXtcProb.value), xtc_threshold: parseFloat(ui.paramXtcThresh.value),
+        dry_multiplier: parseFloat(ui.paramDryMult.value), dry_base: parseFloat(ui.paramDryBase.value), dry_allowed_length: parseInt(ui.paramDryAllowed.value, 10) || 2,
+        dry_penalty_range: parseInt(ui.paramDryRange.value, 10) || 1024
+      };
+    }
+    ui.btnSavePureParam.addEventListener('click', async () => {
+      const name = prompt("Enter a name for this Sampler preset:"); if (!name || !name.trim()) return;
+      const clean = name.trim(); const presets = await loadPureParamPresets();
+      presets[clean] = getCurrentSamplerParams(); await savePureParamPresets(presets);
+      await populatePureParamDropdown(clean); alert(`Sampler preset "${clean}" saved!`);
+    });
+    ui.btnDelPureParam.addEventListener('click', async () => {
+      const selected = ui.pureParamPresetSelect.value;
+      if (selected === 'Default Samplers' || selected === 'custom_modified') {
+        alert("Cannot delete this Sampler preset option!");
+        return;
+      }
+      if (confirm(`Delete sampler preset "${selected}"?`)) {
+        const presets = await loadPureParamPresets();
+        delete presets[selected];
+        await savePureParamPresets(presets);
+        await populatePureParamDropdown('custom_modified');
+      }
+    });
+    async function getCurrentPresetData() {
+      let sysKey = ui.sysPromptSelect.value;
+      if (sysKey === 'custom_modified') sysKey = await getSystemPromptKeyForText(ui.paramSys.value);
+      let paramKey = ui.pureParamPresetSelect?.value || null;
+      if (paramKey === 'custom_modified') paramKey = await getPureParamPresetKeyForValues(getCurrentSamplerParams());
+      return {
+        system_prompt: ui.paramSys.value,
+        linked_sys_prompt: sysKey && sysKey !== 'custom_modified' ? sysKey : null,
+        linked_param_preset: paramKey && paramKey !== 'custom_modified' ? paramKey : null,
         parameters: {
-          temperature: parseFloat(ui.paramTemp.value), top_p: parseFloat(ui.paramTopP.value), top_k: parseInt(ui.paramTopK.value, 10),
-          min_p: parseFloat(ui.paramMinP.value), repeat_penalty: parseFloat(ui.paramRepeat.value), repeat_penalty_range: parseInt(ui.paramRepeatRange.value, 10) || 512,
-          xtc_probability: parseFloat(ui.paramXtcProb.value), xtc_threshold: parseFloat(ui.paramXtcThresh.value),
-          dry_multiplier: parseFloat(ui.paramDryMult.value), dry_base: parseFloat(ui.paramDryBase.value), dry_allowed_length: parseInt(ui.paramDryAllowed.value, 10) || 2,
-          dry_penalty_range: parseInt(ui.paramDryRange.value, 10) || 1024, max_tokens: parseInt(ui.paramMax.value, 10), context_window: parseInt(ui.paramContextWindow.value, 10) || 8192,
+          ...getCurrentSamplerParams(), max_tokens: parseInt(ui.paramMax.value, 10), context_window: parseInt(ui.paramContextWindow.value, 10) || 2048,
           enable_thinking: ui.paramThinking.checked, stop_sequences: ui.paramStopSequences.value.trim(), agents: getAgentToggleStates()
         }
       };
+    }
+    ui.btnSaveCustomDefault.addEventListener('click', async () => {
+      const name = prompt("Enter a name for your custom preset:"); if (!name || !name.trim()) return;
+      const clean = name.trim(); if (clean.toLowerCase() === 'default') { alert("Cannot overwrite 'Default' preset name this way."); return; }
+      const presets = await loadPresets(); presets[clean] = await getCurrentPresetData();
       await savePresets(presets); await populatePresetDropdown(clean); localStorage.setItem('last_selected_preset', clean);
-      alert(`Preset "${clean}" saved successfully!`);
+      alert(`Environment Preset "${clean}" saved successfully!`);
     });
-
     ui.btnOverwritePreset.addEventListener('click', async () => {
       const cur = ui.presetSelect.value; if (cur === 'Default') { alert("Cannot overwrite the factory 'Default' preset."); return; }
-      if (confirm(`Overwrite preset "${cur}" with current panel settings?`)) {
-        let sysKey = ui.sysPromptSelect.value; if (sysKey === 'custom_modified') sysKey = await getSystemPromptKeyForText(ui.paramSys.value);
-        const presets = await loadPresets();
-        presets[cur] = {
-          system_prompt: ui.paramSys.value, linked_sys_prompt: (sysKey && sysKey !== 'custom_modified') ? sysKey : null,
-          parameters: {
-            temperature: parseFloat(ui.paramTemp.value), top_p: parseFloat(ui.paramTopP.value), top_k: parseInt(ui.paramTopK.value, 10),
-            min_p: parseFloat(ui.paramMinP.value), repeat_penalty: parseFloat(ui.paramRepeat.value), repeat_penalty_range: parseInt(ui.paramRepeatRange.value, 10) || 512,
-            xtc_probability: parseFloat(ui.paramXtcProb.value), xtc_threshold: parseFloat(ui.paramXtcThresh.value),
-            dry_multiplier: parseFloat(ui.paramDryMult.value), dry_base: parseFloat(ui.paramDryBase.value), dry_allowed_length: parseInt(ui.paramDryAllowed.value, 10) || 2,
-            dry_penalty_range: parseInt(ui.paramDryRange.value, 10) || 1024, max_tokens: parseInt(ui.paramMax.value, 10), context_window: parseInt(ui.paramContextWindow.value, 10) || 8192,
-            enable_thinking: ui.paramThinking.checked, stop_sequences: ui.paramStopSequences.value.trim(), agents: getAgentToggleStates()
-          }
-        };
-        await savePresets(presets); alert(`Preset "${cur}" overwritten successfully!`);
+      if (confirm(`Overwrite environment preset "${cur}" with current panel settings?`)) {
+        const presets = await loadPresets(); presets[cur] = await getCurrentPresetData();
+        await savePresets(presets); alert(`Environment Preset "${cur}" overwritten successfully!`);
       }
     });
-
     ui.btnResetCustomDefault.addEventListener('click', async () => { await applyPresetToPanel(ui.presetSelect.value); ui.statusText.textContent = `Reset to preset`; setTimeout(() => { if (!activeGenerations.has(activeThread?.id)) ui.statusText.textContent = "Ready"; }, 2000); });
-
     ui.btnResetParams.addEventListener('click', async () => {
       if (activeThread && confirm("Reset this conversation's parameters to factory defaults?")) {
         isProgrammaticUpdate = true;
@@ -2256,19 +2314,15 @@ let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
         ui.statusText.textContent = "Settings Reset"; setTimeout(() => { if (!activeGenerations.has(activeThread.id)) ui.statusText.textContent = "Ready"; }, 2000);
       }
     });
-
     ui.userInput.addEventListener('input', function() {
       this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';
       if (this.value.trim() === '') this.style.height = 'auto';
       updateCharCount(); updateContextBar(); handleSlashInput();
     });
-
     ui.userInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && enterSends && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     });
-
     function updateCharCount() { ui.charCount.textContent = `${ui.userInput.value.length} / 4000 chars • ~${estimateTokens(ui.userInput.value)} tokens`; }
-
     ui.btnSend.addEventListener('click', sendMessage);
     ui.btnStop.addEventListener('click', () => {
       if (activeThread && activeGenerations.has(activeThread.id)) {
@@ -2277,9 +2331,22 @@ let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
         ui.statusText.textContent = "Aborted."; ui.btnStop.style.display = 'none'; ui.btnSend.style.display = 'flex';
       }
     });
-
     async function boot() {
       try {
+        document.title = `RawLLM Pro v${APP_VERSION}`;
+        const verDisplay = document.getElementById('app-version-display');
+        if (verDisplay) verDisplay.textContent = `v${APP_VERSION}`;
+
+        const emailBadge = document.getElementById('contact-email-badge');
+        if (emailBadge) {
+          emailBadge.addEventListener('click', () => {
+            navigator.clipboard.writeText('alphapyrro@proton.me');
+            const orig = emailBadge.textContent;
+            emailBadge.textContent = '✓ Copied to clipboard!';
+            setTimeout(() => { emailBadge.textContent = orig; }, 1500);
+          });
+        }
+
         await loadSettings();
         enterSends = loadedSettings.enter_sends !== false;
         await fetchAgents();
@@ -2291,7 +2358,6 @@ let stopArray = parseStopSequences(targetThread.parameters.stop_sequences);
         else { await loadThread(threads.find(t => t.id === lastId)?.id || threads[0].id); await renderSidebar(); }
       } catch (err) { showError("Boot Failure: " + err.message); }
     }
-
     window.addEventListener('DOMContentLoaded', boot);
   </script>
 </body>
