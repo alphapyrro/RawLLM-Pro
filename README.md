@@ -6,7 +6,7 @@ A modular web-based mini-application designed to run local language models direc
 
 **Installation & Setup**
 
-1. Download the latest **`RawLLM-Pro-v7.2.1.zip`** package from the [Releases](https://github.com/alphapyrro/RawLLM/releases) page.
+1. Download the latest **`RawLLM-Pro-v7.4.0.zip`** package from the Releases page (`https://github.com/alphapyrro/RawLLM/releases`).
 2. Open **Layla** and navigate to **Your Apps**.
 3. Tap the **`+`** icon in the top right corner to open **Browse Apps**.
 4. Tap **Import** in the top right corner.
@@ -16,23 +16,23 @@ A modular web-based mini-application designed to run local language models direc
 
 ---
 
-**What's New in v7.2.1**
+**What's New in v7.4.0**
 
-* **Real-time Performance HUD:** Live generation metrics inside message bubbles (tokens/sec, TTFT, elapsed time, and per-turn token counts) with responsive wrapping.
-* **Visual Stop Sequence Chips:** Interactive badge chips for custom stop sequences with regex escape support (`\n`, `\t`, ChatML, Llama 3 markers).
-* **Live Context Breakdown:** Dedicated granular token allocation tracking for System, User, and AI history directly above the dock.
-* **Universal Search & Agents:** Streamlined `/search` syntax integration and explicit single-pass context injection labels for Date & Time awareness.
-* **UI Polish & Quick-Clear:** Header-based one-tap chat clearing (preserving samplers/system prompts) and streamlined sidebar session indicators.
+* **Dedicated App Settings Tab:** Added a new 5-tab settings layout featuring persistent global controls for keyboard dismissal on send, auto-titling conversations on first send, default auto-scroll behavior, and stats HUD visibility.
+* **Live Streaming & Stats HUD Stability:** Refactored streaming DOM updates so toggling stats mid-stream no longer interrupts or unmounts active assistant response bubbles.
+* **Two-Way Auto-Scroll Sync:** Synchronized the chat dock's quick-lock toggle with global settings while preserving intuitive upward-drag disengagement.
+* **Multi-Tab Preset Preservation:** Resolved an unmounted DOM issue ensuring active agent states are preserved when saving environment presets across different settings tabs.
+* **Standardized Token Limit Defaults:** Harmonized default limits across HTML elements, runtime parameters, and fallback resets to 512 Max Tokens and a 2,048 Context Window.
+* **Clean Boot Rendering:** Updated static HTML placeholders to eliminate layout shifts and context bar token count flicker during initial launch.
 
 ---
 
 **Interface & Features**
 
-| 💬 Main Chat & HUD | 🗂️ Thread Manager | 🧠 Samplers & Tuning | 📝 Prompts & Stops |
+| 1. 💬 Main Chat & HUD | 2. 🗂️ Thread Manager | 3. 🧠 Samplers & Tuning | 4. 📝 Prompts & Stops |
 | :---: | :---: | :---: | :---: |
-| <img src="https://github.com/user-attachments/assets/83579a15-6c12-447a-abdd-9d81a03d8a40" width="220" /> | <img src="https://github.com/user-attachments/assets/ade58773-27b0-499b-9729-a4192e3c309b" width="220" /> | <img src="https://github.com/user-attachments/assets/07ea734d-f894-4226-9f60-eac168498265" width="220" /> | <img src="https://github.com/user-attachments/assets/c2f02eec-3e5d-4393-9afe-63e1e7d3844c" width="220" /> |
+| <img width="465" height="1024" alt="1mainChat" src="https://github.com/user-attachments/assets/0c9e84b4-3022-42ae-bd2c-9b21660397cb" /> | <img width="465" height="1024" alt="2chatManifest" src="https://github.com/user-attachments/assets/e1717288-85c2-4493-a650-714c4536797e" /> | <img width="465" height="1024" alt="3samplers" src="https://github.com/user-attachments/assets/82b23c6e-925b-47ef-ac64-a3cc199a72db" /> | <img width="465" height="1024" alt="4prompts" src="https://github.com/user-attachments/assets/a42a4701-11d0-4280-a1c0-c25fc18b990a" /> |
 
-| 🌐 Web & Agents | 💾 Backup & Restore | 🔍 Payload Inspector |
-| :---: | :---: | :---: |
-| <img src="https://github.com/user-attachments/assets/1910112f-299c-4683-83ea-76f512b01e05" width="220" /> | <img src="https://github.com/user-attachments/assets/35fb7004-3872-4c7c-89ed-9e8c4b4bb9c9" width="220" /> | <img src="https://github.com/user-attachments/assets/2ac2420b-27e3-4508-a842-ce7cba1a011b" width="220" /> |
-
+| 5. ⚡ Web & Agents | 6. 📱 App Settings | 7. 💾 Backup & Data | 8. 🔍 Payload Inspector |
+| :---: | :---: | :---: | :---: |
+| <img width="465" height="1024" alt="5agents" src="https://github.com/user-attachments/assets/a5433552-297e-4ac7-813a-5a34aed423df" /> | <img width="465" height="1024" alt="6appSettings" src="https://github.com/user-attachments/assets/e917759c-91e7-42e9-9b78-528c876d2b38" /> | <img width="465" height="1024" alt="7dataTab" src="https://github.com/user-attachments/assets/1cb99992-2b6e-497b-abab-0940e081120e" /> | <img width="465" height="1024" alt="8apiInspector" src="https://github.com/user-attachments/assets/440f6034-0487-4e8e-b41e-1644c24f8624" /> |

@@ -1,21 +1,48 @@
-MIT License
+# RawLLM Pro Software License & Terms of Use
 
-Copyright (c) 2026 alphapyrro
+**Copyright (c) 2026 alphapyrro. All Rights Reserved.**
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+---
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+### 1. Grant of Personal License
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Subject to the terms and conditions herein, you are granted a personal,
+non-exclusive, non-transferable license to install, inspect, study,
+and modify the RawLLM Pro source code exclusively for your own private,
+non-commercial use.
+
+### 2. Restrictions on Redistribution
+
+You may not:
+* Publish, upload, redistribute, or mirror this software (or any derivative
+  work/fork based upon it) to the Layla Mini-Apps Catalog, Layla repositories,
+  or any public app registry.
+* Sell, lease, rent, license, or commercially exploit this software in whole
+  or in part.
+* Strip, alter, or obscure copyright notices, author tags, or license terms
+  in private distributions or forks.
+
+### 3. Official Distribution Rights
+
+The right to publish, maintain, and distribute RawLLM Pro across the Layla
+ecosystem and official repositories is reserved exclusively for the author
+(**alphapyrro**).
+
+Any unauthorized clones, mirrors, or rebranded releases found on the platform
+are in direct violation of these terms and will be subject to platform removal
+and takedown procedures.
+
+---
+
+### 4. Disclaimer of Warranty and Limitation of Liability
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT.
+
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

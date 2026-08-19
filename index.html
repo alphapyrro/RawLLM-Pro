@@ -1,10 +1,40 @@
-<!DOCTYPE html>
 <!--
-  RawLLM for Layla
-  Created by: alphapyrro
-  Feel free to modify, optimize, and share!
-  If you publish a fork, please include a nod back to the original author.
---><html lang="en">
+  ==============================================================================
+  RawLLM Pro for Layla
+  Copyright (c) 2026 alphapyrro. All Rights Reserved.
+  ==============================================================================
+
+  TERMS OF USE & DISTRIBUTION LICENSE:
+
+  1. PERSONAL USE & MODIFICATION:
+     You are granted a personal, non-exclusive, non-transferable license to use,
+     inspect, and modify this software solely for your own private, personal,
+     and non-commercial use on your own devices.
+
+  2. REDISTRIBUTION RESTRICTIONS:
+     You may NOT redistribute, publish, mirror, sublicense, sell, or upload
+     this software (in whole or in part), including any modified versions,
+     forks, or derivative works, to the official Layla Mini-Apps Catalog/Repo,
+     any third-party application directories, package managers, or app stores
+     without explicit prior written consent from the author (alphapyrro).
+
+  3. DERIVATIVE WORKS & ATTRIBUTION:
+     Creating public rebrands, mirrors, or repackaged versions for public
+     distribution is strictly prohibited. Any unauthorized clones or republications
+     within the Layla platform or external repositories will be subject to
+     immediate takedown requests and copyright enforcement.
+
+  4. WARRANTY & LIABILITY DISCLAIMER:
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+     SOFTWARE.
+  ==============================================================================
+-->
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
@@ -121,9 +151,15 @@
       display: flex; gap: 4px; width: 100%; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
     }
     .settings-tab-btn {
-      flex: 1; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-muted);
-      padding: 8px 2px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-      display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 36px;
+      flex: 1 1 0; min-width: 0; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-muted);
+      padding: 4px 1px; border-radius: 8px; font-size: 10.5px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 42px;
+    }
+    .settings-tab-icon {
+      font-size: 14px; line-height: 1; display: block;
+    }
+    .settings-tab-label {
+      line-height: 1.1; white-space: nowrap;
     }
     .settings-tab-btn:hover { color: var(--text-main); background: var(--bg-surface-hover); }
     .settings-tab-btn.active {
@@ -335,10 +371,26 @@
   <div id="params-panel">
     <div class="params-sticky-header">
       <div class="settings-tab-bar">
-        <button class="settings-tab-btn active" data-target="tab-samplers">🧠 Samplers</button>
-        <button class="settings-tab-btn" data-target="tab-prompts">📝 Prompts</button>
-        <button class="settings-tab-btn" data-target="tab-agents">🌐 Web & Agents</button>
-        <button class="settings-tab-btn" data-target="tab-data">💾 Data</button>
+        <button class="settings-tab-btn active" data-target="tab-samplers">
+          <span class="settings-tab-icon">🧠</span>
+          <span class="settings-tab-label">Samplers</span>
+        </button>
+        <button class="settings-tab-btn" data-target="tab-prompts">
+          <span class="settings-tab-icon">📝</span>
+          <span class="settings-tab-label">Prompts</span>
+        </button>
+        <button class="settings-tab-btn" data-target="tab-agents">
+          <span class="settings-tab-icon">⚡</span>
+          <span class="settings-tab-label">Agents</span>
+        </button>
+        <button class="settings-tab-btn" data-target="tab-app">
+          <span class="settings-tab-icon">📱</span>
+          <span class="settings-tab-label">App</span>
+        </button>
+        <button class="settings-tab-btn" data-target="tab-data">
+          <span class="settings-tab-icon">💾</span>
+          <span class="settings-tab-label">Data</span>
+        </button>
       </div>
     </div>
     <div class="settings-tab-page active" id="tab-samplers">
@@ -500,13 +552,6 @@
       <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; padding: 4px 0 2px;">
         💡 <b>Tip:</b> Web search is triggered explicitly on demand. Start your query with <code>/search [query]</code> in the chat box to retrieve live web data.
       </div>
-      <div class="param-section-title">Keyboard & Input Behavior</div>
-      <div class="param-group">
-        <div class="toggle-group">
-          <label class="toggle-label" for="setting-close-keyboard-on-send">Dismiss Keyboard on Send</label>
-          <input type="checkbox" id="setting-close-keyboard-on-send" class="toggle-checkbox" checked>
-        </div>
-      </div>
 
       <div class="param-section-title">Universal Web Search</div>
       <div class="param-group">
@@ -531,6 +576,15 @@
       </div>
       <button class="btn-secondary" id="btn-test-search" style="margin-top: 4px;">🔍 Test Search Connection</button>
       <div id="search-test-status" style="font-size: 11px; font-family: var(--font-mono); display: none;"></div>
+    </div>
+    <div class="settings-tab-page" id="tab-app">
+      <div class="param-section-title">Keyboard & Input Behavior</div>
+      <div class="param-group">
+        <div class="toggle-group">
+          <label class="toggle-label" for="setting-close-keyboard-on-send">Dismiss Keyboard on Send</label>
+          <input type="checkbox" id="setting-close-keyboard-on-send" class="toggle-checkbox" checked>
+        </div>
+      </div>
     </div>
     <div class="settings-tab-page" id="tab-data">
       <div class="param-section-title">Support & Feedback</div>
@@ -716,7 +770,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
   <script type="module">
     import { LaylaSDK } from './assets/js/layla-sdk.min.js';
     const layla = new LaylaSDK();
-    const APP_VERSION = '7.3.1';
+    const APP_VERSION = '7.4.0';
     const CONFIG_PATHS = {
       SETTINGS: 'config/settings.json',
       SYS_PROMPTS: 'config/system_prompts.json',
@@ -1226,12 +1280,15 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       syncThreadParametersLive();
     });
     document.querySelectorAll('.settings-tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        const targetBtn = e.target.closest('.settings-tab-btn');
+        if (!targetBtn) return;
         document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.settings-tab-page').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        const targetPage = document.getElementById(btn.dataset.target);
+        targetBtn.classList.add('active');
+        const targetPage = document.getElementById(targetBtn.dataset.target);
         if (targetPage) targetPage.classList.add('active');
+        triggerHaptic(10);
       });
     });
     if (ui.settingCloseKeyboardOnSend) {
