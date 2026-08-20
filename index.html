@@ -64,6 +64,7 @@
       --border-color: #30363d; --text-main: #c9d1d9; --text-muted: #8b949e;
       --accent: #238636; --accent-hover: #2ea043; --warning: #d29922;
       --error: #f85149; --user-bubble: #1f6feb; --ai-bubble: #161b22;
+      --chat-font-size: 15px;
       --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
     }
@@ -250,7 +251,7 @@
     #chat-viewport { flex-grow: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
     .message {
       max-width: 92%; min-width: 220px; padding: 10px 14px; border-radius: 12px;
-      font-size: 15px; line-height: 1.5; word-wrap: break-word; display: flex; flex-direction: column; gap: 8px; position: relative;
+      font-size: var(--chat-font-size); line-height: 1.5; word-wrap: break-word; display: flex; flex-direction: column; gap: 8px; position: relative;
     }
     .msg-user { align-self: flex-end; background: var(--user-bubble); color: white; border-bottom-right-radius: 2px; }
     .msg-user .message-content { white-space: pre-wrap !important; word-wrap: break-word; }
@@ -275,6 +276,9 @@
     .stats-hud {
       display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; column-gap: 10px; row-gap: 4px;
       margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border-color); font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);
+    }
+    #chat-viewport.hide-stats .stats-hud {
+      display: none !important;
     }
     .stats-hud span { display: inline-flex; align-items: center; white-space: nowrap; flex-shrink: 0; }
     .msg-actions, .msg-actions-constant { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; width: 100%; }
@@ -370,6 +374,12 @@
   </div>
   <div id="params-panel">
     <div class="params-sticky-header">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 2px 6px 2px;">
+        <span style="font-size: 15px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+          ⚙️ Settings & Controls
+        </span>
+        <button class="icon-btn" id="btn-close-params" style="min-width: 32px; min-height: 32px; font-size: 14px; background: rgba(248,81,73,0.1); border: 1px solid var(--error); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;" title="Close Settings">❌</button>
+      </div>
       <div class="settings-tab-bar">
         <button class="settings-tab-btn active" data-target="tab-samplers">
           <span class="settings-tab-icon">🧠</span>
@@ -585,6 +595,25 @@
           <input type="checkbox" id="setting-close-keyboard-on-send" class="toggle-checkbox" checked>
         </div>
       </div>
+      <div class="param-section-title">Chat & Display Preferences</div>
+      <div class="param-group">
+        <div class="param-header">
+          <span>Chat Font Size</span>
+          <span id="font-size-val-display" style="font-family: var(--font-mono); color: var(--accent);">15px</span>
+        </div>
+        <div class="sync-row">
+          <div class="slider-touch-guard">
+            <div class="slider-touch-overlay"></div>
+            <input type="range" id="setting-font-size" min="12" max="22" step="1" value="15">
+          </div>
+        </div>
+      </div>
+      <div class="param-group">
+        <div class="toggle-group">
+          <label class="toggle-label" for="setting-show-stats">Show Generation Stats HUD</label>
+          <input type="checkbox" id="setting-show-stats" class="toggle-checkbox" checked>
+        </div>
+      </div>
     </div>
     <div class="settings-tab-page" id="tab-data">
       <div class="param-section-title">Support & Feedback</div>
@@ -669,7 +698,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         <button class="prefill-toggle-btn" id="btn-toggle-autoscroll"><span>🔒 Auto-Scroll</span></button>
         <button class="prefill-toggle-btn" id="btn-toggle-enter-send"><span id="enter-send-label">↩️ Enter Sends</span></button>
       </div>
-      <span id="char-count">0 / 4000 chars • ~0 tokens</span>
+      <span id="char-count">0 / ∞ chars • ~0 tokens</span>
     </div>
   </div>
   <script>
@@ -801,7 +830,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       search_api_endpoint: 'https://api.tavily.com/search',
       search_api_key: '',
       enter_sends: true,
-      close_keyboard_on_send: true
+      close_keyboard_on_send: true,
+      font_size: 15,
+      show_stats: true
     };
     const ui = {
       sidebar: document.getElementById('sidebar'), overlay: document.getElementById('sidebar-overlay'),
@@ -823,6 +854,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       paramThinking: document.getElementById('param-thinking'), btnPayload: document.getElementById('btn-payload'),
       modalPayload: document.getElementById('modal-payload'), btnClosePayload: document.getElementById('btn-close-payload'),
       btnCopyPayload: document.getElementById('btn-copy-payload'), payloadCodeView: document.getElementById('payload-code-view'),
+      btnCloseParams: document.getElementById('btn-close-params'),
       btnClearChat: document.getElementById('btn-clear-chat'),
       prefillDrawer: document.getElementById('prefill-drawer'), slashPopup: document.getElementById('slash-popup'),
       btnScrollBottom: document.getElementById('scroll-bottom-btn'),
@@ -831,6 +863,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       prefillInput: document.getElementById('prefill-input'), btnClearPrefill: document.getElementById('btn-clear-prefill'),
       prefillDot: document.getElementById('prefill-dot'), paramSys: document.getElementById('param-system'),
       settingCloseKeyboardOnSend: document.getElementById('setting-close-keyboard-on-send'),
+      settingFontSize: document.getElementById('setting-font-size'),
+      fontSizeValDisplay: document.getElementById('font-size-val-display'),
+      settingShowStats: document.getElementById('setting-show-stats'),
       settingSearchProvider: document.getElementById('setting-search-provider'),
       settingSearchEndpoint: document.getElementById('setting-search-endpoint'),
       settingSearchKey: document.getElementById('setting-search-key'),
@@ -889,9 +924,11 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const fallbackLocalKey = localStorage.getItem('tavily_api_key');
       const fallbackLocalEndpoint = localStorage.getItem('tavily_api_endpoint');
       const fallbackEnterSends = localStorage.getItem('enter_sends');
+      const fallbackLastThread = localStorage.getItem('last_active_thread_id');
       if (fallbackLocalKey) loadedSettings.search_api_key = fallbackLocalKey;
       if (fallbackLocalEndpoint) loadedSettings.search_api_endpoint = fallbackLocalEndpoint;
       if (fallbackEnterSends !== null) loadedSettings.enter_sends = fallbackEnterSends !== 'false';
+      if (fallbackLastThread) loadedSettings.last_active_thread_id = fallbackLastThread;
       await saveSettings(loadedSettings);
       return loadedSettings;
     }
@@ -903,6 +940,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       localStorage.setItem('tavily_api_key', loadedSettings.search_api_key);
       localStorage.setItem('tavily_api_endpoint', loadedSettings.search_api_endpoint);
       localStorage.setItem('enter_sends', loadedSettings.enter_sends);
+      if (loadedSettings.last_active_thread_id) {
+        localStorage.setItem('last_active_thread_id', loadedSettings.last_active_thread_id);
+      }
     }
     async function getSystemPromptPresets() {
       try {
@@ -1288,7 +1328,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         targetBtn.classList.add('active');
         const targetPage = document.getElementById(targetBtn.dataset.target);
         if (targetPage) targetPage.classList.add('active');
-        triggerHaptic(10);
       });
     });
     if (ui.settingCloseKeyboardOnSend) {
@@ -1296,7 +1335,19 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         saveSettings({ close_keyboard_on_send: e.target.checked });
       });
     }
-
+    if (ui.settingFontSize) {
+      ui.settingFontSize.addEventListener('input', (e) => {
+        const size = parseInt(e.target.value, 10);
+        applyFontSize(size);
+        saveSettings({ font_size: size });
+      });
+    }
+    if (ui.settingShowStats) {
+      ui.settingShowStats.addEventListener('change', (e) => {
+        applyShowStats(e.target.checked);
+        saveSettings({ show_stats: e.target.checked });
+      });
+    }
     ui.settingSearchProvider.addEventListener('change', (e) => {
       const selected = e.target.value;
       if (SEARCH_PRESETS[selected] && selected !== 'custom') {
@@ -1588,7 +1639,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     }
     async function applyPresetToPanel(name) {
       const presets = await loadPresets();
-      const target = presets[name] || (name === 'Default' ? { system_prompt: DEFAULT_SYS, parameters: { ...DEFAULT_PARAMS } } : null);
+      const target = name === 'Default'
+        ? { system_prompt: DEFAULT_SYS, linked_sys_prompt: 'Default Prompt', linked_param_preset: 'Default Samplers', parameters: { ...DEFAULT_PARAMS } }
+        : presets[name];
       if (target) {
         isProgrammaticUpdate = true;
         ui.paramThinking.checked = target.parameters.enable_thinking ?? false;
@@ -1597,10 +1650,12 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         updateSynchronizedInputs(target.parameters);
         const sysPresets = await getSystemPromptPresets();
         let sysPrompt = target.system_prompt || DEFAULT_SYS;
-        let sysKey = target.linked_sys_prompt || (sysPresets[target.system_prompt] ? null : await getSystemPromptKeyForText(sysPrompt));
+        let sysKey = target.linked_sys_prompt || (sysPresets[sysPrompt] ? await getSystemPromptKeyForText(sysPrompt) : null);
+        if (!sysKey && name === 'Default') sysKey = 'Default Prompt';
         ui.paramSys.value = sysPrompt;
         await populateSystemPromptDropdown(sysKey || 'custom_modified');
         let paramKey = target.linked_param_preset || await getPureParamPresetKeyForValues(target.parameters);
+        if (!paramKey && name === 'Default') paramKey = 'Default Samplers';
         await populatePureParamDropdown(paramKey || 'custom_modified');
         isProgrammaticUpdate = false;
         renderAgentsUI(target.parameters.agents || DEFAULT_PARAMS.agents);
@@ -1676,6 +1731,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         activeThread.parameters = { ...DEFAULT_PARAMS, ...activeThread.parameters };
         if (!activeThread.parameters.agents) activeThread.parameters.agents = { ...DEFAULT_PARAMS.agents };
         localStorage.setItem('last_active_thread_id', activeThread.id);
+        loadedSettings.last_active_thread_id = activeThread.id;
+        saveSettings({ last_active_thread_id: activeThread.id });
         isProgrammaticUpdate = true;
         ui.activeTitle.textContent = activeThread.title;
         ui.paramSys.value = activeThread.system_prompt;
@@ -1775,6 +1832,21 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       window.Bridge.files.save(`chats/${activeThread.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.md`, toB64(md), true)
         .then(() => alert("Exported Markdown file!"))
         .catch(err => showError("Export failed: " + err.message));
+    }
+    function applyFontSize(size) {
+      const val = parseInt(size, 10) || 15;
+      document.documentElement.style.setProperty('--chat-font-size', `${val}px`);
+      if (ui.fontSizeValDisplay) ui.fontSizeValDisplay.textContent = `${val}px`;
+      if (ui.settingFontSize) ui.settingFontSize.value = val;
+    }
+
+    function applyShowStats(show) {
+      if (ui.chatViewport) {
+        ui.chatViewport.classList.toggle('hide-stats', !show);
+      }
+      if (ui.settingShowStats) {
+        ui.settingShowStats.checked = !!show;
+      }
     }
     function applyHighlightAndCopy(container, rawText, role, msgIndex, rawStream = '') {
       container.querySelectorAll('pre').forEach(pre => {
@@ -1922,12 +1994,19 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     ui.chatViewport.addEventListener('touchend', () => { isUserInteracting = false; }, { passive: true });
     ui.chatViewport.addEventListener('pointerup', () => { isUserInteracting = false; }, { passive: true });    
     ui.chatViewport.addEventListener('wheel', (e) => {
-      if (e.deltaY < 0 && isAutoScrolling) { isAutoScrolling = false; ui.btnToggleAutoscroll.innerHTML = '<span>🔓 Auto-Scroll</span>'; }
+      if (e.deltaY < -40 && isAutoScrolling) {
+        const { scrollTop, scrollHeight, clientHeight } = ui.chatViewport;
+        if (scrollHeight - scrollTop - clientHeight > 140) {
+          isAutoScrolling = false;
+          ui.btnToggleAutoscroll.innerHTML = '<span>🔓 Auto-Scroll</span>';
+        }
+      }
     });
     ui.chatViewport.addEventListener('scroll', () => {
       const { scrollTop, scrollHeight, clientHeight } = ui.chatViewport;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight <= 80;
-      if (isUserInteracting && isAutoScrolling && !isNearBottom) {
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      const isNearBottom = distanceFromBottom <= 60;
+      if (isUserInteracting && isAutoScrolling && distanceFromBottom > 140) {
         isAutoScrolling = false;
         ui.btnToggleAutoscroll.innerHTML = '<span>🔓 Auto-Scroll</span>';
       }
@@ -1973,6 +2052,27 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         activeThread.messages.pop(); await dbPut(activeThread); renderChatViewport(); executeGeneration();
       }
     }
+    async function persistStreamProgress(targetThreadId, replyText, thoughtText, rawStreamText) {
+      if (!targetThreadId) return;
+      try {
+        const thread = await dbGet(targetThreadId);
+        if (!thread) return;
+        const cleanContent = cleanEosTokens(replyText.replace(/\n\n\*\*\[Error:.*\]\*\*$/, ''));
+        const msgObj = { role: 'assistant', content: cleanContent, rawStream: rawStreamText };
+        if (thoughtText) msgObj.thinking = thoughtText;
+        
+        // If the last message is already the current in-flight stream, update it; otherwise append
+        const lastIdx = thread.messages.length - 1;
+        if (lastIdx >= 0 && thread.messages[lastIdx]._isStreaming) {
+          thread.messages[lastIdx] = { ...msgObj, _isStreaming: true };
+        } else {
+          thread.messages.push({ ...msgObj, _isStreaming: true });
+        }
+        thread.updated_at = Date.now();
+        await dbPut(thread);
+      } catch (e) {}
+    }
+
     async function sendMessage() {
       let text = ui.userInput.value.replace(/^\s+|\s+$/g, '');
       if (!text || !activeThread || activeGenerations.has(activeThread.id)) return;
@@ -2054,7 +2154,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         isAutoScrolling = true; ui.btnToggleAutoscroll.innerHTML = '<span>🔒 Auto-Scroll</span>'; scrollToBottom(true);
       }
       let rawGeneratedText = "", aiResponseContent = prefillVal || "", tokenCount = estimateTokens(aiResponseContent);
-      let streamChunkCount = 0;
+      let streamChunkCount = 0, lastSavedTokenCount = 0, lastSavedTime = performance.now(), isDiskSaving = false;
       const startTime = performance.now();
       let firstTokenTime = null, computedStats = null;
       if (activeThread?.id === targetThreadId) currentStreamTokens = tokenCount;
@@ -2163,6 +2263,16 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
               updateContextBar();
               scrollToBottom();
             }
+
+            // Periodic incremental flush: every 15 tokens or every 1.5 seconds
+            const nowTime = performance.now();
+            if (!isDiskSaving && (tokenCount - lastSavedTokenCount >= 15 || nowTime - lastSavedTime >= 1500)) {
+              isDiskSaving = true;
+              lastSavedTokenCount = tokenCount;
+              lastSavedTime = nowTime;
+              persistStreamProgress(targetThreadId, displayReply, displayThought, aiResponseContent)
+                .finally(() => { isDiskSaving = false; });
+            }
           }
         }
         if (activeThread?.id === targetThreadId) {
@@ -2197,7 +2307,15 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           if (computedStats) msgObj.stats = computedStats;
           const latest = await dbGet(targetThreadId);
           if (latest) {
-            latest.messages.push(msgObj); latest.updated_at = Date.now(); await dbPut(latest);
+            // Replace in-flight streaming placeholder if present, or push final message
+            const lastIdx = latest.messages.length - 1;
+            if (lastIdx >= 0 && latest.messages[lastIdx]._isStreaming) {
+              latest.messages[lastIdx] = msgObj;
+            } else {
+              latest.messages.push(msgObj);
+            }
+            latest.updated_at = Date.now();
+            await dbPut(latest);
             if (activeThread?.id === targetThreadId) { activeThread = latest; renderSidebar(); renderChatViewport(); updateContextBar(); }
             else { renderSidebar(); }
           }
@@ -2214,6 +2332,13 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const title = prompt("Rename current conversation:", activeThread.title);
       if (title && title.trim()) { activeThread.title = title.trim(); activeThread.updated_at = Date.now(); ui.activeTitle.textContent = activeThread.title; await dbPut(activeThread); await renderSidebar(); }
     });
+    if (ui.btnCloseParams) {
+      ui.btnCloseParams.addEventListener('click', (e) => {
+        e.stopPropagation();
+        ui.paramsPanel.style.display = 'none';
+      });
+    }
+
     ui.btnParams.addEventListener('click', async () => {
       const visible = ui.paramsPanel.style.display === 'flex';
       if (!visible) {
@@ -2400,7 +2525,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     ui.userInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && enterSends && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     });
-    function updateCharCount() { ui.charCount.textContent = `${ui.userInput.value.length} / 4000 chars • ~${estimateTokens(ui.userInput.value)} tokens`; }
+    function updateCharCount() { ui.charCount.textContent = `${ui.userInput.value.length.toLocaleString()} / ∞ chars • ~${estimateTokens(ui.userInput.value).toLocaleString()} tokens`; }
     ui.btnSend.addEventListener('click', sendMessage);
     ui.btnStop.addEventListener('click', () => {
       if (activeThread && activeGenerations.has(activeThread.id)) {
@@ -2427,13 +2552,23 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
         await loadSettings();
         enterSends = loadedSettings.enter_sends !== false;
+        applyFontSize(loadedSettings.font_size || 15);
+        applyShowStats(loadedSettings.show_stats !== false);
         await fetchAgents();
         updateEnterSendUI();
         await populateSystemPromptDropdown();
-        const lastId = localStorage.getItem('last_active_thread_id');
+        const lastId = loadedSettings.last_active_thread_id || localStorage.getItem('last_active_thread_id');
         const threads = await dbGetAll();
-        if (!threads.length) await createNewThread();
-        else { await loadThread(threads.find(t => t.id === lastId)?.id || threads[0].id); await renderSidebar(); }
+        if (!threads.length) {
+          await createNewThread();
+        } else {
+          let targetThread = threads.find(t => t.id === lastId);
+          if (!targetThread) {
+            targetThread = [...threads].sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0))[0];
+          }
+          await loadThread(targetThread.id);
+          await renderSidebar();
+        }
       } catch (err) { showError("Boot Failure: " + err.message); }
     }
     window.addEventListener('DOMContentLoaded', boot);
