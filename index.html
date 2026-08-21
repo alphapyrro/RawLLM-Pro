@@ -37,7 +37,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
   <title>RawLLM Pro</title>
   <script>
     window.onerror = function(message, source, lineno, colno, error) {
@@ -74,6 +74,8 @@
       background-color: var(--bg-base); color: var(--text-main);
       display: flex; flex-direction: column; overflow: hidden; max-width: 100vw;
       -webkit-user-select: none; user-select: none;
+      touch-action: pan-x pan-y;
+      -webkit-text-size-adjust: 100%;
     }
     input, textarea, select, .message-content, pre code, .think-content {
       -webkit-user-select: text !important;
@@ -256,7 +258,10 @@
     .msg-user { align-self: flex-end; background: var(--user-bubble); color: white; border-bottom-right-radius: 2px; }
     .msg-user .message-content { white-space: pre-wrap !important; word-wrap: break-word; }
     .msg-ai { align-self: flex-start; background: var(--ai-bubble); border: 1px solid var(--border-color); border-bottom-left-radius: 2px; width: 100%; }
-    .msg-header { display: flex; justify-content: flex-end; align-items: center; gap: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 2px; }
+    .msg-header { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 2px; width: 100%; }
+    .msg-timestamp { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); opacity: 0.75; user-select: none; }
+    .msg-user .msg-timestamp { color: rgba(255,255,255,0.7); }
+    .msg-header-right { display: flex; align-items: center; gap: 6px; margin-left: auto; }
     .gear-toggle-btn {
       background: none; border: 1px solid var(--border-color); color: var(--text-muted); font-size: 11px;
       cursor: pointer; padding: 2px 6px; border-radius: 6px; min-height: 26px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;
@@ -292,10 +297,14 @@
     .edit-container { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 4px; }
     .edit-textarea { width: 100%; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; font-family: inherit; font-size: 14px; min-height: 60px; }
     .edit-btn-row { display: flex; justify-content: flex-end; gap: 8px; }
-    .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 12px 14px; background: var(--ai-bubble); border: 1px solid var(--border-color); border-radius: 12px; border-bottom-left-radius: 2px; width: fit-content; display: none; }
-    .dot { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; animation: pulse 1.5s infinite ease-in-out; }
-    .dot:nth-child(2) { animation-delay: 0.2s; } .dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes pulse { 0%, 100% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } }
+    .typing-indicator { display: flex; align-items: center; gap: 5px; padding: 10px 14px; background: var(--ai-bubble); border: 1px solid var(--border-color); border-radius: 12px; border-bottom-left-radius: 2px; width: fit-content; display: none; margin-bottom: 4px; }
+    .dot { width: 6.5px; height: 6.5px; background: var(--text-muted); border-radius: 50%; animation: dotWavePause 1.8s infinite ease-in-out; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotWavePause {
+      0%, 60%, 100% { transform: scale(0.75); opacity: 0.35; }
+      30% { transform: scale(1.35); opacity: 1; background: var(--accent); }
+    }
     #context-bar-container { padding: 6px 16px; background: var(--bg-surface); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--text-muted); }
     .context-bar-header { display: flex; justify-content: space-between; align-items: center; }
     .context-bar-left { display: flex; align-items: center; gap: 6px; }
@@ -614,6 +623,23 @@
           <input type="checkbox" id="setting-show-stats" class="toggle-checkbox" checked>
         </div>
       </div>
+      <div class="param-group">
+        <label class="param-header">Message Timestamps</label>
+        <select id="setting-timestamp-mode">
+          <option value="off">Off (Hide Timestamps)</option>
+          <option value="24h">24-Hour (19:30)</option>
+          <option value="12h">12-Hour (7:30 PM)</option>
+        </select>
+      </div>
+      <div class="param-section-title" style="color: var(--error); margin-top: 20px;">⚠️ Danger Zone</div>
+      <div class="param-group" style="border: 1px solid rgba(248,81,73,0.3); background: rgba(248,81,73,0.04); border-radius: 8px; padding: 12px;">
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
+          Revert App tab display preferences (font size, stats HUD, keyboard dismissal, timestamps) back to factory defaults.
+        </div>
+        <button id="btn-reset-app-settings" class="icon-btn" style="width: 100%; height: 38px; background: rgba(248,81,73,0.15); border: 1px solid var(--error); color: var(--error); font-weight: 700; border-radius: 6px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+          <span>⚠️</span> Reset App Settings to Default
+        </button>
+      </div>
     </div>
     <div class="settings-tab-page" id="tab-data">
       <div class="param-section-title">Support & Feedback</div>
@@ -799,7 +825,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
   <script type="module">
     import { LaylaSDK } from './assets/js/layla-sdk.min.js';
     const layla = new LaylaSDK();
-    const APP_VERSION = '7.4.0';
+    const APP_VERSION = '7.5.0';
     const CONFIG_PATHS = {
       SETTINGS: 'config/settings.json',
       SYS_PROMPTS: 'config/system_prompts.json',
@@ -832,7 +858,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       enter_sends: true,
       close_keyboard_on_send: true,
       font_size: 15,
-      show_stats: true
+      show_stats: true,
+      timestamp_mode: 'off'
     };
     const ui = {
       sidebar: document.getElementById('sidebar'), overlay: document.getElementById('sidebar-overlay'),
@@ -866,6 +893,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       settingFontSize: document.getElementById('setting-font-size'),
       fontSizeValDisplay: document.getElementById('font-size-val-display'),
       settingShowStats: document.getElementById('setting-show-stats'),
+      settingTimestampMode: document.getElementById('setting-timestamp-mode'),
+      btnResetAppSettings: document.getElementById('btn-reset-app-settings'),
       settingSearchProvider: document.getElementById('setting-search-provider'),
       settingSearchEndpoint: document.getElementById('setting-search-endpoint'),
       settingSearchKey: document.getElementById('setting-search-key'),
@@ -1348,6 +1377,44 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         saveSettings({ show_stats: e.target.checked });
       });
     }
+    if (ui.settingTimestampMode) {
+      ui.settingTimestampMode.addEventListener('change', (e) => {
+        const mode = e.target.value;
+        saveSettings({ timestamp_mode: mode });
+        refreshAllTimestamps();
+      });
+    }
+
+    if (ui.btnResetAppSettings) {
+      ui.btnResetAppSettings.addEventListener('click', async () => {
+        const msg = "Are you sure you want to reset App Settings to default?\n\n" +
+                    "• WHAT RESETS: Chat font size (15px), Keyboard dismissal (On), Stats HUD (On), and Message Timestamps (Off).\n\n" +
+                    "• WHAT IS SAFE: All conversations, custom system prompts, sampler presets, and Web Search API keys will NOT be changed or deleted.\n\n" +
+                    "Press OK to reset, or Cancel to keep your current settings.";
+        
+        if (!confirm(msg)) return;
+
+        // Hardcoded factory app defaults
+        const factoryAppSettings = {
+          font_size: 15,
+          close_keyboard_on_send: true,
+          show_stats: true,
+          timestamp_mode: 'off'
+        };
+
+        // 1. Persist to disk settings.json & memory
+        await saveSettings(factoryAppSettings);
+
+        // 2. Update UI Controls live
+        if (ui.settingCloseKeyboardOnSend) ui.settingCloseKeyboardOnSend.checked = true;
+        if (ui.settingTimestampMode) ui.settingTimestampMode.value = 'off';
+        
+        // 3. Apply live viewport styles & renders
+        applyFontSize(15);
+        applyShowStats(true);
+        refreshAllTimestamps();
+      });
+    }
     ui.settingSearchProvider.addEventListener('change', (e) => {
       const selected = e.target.value;
       if (SEARCH_PRESETS[selected] && selected !== 'custom') {
@@ -1497,10 +1564,10 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         if (agentsMap[agent.id]) {
           let addon = agent.system_prompt_addon || '';
           if (agent.id === 'get_datetime' || agent.id.toLowerCase().includes('time')) {
+            // Keep system prompt static per session date to avoid invalidating the root KV cache block every second
             const now = new Date();
             const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-            addon = `Live system clock access enabled. Today's date is ${dateStr}, and the current time is ${timeStr} (24-hour format). Year is 2026.`;
+            addon = `System clock access enabled. Current calendar date: ${dateStr}. Reference year is 2026.`;
           }
           if (agent.id === 'web_search') {
             addon = `You have access to live web search integration. When search results are appended to a query, utilize them directly to provide up-to-date facts.`;
@@ -1722,10 +1789,13 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       await dbPut(newThread); await loadThread(newThread.id); await renderSidebar();
     }
     window.branchChat = branchChat;
+    let isLoadingThread = false;
     async function loadThread(id) {
+      if (isLoadingThread && activeThread?.id === id) return;
+      isLoadingThread = true;
       try {
         const thread = await dbGet(id);
-        if (!thread) return;
+        if (!thread) { isLoadingThread = false; return; }
         activeThread = thread;
         if (!activeThread.parameters) activeThread.parameters = { ...DEFAULT_PARAMS };
         activeThread.parameters = { ...DEFAULT_PARAMS, ...activeThread.parameters };
@@ -1758,7 +1828,12 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           currentStreamTokens = 0; ui.btnSend.style.display = 'flex'; ui.btnStop.style.display = 'none';
           ui.typingIndicator.style.display = 'none'; ui.statusText.textContent = "Ready";
         }
-      } catch (err) { isProgrammaticUpdate = false; showError("Failed to load thread: " + err.message); }
+      } catch (err) { 
+        isProgrammaticUpdate = false; 
+        showError("Failed to load thread: " + err.message); 
+      } finally {
+        isLoadingThread = false;
+      }
     }
     async function renderSidebar() {
       try {
@@ -1841,12 +1916,35 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     }
 
     function applyShowStats(show) {
+      const isVisible = show === true || show === 'true';
       if (ui.chatViewport) {
-        ui.chatViewport.classList.toggle('hide-stats', !show);
+        ui.chatViewport.classList.toggle('hide-stats', !isVisible);
       }
       if (ui.settingShowStats) {
-        ui.settingShowStats.checked = !!show;
+        ui.settingShowStats.checked = isVisible;
       }
+    }
+
+    function formatTimestamp(ts, mode) {
+      if (!ts || mode === 'off') return '';
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return '';
+      if (mode === '12h') {
+        return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+      }
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+    function refreshAllTimestamps() {
+      const mode = loadedSettings.timestamp_mode || 'off';
+      document.querySelectorAll('.message').forEach(msgEl => {
+        const tsVal = parseInt(msgEl.dataset.timestamp, 10);
+        let span = msgEl.querySelector('.msg-timestamp');
+        const formatted = tsVal ? formatTimestamp(tsVal, mode) : '';
+        if (span) {
+          span.textContent = formatted;
+          span.style.display = formatted ? 'inline-block' : 'none';
+        }
+      });
     }
     function applyHighlightAndCopy(container, rawText, role, msgIndex, rawStream = '') {
       container.querySelectorAll('pre').forEach(pre => {
@@ -1866,10 +1964,11 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         actionsWrapper.appendChild(actionsDiv);
         if (headerDiv) container.insertBefore(actionsWrapper, headerDiv.nextSibling); else container.insertBefore(actionsWrapper, container.firstChild);
       } else { actionsDiv.innerHTML = ''; }
-      let constantDiv = headerDiv ? headerDiv.querySelector('.msg-actions-constant') : null;
-      if (!constantDiv && headerDiv) {
+      const headerRight = headerDiv ? (headerDiv.querySelector('.msg-header-right') || headerDiv) : null;
+      let constantDiv = headerRight ? headerRight.querySelector('.msg-actions-constant') : null;
+      if (!constantDiv && headerRight) {
         constantDiv = document.createElement('div'); constantDiv.className = 'msg-actions-constant';
-        headerDiv.insertBefore(constantDiv, headerDiv.querySelector('.gear-toggle-btn'));
+        headerRight.insertBefore(constantDiv, headerRight.querySelector('.gear-toggle-btn'));
       } else if (constantDiv) { constantDiv.innerHTML = ''; }
       if (constantDiv) {
         const copyBtn = document.createElement('button'); copyBtn.className = 'bubble-action-btn'; copyBtn.textContent = '📋 Copy';
@@ -1949,27 +2048,45 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       container.querySelector('.cancel-edit-btn').onclick = (e) => { e.stopPropagation(); renderChatViewport(); };
       container.querySelector('.save-edit-btn').onclick = async (e) => {
         e.stopPropagation(); const text = ta.value.replace(/^\s+|\s+$/g, ''); if (!text) return;
+        const editMsgTs = Date.now();
         activeThread.messages = activeThread.messages.slice(0, msgIndex);
-        activeThread.messages.push({ role: 'user', content: text });
-        activeThread.updated_at = Date.now(); await dbPut(activeThread);
+        activeThread.messages.push({ role: 'user', content: text, timestamp: editMsgTs });
+        activeThread.updated_at = editMsgTs; await dbPut(activeThread);
         renderChatViewport(); executeGeneration();
       };
     }
     function renderChatViewport() {
       Array.from(ui.chatViewport.children).forEach(child => { if (child.id !== 'typing-indicator') child.remove(); });
-      if (activeThread?.messages) activeThread.messages.forEach((msg, idx) => appendMessageDOM(msg.role, msg.content, false, msg.stats, idx, msg.thinking, msg.rawStream));
+      if (activeThread?.messages) {
+        activeThread.messages.forEach((msg, idx) => {
+          if (!msg.timestamp) msg.timestamp = activeThread.created_at || Date.now();
+          appendMessageDOM(msg.role, msg.content, false, msg.stats, idx, msg.thinking, msg.rawStream, msg.timestamp);
+        });
+      }
       scrollToBottom(true);
     }
-    function appendMessageDOM(role, content, animated = true, stats = null, msgIndex = undefined, thinking = null, rawStream = '') {
+    function appendMessageDOM(role, content, animated = true, stats = null, msgIndex = undefined, thinking = null, rawStream = '', timestamp = null) {
       const div = document.createElement('div'); div.className = `message ${role === 'user' ? 'msg-user' : 'msg-ai'}`;
+      const ts = timestamp || Date.now();
+      div.dataset.timestamp = ts;
       const headerDiv = document.createElement('div'); headerDiv.className = 'msg-header';
+      const tsSpan = document.createElement('span'); tsSpan.className = 'msg-timestamp';
+      const mode = loadedSettings.timestamp_mode || 'off';
+      const formattedTs = formatTimestamp(ts, mode);
+      tsSpan.textContent = formattedTs;
+      tsSpan.style.display = formattedTs ? 'inline-block' : 'none';
+      headerDiv.appendChild(tsSpan);
+
+      const headerRight = document.createElement('div'); headerRight.className = 'msg-header-right';
       const gearBtn = document.createElement('button'); gearBtn.className = 'gear-toggle-btn'; gearBtn.innerHTML = '⚙️'; gearBtn.title = 'More Options';
       gearBtn.onclick = (e) => {
         e.stopPropagation(); const shown = div.classList.contains('show-actions');
         document.querySelectorAll('.message.show-actions').forEach(m => m.classList.remove('show-actions'));
         if (!shown) div.classList.add('show-actions');
       };
-      headerDiv.appendChild(gearBtn); div.appendChild(headerDiv);
+      headerRight.appendChild(gearBtn);
+      headerDiv.appendChild(headerRight);
+      div.appendChild(headerDiv);
       const contentSpan = document.createElement('div'); contentSpan.className = 'message-content';
       if (role === 'user') {
         contentSpan.textContent = content; div.appendChild(contentSpan);
@@ -1989,27 +2106,55 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         document.querySelectorAll('.message.show-actions').forEach(m => m.classList.remove('show-actions'));
       }
     });
-    ui.chatViewport.addEventListener('pointerdown', () => { isUserInteracting = true; }, { passive: true });
-    ui.chatViewport.addEventListener('touchstart', () => { isUserInteracting = true; }, { passive: true });
-    ui.chatViewport.addEventListener('touchend', () => { isUserInteracting = false; }, { passive: true });
-    ui.chatViewport.addEventListener('pointerup', () => { isUserInteracting = false; }, { passive: true });    
+    let lastTouchY = 0, userScrolledUpwards = false;
+
+    ui.chatViewport.addEventListener('touchstart', (e) => {
+      isUserInteracting = true;
+      userScrolledUpwards = false;
+      if (e.touches && e.touches.length > 0) {
+        lastTouchY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    ui.chatViewport.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches.length > 0) {
+        const currentY = e.touches[0].clientY;
+        // User dragged downward on screen by > 20px (intent to scroll up into chat history)
+        if (currentY - lastTouchY > 20) {
+          userScrolledUpwards = true;
+        }
+        lastTouchY = currentY;
+      }
+    }, { passive: true });
+
+    ui.chatViewport.addEventListener('touchend', () => {
+      isUserInteracting = false;
+    }, { passive: true });
+
+    ui.chatViewport.addEventListener('pointerup', () => {
+      isUserInteracting = false;
+    }, { passive: true });
+
     ui.chatViewport.addEventListener('wheel', (e) => {
-      if (e.deltaY < -40 && isAutoScrolling) {
+      if (e.deltaY < -20 && isAutoScrolling) {
         const { scrollTop, scrollHeight, clientHeight } = ui.chatViewport;
-        if (scrollHeight - scrollTop - clientHeight > 140) {
+        if (scrollHeight - scrollTop - clientHeight > 90) {
           isAutoScrolling = false;
           ui.btnToggleAutoscroll.innerHTML = '<span>🔓 Auto-Scroll</span>';
         }
       }
     });
+
     ui.chatViewport.addEventListener('scroll', () => {
       const { scrollTop, scrollHeight, clientHeight } = ui.chatViewport;
       const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-      const isNearBottom = distanceFromBottom <= 60;
-      if (isUserInteracting && isAutoScrolling && distanceFromBottom > 140) {
+      const isNearBottom = distanceFromBottom <= 40;
+
+      if (isUserInteracting && isAutoScrolling && userScrolledUpwards && distanceFromBottom > 90) {
         isAutoScrolling = false;
         ui.btnToggleAutoscroll.innerHTML = '<span>🔓 Auto-Scroll</span>';
       }
+
       if (ui.btnScrollBottom) {
         ui.btnScrollBottom.style.display = isNearBottom ? 'none' : 'flex';
       }
@@ -2034,15 +2179,32 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       if (!activeThread) return {};
       const prefillVal = ui.prefillInput.value;
       const effectiveSys = buildEffectiveSystemPrompt(activeThread.system_prompt, activeThread.parameters.agents);
-      const messages = [{ role: 'system', content: effectiveSys }];
-      activeThread.messages.forEach((m, idx) => {
-        let content = m.searchContext || m.content;
-        if (idx === activeThread.messages.length - 1 && m.role === 'user' && activeThread.parameters?.agents?.get_datetime) {
-          const now = new Date();
-          content += `\n\n[Current Time: ${now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}, Year: ${now.getFullYear()} at ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}]`;
-        }
-        messages.push({ role: m.role, content });
+      const limit = activeThread.parameters?.context_window || 4096;
+      const maxGen = activeThread.parameters?.max_tokens || 1024;
+      const hardCeiling = Math.max(512, limit - maxGen);
+      
+      const allMsgs = activeThread.messages || [];
+      let totalEstimatedCost = estimateTokens(effectiveSys) + estimateTokens(prefillVal || "");
+      allMsgs.forEach(m => {
+        totalEstimatedCost += estimateTokens(m.searchContext || m.content || "") + (m.thinking ? estimateTokens(m.thinking) : 0);
       });
+
+      const effectiveBudget = (totalEstimatedCost > hardCeiling) 
+        ? Math.max(256, hardCeiling - 512) 
+        : hardCeiling;
+
+      let tokenBudget = effectiveBudget - estimateTokens(effectiveSys) - estimateTokens(prefillVal || "");
+      const trimmedHistory = [];
+
+      for (let i = allMsgs.length - 1; i >= 0; i--) {
+        const m = allMsgs[i];
+        const cost = estimateTokens(m.searchContext || m.content || "") + (m.thinking ? estimateTokens(m.thinking) : 0);
+        if (tokenBudget - cost < 0 && trimmedHistory.length > 0) break;
+        tokenBudget -= cost;
+        trimmedHistory.unshift({ role: m.role, content: m.searchContext || m.content });
+      }
+
+      const messages = [{ role: 'system', content: effectiveSys }, ...trimmedHistory];
       if (prefillVal) messages.push({ role: 'assistant', content: prefillVal });
       return { messages, parameters: activeThread.parameters };
     }
@@ -2089,14 +2251,16 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         ui.typingIndicator.style.display = 'flex'; ui.statusText.textContent = "Searching web...";
         const searchResults = await performWebSearch(query);
         ui.typingIndicator.style.display = 'none';
+          const searchMsgTs = Date.now();
         activeThread.messages.push({
           role: 'user',
           content: text,
+          timestamp: searchMsgTs,
           searchContext: `[Web Search Results for "${query}"]:\n${searchResults}\n\n[User Instruction]:\nBased strictly on the search results provided above, provide a direct and accurate summary answering the query: "${query}". Do not claim you lack real-time access.`
         });
-        activeThread.updated_at = Date.now();
+        activeThread.updated_at = searchMsgTs;
         await dbPut(activeThread);
-        appendMessageDOM('user', text, true, null, activeThread.messages.length - 1);
+        appendMessageDOM('user', text, true, null, activeThread.messages.length - 1, null, '', searchMsgTs);
         renderSidebar(); updateContextBar(); executeGeneration();
         return;
       }
@@ -2105,8 +2269,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         ui.activeTitle.textContent = activeThread.title;
       }
       ui.userInput.value = ''; ui.userInput.style.height = 'auto'; ui.slashPopup.classList.remove('open'); updateCharCount();
-      activeThread.messages.push({ role: 'user', content: text }); activeThread.updated_at = Date.now();
-      await dbPut(activeThread); appendMessageDOM('user', text, true, null, activeThread.messages.length - 1);
+      const userMsgTs = Date.now();
+      activeThread.messages.push({ role: 'user', content: text, timestamp: userMsgTs }); activeThread.updated_at = userMsgTs;
+      await dbPut(activeThread); appendMessageDOM('user', text, true, null, activeThread.messages.length - 1, null, '', userMsgTs);
       renderSidebar(); updateContextBar(); executeGeneration();
     }
     async function executeGeneration() {
@@ -2129,28 +2294,59 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       }
 
       const effectiveSys = buildEffectiveSystemPrompt(targetThread.system_prompt, targetThread.parameters.agents);
-      const payloadMessages = [{ role: 'system', content: effectiveSys }];
-      targetThread.messages.forEach((m, idx) => {
-        let content = m.searchContext || m.content;
-        if (idx === targetThread.messages.length - 1 && m.role === 'user' && targetThread.parameters?.agents?.get_datetime) {
-          const now = new Date();
-          content += `\n\n[Current Time: ${now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}, Year: ${now.getFullYear()} at ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}]`;
-        }
-        payloadMessages.push({ role: m.role, content });
+      const limit = targetThread.parameters?.context_window || 4096;
+      const maxGen = targetThread.parameters?.max_tokens || 1024;
+      const hardCeiling = Math.max(512, limit - maxGen);
+      
+      const allMsgs = targetThread.messages || [];
+      let totalEstimatedCost = estimateTokens(effectiveSys) + estimateTokens(prefillVal || "");
+      allMsgs.forEach(m => {
+        totalEstimatedCost += estimateTokens(m.searchContext || m.content || "") + (m.thinking ? estimateTokens(m.thinking) : 0);
       });
+
+      // When over limit, prune with a 512-token headroom buffer so prefix stays untouched for the next 4-8 turns
+      const effectiveBudget = (totalEstimatedCost > hardCeiling) 
+        ? Math.max(256, hardCeiling - 512) 
+        : hardCeiling;
+
+      let tokenBudget = effectiveBudget - estimateTokens(effectiveSys) - estimateTokens(prefillVal || "");
+      const trimmedHistory = [];
+
+      for (let i = allMsgs.length - 1; i >= 0; i--) {
+        const m = allMsgs[i];
+        const cost = estimateTokens(m.searchContext || m.content || "") + (m.thinking ? estimateTokens(m.thinking) : 0);
+        if (tokenBudget - cost < 0 && trimmedHistory.length > 0) break;
+        tokenBudget -= cost;
+        trimmedHistory.unshift({ role: m.role, content: m.searchContext || m.content });
+      }
+
+      const payloadMessages = [{ role: 'system', content: effectiveSys }, ...trimmedHistory];
+
       if (prefillVal) payloadMessages.push({ role: 'assistant', content: prefillVal });
+      let genTimestamp = null;
       const aiBubble = document.createElement('div'); aiBubble.className = 'message msg-ai';
       const headerDiv = document.createElement('div'); headerDiv.className = 'msg-header';
+      const tsSpan = document.createElement('span'); tsSpan.className = 'msg-timestamp';
+      tsSpan.style.display = 'none';
+      headerDiv.appendChild(tsSpan);
+
+      const headerRight = document.createElement('div'); headerRight.className = 'msg-header-right';
       const gearBtn = document.createElement('button'); gearBtn.className = 'gear-toggle-btn'; gearBtn.innerHTML = '⚙️'; gearBtn.title = 'More Options';
       gearBtn.onclick = (e) => {
         e.stopPropagation(); const shown = aiBubble.classList.contains('show-actions');
         document.querySelectorAll('.message.show-actions').forEach(m => m.classList.remove('show-actions'));
         if (!shown) aiBubble.classList.add('show-actions');
       };
-      headerDiv.appendChild(gearBtn); aiBubble.appendChild(headerDiv);
-      activeGenerations.set(targetThreadId, { bubble: aiBubble, abortController: abortCtrl, thinkingInterval: null, targetThreadId });
+      headerRight.appendChild(gearBtn);
+      headerDiv.appendChild(headerRight);
+      aiBubble.appendChild(headerDiv);
+      const genId = generateId();
+      applyHighlightAndCopy(aiBubble, prefillVal || "", 'assistant');
+      activeGenerations.set(targetThreadId, { id: genId, bubble: aiBubble, abortController: abortCtrl, thinkingInterval: null, loadingInterval: null, hasReceivedTokens: false, targetThreadId });
       if (activeThread?.id === targetThreadId) {
+        aiBubble.style.display = 'none';
         ui.chatViewport.insertBefore(aiBubble, ui.typingIndicator);
+        ui.typingIndicator.style.display = 'flex';
         isAutoScrolling = true; ui.btnToggleAutoscroll.innerHTML = '<span>🔒 Auto-Scroll</span>'; scrollToBottom(true);
       }
       let rawGeneratedText = "", aiResponseContent = prefillVal || "", tokenCount = estimateTokens(aiResponseContent);
@@ -2160,14 +2356,18 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       if (activeThread?.id === targetThreadId) currentStreamTokens = tokenCount;
       let loadingDots = 1;
       let loadingInterval = setInterval(() => {
-        if (activeThread?.id === targetThreadId && !firstTokenTime) {
+        if (activeThread?.id === targetThreadId && !firstTokenTime && activeGenerations.get(targetThreadId)?.id === genId) {
           loadingDots = (loadingDots % 3) + 1; ui.statusText.textContent = `Loading model${'.'.repeat(loadingDots)}`;
         }
       }, 500);
+
+      const curGenRecord = activeGenerations.get(targetThreadId);
+      if (curGenRecord && curGenRecord.id === genId) curGenRecord.loadingInterval = loadingInterval;
+
       let thinkingInterval = null, displayThought = "", displayReply = prefillVal || "";
       const stopArray = parseStopSequences(targetThread.parameters?.stop_sequences);
       try {
-        if (activeThread?.id === targetThreadId) ui.typingIndicator.style.display = 'none';
+        if (abortCtrl.signal.aborted || activeGenerations.get(targetThreadId)?.id !== genId) return;
         const stream = await layla.chat.completions.create({
           messages: payloadMessages,
           temperature: targetThread.parameters.temperature,
@@ -2188,16 +2388,31 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           stream: true
         });
         for await (const chunk of stream) {
-          if (!activeGenerations.has(targetThreadId)) break;
+          const curGen = activeGenerations.get(targetThreadId);
+          if (!curGen || curGen.id !== genId || curGen.isAborted || abortCtrl.signal.aborted) break;
           const delta = chunk.choices[0]?.delta?.content || "";
           if (delta) {
             if (!firstTokenTime) {
               firstTokenTime = performance.now();
+              genTimestamp = Date.now();
+              aiBubble.dataset.timestamp = genTimestamp;
+              const curRecord = activeGenerations.get(targetThreadId);
+              if (curRecord) curRecord.hasReceivedTokens = true;
+              if (activeThread?.id === targetThreadId) {
+                ui.typingIndicator.style.display = 'none';
+                aiBubble.style.display = 'flex';
+              }
+              const curMode = loadedSettings.timestamp_mode || 'off';
+              const formattedTs = formatTimestamp(genTimestamp, curMode);
+              if (tsSpan) {
+                tsSpan.textContent = formattedTs;
+                tsSpan.style.display = formattedTs ? 'inline-block' : 'none';
+              }
               if (loadingInterval) { clearInterval(loadingInterval); loadingInterval = null; }
               if (targetThread.parameters.enable_thinking) {
                 let dots = 1; if (activeThread?.id === targetThreadId) ui.statusText.textContent = "Thinking.";
                 thinkingInterval = setInterval(() => {
-                  if (activeThread?.id === targetThreadId) { dots = (dots % 3) + 1; ui.statusText.textContent = `Thinking${'.'.repeat(dots)}`; }
+                  if (activeThread?.id === targetThreadId && activeGenerations.get(targetThreadId)?.id === genId) { dots = (dots % 3) + 1; ui.statusText.textContent = `Thinking${'.'.repeat(dots)}`; }
                 }, 500);
               } else { if (activeThread?.id === targetThreadId) ui.statusText.textContent = "Generating..."; }
             }
@@ -2242,23 +2457,16 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
               displayReply = displayReply.replace(/<\/?(?:think\d*|thought\d*|endthink\d*)>/gi, '').replace(/<\|end_of_thought\|>|\[\/?END_THOUGHT\]/gi, '').trim();
             } else { displayReply = aiResponseContent; }
             displayReply = cleanEosTokens(displayReply);
-            if (activeThread?.id === targetThreadId) {
+            if (activeThread?.id === targetThreadId && activeGenerations.get(targetThreadId)?.id === genId) {
               const existingDetails = aiBubble.querySelector('details.think-block');
               const finalIsOpen = existingDetails ? existingDetails.open : isOpen;
-              let html = '<div class="message-content">';
-              if (displayThought) html += `<details class="think-block" ${finalIsOpen ? 'open' : ''}><summary>🧠 View Thinking Process</summary><div class="think-content">${displayThought.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div></details>`;
-              html += marked.parse(displayReply) + '</div>';
-              const msgContent = aiBubble.querySelector('.message-content');
-              if (msgContent) {
-                msgContent.innerHTML = (displayThought ? `<details class="think-block" ${finalIsOpen ? 'open' : ''}><summary>🧠 View Thinking Process</summary><div class="think-content">${displayThought.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div></details>` : '') + marked.parse(displayReply);
-              } else {
-                aiBubble.innerHTML = `<div class="msg-header"><button class="gear-toggle-btn" title="More Options">⚙️</button></div><div class="message-content">${html}</div>`;
-                aiBubble.querySelector('.gear-toggle-btn').onclick = (e) => {
-                  e.stopPropagation(); const shown = aiBubble.classList.contains('show-actions');
-                  document.querySelectorAll('.message.show-actions').forEach(m => m.classList.remove('show-actions'));
-                  if (!shown) aiBubble.classList.add('show-actions');
-                };
+              let msgContent = aiBubble.querySelector('.message-content');
+              if (!msgContent) {
+                msgContent = document.createElement('div');
+                msgContent.className = 'message-content';
+                aiBubble.appendChild(msgContent);
               }
+              msgContent.innerHTML = (displayThought ? `<details class="think-block" ${finalIsOpen ? 'open' : ''}><summary>🧠 View Thinking Process</summary><div class="think-content">${displayThought.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div></details>` : '') + marked.parse(displayReply);
               renderStatsHUD(aiBubble, { tps: tokenCount / Math.max(0.001, (performance.now() - firstTokenTime) / 1000), ttft: firstTokenTime - startTime, totalTime: performance.now() - startTime, tokens: tokenCount });
               updateContextBar();
               scrollToBottom();
@@ -2275,49 +2483,67 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
             }
           }
         }
-        if (activeThread?.id === targetThreadId) {
+        if (activeThread?.id === targetThreadId && activeGenerations.get(targetThreadId)?.id === genId) {
           applyHighlightAndCopy(aiBubble, displayReply, 'assistant', targetThread.messages.length, aiResponseContent);
         }
         if (firstTokenTime && tokenCount > 0) {
           computedStats = { tps: tokenCount / Math.max(0.001, (performance.now() - firstTokenTime) / 1000), ttft: firstTokenTime - startTime, totalTime: performance.now() - startTime, tokens: tokenCount };
-          if (activeThread?.id === targetThreadId) renderStatsHUD(aiBubble, computedStats);
+          if (activeThread?.id === targetThreadId && activeGenerations.get(targetThreadId)?.id === genId) renderStatsHUD(aiBubble, computedStats);
         }
       } catch (err) {
-        displayReply += `\n\n**[Error: ${err.message}]**`;
-        if (activeThread?.id === targetThreadId) {
-          let html = '<div class="message-content">';
-          if (displayThought) html += `<details class="think-block"><summary>🧠 View Thinking Process</summary><div class="think-content">${displayThought.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div></details>`;
-          html += marked.parse(displayReply) + '</div>';
-          aiBubble.innerHTML = `<div class="msg-header"><button class="gear-toggle-btn" title="More Options">⚙️</button></div>${html}`;
-          applyHighlightAndCopy(aiBubble, displayReply, 'assistant', targetThread.messages.length, aiResponseContent);
-          showError("Inference Error: " + err.message);
+        if (activeGenerations.get(targetThreadId)?.id === genId) {
+          displayReply += `\n\n**[Error: ${err.message}]**`;
+          if (activeThread?.id === targetThreadId) {
+            let html = '<div class="message-content">';
+            if (displayThought) html += `<details class="think-block"><summary>🧠 View Thinking Process</summary><div class="think-content">${displayThought.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div></details>`;
+            html += marked.parse(displayReply) + '</div>';
+            aiBubble.innerHTML = `<div class="msg-header"><button class="gear-toggle-btn" title="More Options">⚙️</button></div>${html}`;
+            applyHighlightAndCopy(aiBubble, displayReply, 'assistant', targetThread.messages.length, aiResponseContent);
+            showError("Inference Error: " + err.message);
+          }
         }
       } finally {
         if (loadingInterval) clearInterval(loadingInterval);
         if (thinkingInterval) clearInterval(thinkingInterval);
-        activeGenerations.delete(targetThreadId);
-        if (activeThread?.id === targetThreadId) {
-          currentStreamTokens = 0; ui.btnStop.style.display = 'none'; ui.btnSend.style.display = 'flex';
-          ui.typingIndicator.style.display = 'none'; ui.statusText.textContent = "Ready";
-        }
-        if (displayReply.trim() !== "" || displayThought.trim() !== "") {
-          const cleanContent = cleanEosTokens(displayReply.replace(/\n\n\*\*\[Error:.*\]\*\*$/, ''));
-          const msgObj = { role: 'assistant', content: cleanContent, rawStream: aiResponseContent };
-          if (displayThought) msgObj.thinking = displayThought;
-          if (computedStats) msgObj.stats = computedStats;
-          const latest = await dbGet(targetThreadId);
-          if (latest) {
-            // Replace in-flight streaming placeholder if present, or push final message
-            const lastIdx = latest.messages.length - 1;
-            if (lastIdx >= 0 && latest.messages[lastIdx]._isStreaming) {
-              latest.messages[lastIdx] = msgObj;
-            } else {
-              latest.messages.push(msgObj);
+        
+        const isOwner = activeGenerations.get(targetThreadId)?.id === genId || abortCtrl.signal.aborted;
+        if (isOwner) {
+          activeGenerations.delete(targetThreadId);
+          
+          if (activeThread?.id === targetThreadId) {
+            currentStreamTokens = 0; 
+            ui.btnStop.style.display = 'none'; 
+            ui.btnSend.style.display = 'flex';
+            ui.typingIndicator.style.display = 'none'; 
+            if (ui.statusText.textContent !== "Aborted.") ui.statusText.textContent = "Ready";
+          }
+
+          // Persist and finalize message even if stopped mid-stream
+          if (displayReply.trim() !== "" || displayThought.trim() !== "") {
+            const cleanContent = cleanEosTokens(displayReply.replace(/\n\n\*\*\[Error:.*\]\*\*$/, ''));
+            const finalTimestamp = genTimestamp || Date.now();
+            const msgObj = { role: 'assistant', content: cleanContent, rawStream: aiResponseContent, timestamp: finalTimestamp };
+            if (displayThought) msgObj.thinking = displayThought;
+            if (computedStats) msgObj.stats = computedStats;
+            const latest = await dbGet(targetThreadId);
+            if (latest) {
+              const lastIdx = latest.messages.length - 1;
+              if (lastIdx >= 0 && latest.messages[lastIdx]._isStreaming) {
+                latest.messages[lastIdx] = msgObj;
+              } else {
+                latest.messages.push(msgObj);
+              }
+              latest.updated_at = Date.now();
+              await dbPut(latest);
+              if (activeThread?.id === targetThreadId) {
+                activeThread = latest;
+                applyHighlightAndCopy(aiBubble, displayReply, 'assistant', latest.messages.length - 1, aiResponseContent);
+                renderSidebar();
+                updateContextBar();
+              } else {
+                renderSidebar();
+              }
             }
-            latest.updated_at = Date.now();
-            await dbPut(latest);
-            if (activeThread?.id === targetThreadId) { activeThread = latest; renderSidebar(); renderChatViewport(); updateContextBar(); }
-            else { renderSidebar(); }
           }
         }
       }
@@ -2338,6 +2564,17 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         ui.paramsPanel.style.display = 'none';
       });
     }
+
+    // Dismiss settings panel when tapping outside
+    document.addEventListener('click', (e) => {
+      if (ui.paramsPanel && ui.paramsPanel.style.display === 'flex') {
+        const isClickInsidePanel = ui.paramsPanel.contains(e.target);
+        const isClickOnToggleBtn = ui.btnParams && ui.btnParams.contains(e.target);
+        if (!isClickInsidePanel && !isClickOnToggleBtn) {
+          ui.paramsPanel.style.display = 'none';
+        }
+      }
+    });
 
     ui.btnParams.addEventListener('click', async () => {
       const visible = ui.paramsPanel.style.display === 'flex';
@@ -2529,9 +2766,33 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     ui.btnSend.addEventListener('click', sendMessage);
     ui.btnStop.addEventListener('click', () => {
       if (activeThread && activeGenerations.has(activeThread.id)) {
-        activeGenerations.get(activeThread.id).abortController?.abort();
+        const genState = activeGenerations.get(activeThread.id);
+        if (genState.loadingInterval) clearInterval(genState.loadingInterval);
+        if (genState.thinkingInterval) clearInterval(genState.thinkingInterval);
+        
+        // 1. Explicitly flag the abort state on the record
+        genState.isAborted = true;
+        genState.abortController?.abort();
+        
+        // 2. Remove placeholder only if nothing ever streamed
+        if (genState.bubble && genState.bubble.parentNode && !genState.hasReceivedTokens) {
+          genState.bubble.remove();
+        }
+
+        // 3. Immediately delete from active map to instantly sever the for-await stream loop
         activeGenerations.delete(activeThread.id);
-        ui.statusText.textContent = "Aborted."; ui.btnStop.style.display = 'none'; ui.btnSend.style.display = 'flex';
+        
+        currentStreamTokens = 0;
+        ui.typingIndicator.style.display = 'none';
+        ui.btnStop.style.display = 'none';
+        ui.btnSend.style.display = 'flex';
+        ui.statusText.textContent = "Aborted.";
+        
+        setTimeout(() => {
+          if (!activeGenerations.has(activeThread?.id) && ui.statusText.textContent === "Aborted.") {
+            ui.statusText.textContent = "Ready";
+          }
+        }, 1500);
       }
     });
     async function boot() {
@@ -2553,7 +2814,13 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         await loadSettings();
         enterSends = loadedSettings.enter_sends !== false;
         applyFontSize(loadedSettings.font_size || 15);
-        applyShowStats(loadedSettings.show_stats !== false);
+        applyShowStats(loadedSettings.show_stats !== false && loadedSettings.show_stats !== 'false');
+        if (ui.settingShowStats) {
+          ui.settingShowStats.checked = loadedSettings.show_stats !== false && loadedSettings.show_stats !== 'false';
+        }
+        if (ui.settingTimestampMode) {
+          ui.settingTimestampMode.value = loadedSettings.timestamp_mode || 'off';
+        }
         await fetchAgents();
         updateEnterSendUI();
         await populateSystemPromptDropdown();
