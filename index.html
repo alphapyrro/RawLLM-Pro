@@ -637,6 +637,49 @@
           <option value="12h">12-Hour (7:30 PM)</option>
         </select>
       </div>
+
+      <div class="param-section-title">🎙️ Voice & Speech (Hands-Free)</div>
+      <div class="param-group">
+        <div class="toggle-group">
+          <label class="toggle-label" for="setting-voice-features-enabled">Enable Voice Features</label>
+          <input type="checkbox" id="setting-voice-features-enabled" class="toggle-checkbox">
+        </div>
+      </div>
+      <div id="voice-settings-subpanel" style="display: none; flex-direction: column; gap: 10px;">
+        <div class="param-group">
+          <div class="toggle-group">
+            <label class="toggle-label" for="setting-auto-tts">Auto-Read AI Responses (TTS)</label>
+            <input type="checkbox" id="setting-auto-tts" class="toggle-checkbox">
+          </div>
+        </div>
+        <div class="param-group">
+          <label class="param-header">TTS Playback Timing</label>
+          <select id="setting-tts-timing">
+            <option value="stream">⚡ Speak As Soon As Possible (Sentence Stream)</option>
+            <option value="end">⌛ Speak When Generation Has Finished</option>
+          </select>
+        </div>
+        <div class="param-group">
+          <div class="toggle-group">
+            <label class="toggle-label" for="setting-auto-listen">🔁 Auto-Listen After AI Finishes (Hands-Free Loop)</label>
+            <input type="checkbox" id="setting-auto-listen" class="toggle-checkbox">
+          </div>
+        </div>
+        <div class="param-group">
+          <label class="param-header">Voice Engine / Model</label>
+          <select id="setting-tts-voice">
+            <option value="auto">Auto (Best Natural English)</option>
+          </select>
+        </div>
+        <div class="param-group">
+          <label class="param-header">Dictation Send Mode (STT)</label>
+          <select id="setting-stt-mode">
+            <option value="pause">Auto-Send on Speech Pause (Hands-Free)</option>
+            <option value="hold">Push-to-Talk (Hold Mic to Speak, Release to Send)</option>
+            <option value="manual">Manual (Tap to Dictate, Review Before Send)</option>
+          </select>
+        </div>
+      </div>
       <div class="param-section-title" style="color: var(--error); margin-top: 20px;">⚠️ Danger Zone</div>
       <div class="param-group" style="border: 1px solid rgba(248,81,73,0.3); background: rgba(248,81,73,0.04); border-radius: 8px; padding: 12px;">
         <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
@@ -716,9 +759,13 @@
 Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"></textarea>
   </div>
   <div id="input-dock">
+    <button id="btn-stop-voice" style="position: absolute; bottom: calc(100% + 12px); right: 16px; background: rgba(248, 81, 73, 0.9); color: white; border: 1px solid var(--border-color); border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 110;" title="Stop Voice Playback">
+      <span>🔇</span> Stop Voice
+    </button>
     <button id="scroll-bottom-btn" title="Scroll to bottom">↓</button>
     <div id="slash-popup"></div>
     <div class="input-wrapper">
+      <button class="action-btn" id="mic-btn" style="display: none; background: var(--bg-surface-hover); color: var(--text-main); font-size: 16px; border: 1px solid var(--border-color);" title="Voice Input">🎙️</button>
       <textarea id="user-input" rows="1" placeholder="Type a message or / for templates..." enterkeyhint="send" spellcheck="true" autocapitalize="sentences" autocomplete="on"></textarea>
       <button class="action-btn" id="send-btn">➤</button>
       <button class="action-btn" id="stop-btn">⏹</button>
@@ -866,7 +913,13 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       close_keyboard_on_send: true,
       font_size: 15,
       show_stats: true,
-      timestamp_mode: 'off'
+      timestamp_mode: 'off',
+      voice_enabled: false,
+      auto_tts: false,
+      tts_timing: 'stream',
+      auto_listen: true,
+      tts_voice_id: 'auto',
+      stt_mode: 'pause'
     };
     const ui = {
       sidebar: document.getElementById('sidebar'), overlay: document.getElementById('sidebar-overlay'),
@@ -901,6 +954,15 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       fontSizeValDisplay: document.getElementById('font-size-val-display'),
       settingShowStats: document.getElementById('setting-show-stats'),
       settingTimestampMode: document.getElementById('setting-timestamp-mode'),
+      settingVoiceEnabled: document.getElementById('setting-voice-features-enabled'),
+      voiceSettingsSubpanel: document.getElementById('voice-settings-subpanel'),
+      settingAutoTts: document.getElementById('setting-auto-tts'),
+      settingTtsTiming: document.getElementById('setting-tts-timing'),
+      settingAutoListen: document.getElementById('setting-auto-listen'),
+      settingTtsVoice: document.getElementById('setting-tts-voice'),
+      settingSttMode: document.getElementById('setting-stt-mode'),
+      btnMic: document.getElementById('mic-btn'),
+      btnStopVoice: document.getElementById('btn-stop-voice'),
       btnResetAppSettings: document.getElementById('btn-reset-app-settings'),
       settingSearchProvider: document.getElementById('setting-search-provider'),
       settingSearchEndpoint: document.getElementById('setting-search-endpoint'),
@@ -2356,6 +2418,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         ui.typingIndicator.style.display = 'flex';
         isAutoScrolling = true; ui.btnToggleAutoscroll.innerHTML = '<span>🔒 Auto-Scroll</span>'; scrollToBottom(true);
       }
+      stopAllAudio();
       let rawGeneratedText = "", aiResponseContent = prefillVal || "", tokenCount = estimateTokens(aiResponseContent);
       let streamChunkCount = 0, lastSavedTokenCount = 0, lastSavedTime = performance.now(), isDiskSaving = false;
       const startTime = performance.now();
@@ -2477,8 +2540,11 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
               renderStatsHUD(aiBubble, { tps: tokenCount / Math.max(0.001, (performance.now() - firstTokenTime) / 1000), ttft: firstTokenTime - startTime, totalTime: performance.now() - startTime, tokens: tokenCount });
               updateContextBar();
               scrollToBottom();
-            }
 
+              if (displayReply) {
+                handleStreamingTtsTokens(displayReply);
+              }
+            }
             // Periodic incremental flush: every 15 tokens or every 1.5 seconds
             const nowTime = performance.now();
             if (!isDiskSaving && (tokenCount - lastSavedTokenCount >= 15 || nowTime - lastSavedTime >= 1500)) {
@@ -2519,12 +2585,13 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           
           if (activeThread?.id === targetThreadId) {
             currentStreamTokens = 0; 
-            ui.btnStop.style.display = 'none'; 
-            ui.btnSend.style.display = 'flex';
             ui.typingIndicator.style.display = 'none'; 
-            if (ui.statusText.textContent !== "Aborted.") ui.statusText.textContent = "Ready";
+            ui.btnStop.style.display = 'none';
+            ui.btnSend.style.display = 'flex';
+            if (ui.statusText.textContent !== "Aborted." && !isTtsPlaying && !ttsQueue.length) {
+              ui.statusText.textContent = "Ready";
+            }
           }
-
           // Persist and finalize message even if stopped mid-stream
           if (displayReply.trim() !== "" || displayThought.trim() !== "") {
             const cleanContent = cleanEosTokens(displayReply.replace(/\n\n\*\*\[Error:.*\]\*\*$/, ''));
@@ -2547,6 +2614,10 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
                 applyHighlightAndCopy(aiBubble, displayReply, 'assistant', latest.messages.length - 1, aiResponseContent);
                 renderSidebar();
                 updateContextBar();
+
+                if (loadedSettings.voice_enabled && loadedSettings.auto_tts && displayReply) {
+                  finalizeStreamingTts(displayReply);
+                }
               } else {
                 renderSidebar();
               }
@@ -2771,22 +2842,19 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     });
     function updateCharCount() { ui.charCount.textContent = `${ui.userInput.value.length.toLocaleString()} / ∞ chars • ~${estimateTokens(ui.userInput.value).toLocaleString()} tokens`; }
     ui.btnSend.addEventListener('click', sendMessage);
-    ui.btnStop.addEventListener('click', () => {
+ui.btnStop.addEventListener('click', () => {
       if (activeThread && activeGenerations.has(activeThread.id)) {
         const genState = activeGenerations.get(activeThread.id);
         if (genState.loadingInterval) clearInterval(genState.loadingInterval);
         if (genState.thinkingInterval) clearInterval(genState.thinkingInterval);
         
-        // 1. Explicitly flag the abort state on the record
         genState.isAborted = true;
         genState.abortController?.abort();
         
-        // 2. Remove placeholder only if nothing ever streamed
         if (genState.bubble && genState.bubble.parentNode && !genState.hasReceivedTokens) {
           genState.bubble.remove();
         }
 
-        // 3. Immediately delete from active map to instantly sever the for-await stream loop
         activeGenerations.delete(activeThread.id);
         
         currentStreamTokens = 0;
@@ -2802,6 +2870,335 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         }, 1500);
       }
     });
+
+    let availableVoices = [];
+    let activeSpeechRecognition = null;
+    let isListening = false;
+    let isTtsPlaying = false;
+    let isTtsProcessingLoop = false;
+    let ttsQueue = [];
+    let streamTtsSentIndex = 0;
+    let sttSilenceTimer = null;
+    let hasCapturedSpeech = false;
+    let isHoldingMic = false;
+
+    async function loadVoices() {
+      try {
+        if (layla && layla.tts && typeof layla.tts.getVoices === 'function') {
+          availableVoices = await layla.tts.getVoices();
+          if (ui.settingTtsVoice) {
+            ui.settingTtsVoice.innerHTML = '<option value="auto">Auto (Best Natural Voice)</option>';
+            availableVoices.forEach(v => {
+              const opt = document.createElement('option');
+              opt.value = v.id;
+              opt.textContent = `${v.name || v.id} (${v.type || 'model'})`;
+              ui.settingTtsVoice.appendChild(opt);
+            });
+            ui.settingTtsVoice.value = loadedSettings.tts_voice_id || 'auto';
+          }
+        }
+      } catch (e) {
+        console.warn("Could not retrieve Layla voices:", e);
+      }
+    }
+
+    function getSelectedVoiceId() {
+      const pref = loadedSettings.tts_voice_id || 'auto';
+      if (pref !== 'auto' && availableVoices.some(v => v.id === pref)) return pref;
+      const best = availableVoices.find(v => v.type !== 'native') ||
+                   availableVoices.find(v => v.tags?.includes('en') && (v.name?.includes('US') || v.name?.includes('en_US'))) ||
+                   availableVoices.find(v => v.tags?.includes('en')) ||
+                   availableVoices[0];
+      return best ? best.id : 'native-en-language';
+    }
+
+    function cleanForSpeech(raw) {
+      if (!raw) return '';
+      return raw.replace(/<think[\s\S]*?<\/think>/gi, '')
+                .replace(/<thought[\s\S]*?<\/thought>/gi, '')
+                .replace(/```[\s\S]*?```/g, 'Code block omitted.')
+                .replace(/[*_#~`>]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+    }
+
+    function updateVoiceStopButton() {
+      const isVoiceActive = isTtsPlaying || ttsQueue.length > 0;
+      if (ui.btnStopVoice) {
+        ui.btnStopVoice.style.display = isVoiceActive ? 'inline-flex' : 'none';
+      }
+    }
+
+    function stopAllAudio() {
+      ttsQueue = [];
+      streamTtsSentIndex = 0;
+      isTtsPlaying = false;
+      isTtsProcessingLoop = false;
+      try {
+        if (layla?.tts?.stopSpeaking) layla.tts.stopSpeaking();
+      } catch (e) {}
+      updateVoiceStopButton();
+      if (!activeGenerations.has(activeThread?.id) && ui.statusText.textContent === "Speaking...") {
+        ui.statusText.textContent = "Ready";
+      }
+    }
+
+    async function processTtsQueue() {
+      if (isTtsProcessingLoop) return;
+      isTtsProcessingLoop = true;
+
+      while (ttsQueue.length > 0) {
+        const textBlock = ttsQueue.shift();
+        if (!textBlock || !textBlock.trim()) continue;
+        
+        isTtsPlaying = true;
+        updateVoiceStopButton();
+        if (!activeGenerations.has(activeThread?.id)) {
+          ui.statusText.textContent = "Speaking...";
+        }
+
+        try {
+          const voiceId = getSelectedVoiceId();
+          await layla.tts.generateVoice(voiceId, textBlock);
+        } catch (err) {
+          console.error("Layla TTS Error:", err);
+        }
+      }
+
+      isTtsPlaying = false;
+      isTtsProcessingLoop = false;
+      updateVoiceStopButton();
+
+      if (!activeGenerations.has(activeThread?.id) && ui.statusText.textContent === "Speaking...") {
+        ui.statusText.textContent = "Ready";
+      }
+
+      if (loadedSettings.voice_enabled && loadedSettings.auto_listen !== false && !activeGenerations.has(activeThread?.id) && !isListening && !isHoldingMic) {
+        setTimeout(() => {
+          if (!isListening && !isTtsPlaying && !ttsQueue.length) startSpeechRecognition();
+        }, 300);
+      }
+    }
+
+    function queueTtsChunk(cleanChunk) {
+      if (!loadedSettings.voice_enabled || !loadedSettings.auto_tts || !cleanChunk) return;
+      ttsQueue.push(cleanChunk);
+      // Spawn synthesis in an unblocked microtask to avoid freezing the LLM stream
+      setTimeout(processTtsQueue, 0);
+    }
+
+    function handleStreamingTtsTokens(rawDisplayReply) {
+      const timingMode = loadedSettings.tts_timing || 'stream';
+      if (!loadedSettings.voice_enabled || !loadedSettings.auto_tts || timingMode !== 'stream') return;
+
+      const cleanFull = cleanForSpeech(rawDisplayReply);
+      if (!cleanFull || cleanFull.length <= streamTtsSentIndex) return;
+
+      let unreadText = cleanFull.substring(streamTtsSentIndex);
+      // Require trailing whitespace so we don't chop a sentence currently generating
+      let match = /(.*?[.!?\n]+)(?:\s+)/s.exec(unreadText);
+      
+      while (match && match[1].trim().length >= 2) {
+        const segment = match[1].trim();
+        streamTtsSentIndex += match[0].length;
+        queueTtsChunk(segment);
+        
+        // Check for subsequent complete sentences in the same chunk
+        unreadText = cleanFull.substring(streamTtsSentIndex);
+        match = /(.*?[.!?\n]+)(?:\s+)/s.exec(unreadText);
+      }
+    }
+
+    function finalizeStreamingTts(rawDisplayReply) {
+      if (!loadedSettings.voice_enabled || !loadedSettings.auto_tts) return;
+      const timingMode = loadedSettings.tts_timing || 'stream';
+      const cleanFull = cleanForSpeech(rawDisplayReply);
+      if (!cleanFull) return;
+
+      if (timingMode === 'stream') {
+        const remaining = cleanFull.substring(streamTtsSentIndex).trim();
+        if (remaining) {
+          streamTtsSentIndex = cleanFull.length;
+          queueTtsChunk(remaining);
+        }
+      } else {
+        stopAllAudio();
+        queueTtsChunk(cleanFull);
+      }
+    }
+
+    function startSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showError("Speech Recognition is not supported on this device/webview.");
+        return;
+      }
+      if (isListening) return;
+
+      stopAllAudio();
+      hasCapturedSpeech = false;
+
+      try {
+        activeSpeechRecognition = new SpeechRecognition();
+        activeSpeechRecognition.continuous = true;
+        activeSpeechRecognition.interimResults = true;
+        activeSpeechRecognition.lang = 'en-US';
+
+        activeSpeechRecognition.onstart = () => {
+          isListening = true;
+          ui.btnMic.style.background = 'var(--error)';
+          ui.btnMic.style.color = 'white';
+          ui.statusText.textContent = loadedSettings.stt_mode === 'hold' ? 'Recording (Hold)...' : 'Listening...';
+        };
+
+        activeSpeechRecognition.onresult = (event) => {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript;
+          }
+          if (transcript.trim().length > 0) {
+            hasCapturedSpeech = true;
+            ui.userInput.value = transcript;
+            updateCharCount();
+            updateContextBar();
+
+            if (loadedSettings.stt_mode === 'pause' && !isHoldingMic) {
+              if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
+              sttSilenceTimer = setTimeout(() => {
+                if (isListening && hasCapturedSpeech && ui.userInput.value.trim().length > 0) {
+                  stopSpeechRecognition();
+                }
+              }, 1400);
+            }
+          }
+        };
+
+        activeSpeechRecognition.onerror = (e) => {
+          console.warn("STT Error:", e.error);
+        };
+
+        activeSpeechRecognition.onend = () => {
+          if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
+
+          if (isListening && !hasCapturedSpeech && !isHoldingMic && loadedSettings.stt_mode !== 'hold') {
+            try {
+              activeSpeechRecognition.start();
+              return;
+            } catch (e) {}
+          }
+
+          isListening = false;
+          ui.btnMic.style.background = 'var(--bg-surface-hover)';
+          ui.btnMic.style.color = 'var(--text-main)';
+          ui.statusText.textContent = 'Ready';
+
+          if (loadedSettings.stt_mode !== 'manual' && ui.userInput.value.trim().length > 0) {
+            sendMessage();
+          }
+        };
+
+        activeSpeechRecognition.start();
+      } catch (err) {
+        isListening = false;
+        showError("Mic Access Error: " + err.message);
+      }
+    }
+
+    function stopSpeechRecognition() {
+      if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
+      if (activeSpeechRecognition && isListening) {
+        activeSpeechRecognition.stop();
+      }
+    }
+
+    function toggleSpeechRecognition() {
+      if (isListening) {
+        stopSpeechRecognition();
+      } else {
+        startSpeechRecognition();
+      }
+    }
+
+    function applyVoiceVisibility(enabled) {
+      if (ui.voiceSettingsSubpanel) ui.voiceSettingsSubpanel.style.display = enabled ? 'flex' : 'none';
+      if (ui.btnMic) ui.btnMic.style.display = enabled ? 'inline-flex' : 'none';
+      if (!enabled && ui.btnStopVoice) ui.btnStopVoice.style.display = 'none';
+    }
+
+    if (ui.settingVoiceEnabled) {
+      ui.settingVoiceEnabled.addEventListener('change', (e) => {
+        const enabled = e.target.checked;
+        applyVoiceVisibility(enabled);
+        saveSettings({ voice_enabled: enabled });
+      });
+    }
+
+    if (ui.settingAutoTts) {
+      ui.settingAutoTts.addEventListener('change', (e) => {
+        saveSettings({ auto_tts: e.target.checked });
+      });
+    }
+
+    if (ui.settingTtsTiming) {
+      ui.settingTtsTiming.addEventListener('change', (e) => {
+        saveSettings({ tts_timing: e.target.value });
+      });
+    }
+
+    if (ui.settingAutoListen) {
+      ui.settingAutoListen.addEventListener('change', (e) => {
+        saveSettings({ auto_listen: e.target.checked });
+      });
+    }
+
+    if (ui.settingTtsVoice) {
+      ui.settingTtsVoice.addEventListener('change', (e) => {
+        saveSettings({ tts_voice_id: e.target.value });
+      });
+    }
+
+    if (ui.settingSttMode) {
+      ui.settingSttMode.addEventListener('change', (e) => {
+        saveSettings({ stt_mode: e.target.value });
+      });
+    }
+
+    if (ui.btnStopVoice) {
+      ui.btnStopVoice.addEventListener('click', (e) => {
+        e.stopPropagation();
+        stopAllAudio();
+      });
+    }
+
+    // Push-to-Talk & Tap Handlers for Mic
+    if (ui.btnMic) {
+      const handleMicDown = (e) => {
+        if (loadedSettings.stt_mode === 'hold') {
+          e.preventDefault();
+          isHoldingMic = true;
+          startSpeechRecognition();
+        }
+      };
+
+      const handleMicUp = (e) => {
+        if (loadedSettings.stt_mode === 'hold' && isHoldingMic) {
+          e.preventDefault();
+          isHoldingMic = false;
+          stopSpeechRecognition();
+        }
+      };
+
+      ui.btnMic.addEventListener('pointerdown', handleMicDown);
+      window.addEventListener('pointerup', handleMicUp);
+
+      ui.btnMic.addEventListener('click', (e) => {
+        if (loadedSettings.stt_mode !== 'hold') {
+          toggleSpeechRecognition();
+        }
+      });
+    }
+
+
     async function boot() {
       try {
         // --- LAYLA SDK & BRIDGE INTROSPECTION ---
@@ -2842,6 +3239,23 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         if (ui.settingTimestampMode) {
           ui.settingTimestampMode.value = loadedSettings.timestamp_mode || 'off';
         }
+        if (ui.settingVoiceEnabled) {
+          ui.settingVoiceEnabled.checked = !!loadedSettings.voice_enabled;
+        }
+        if (ui.settingAutoTts) {
+          ui.settingAutoTts.checked = !!loadedSettings.auto_tts;
+        }
+        if (ui.settingTtsTiming) {
+          ui.settingTtsTiming.value = loadedSettings.tts_timing || 'stream';
+        }
+        if (ui.settingAutoListen) {
+          ui.settingAutoListen.checked = loadedSettings.auto_listen !== false;
+        }
+        if (ui.settingSttMode) {
+          ui.settingSttMode.value = loadedSettings.stt_mode || 'pause';
+        }
+        applyVoiceVisibility(!!loadedSettings.voice_enabled);
+        await loadVoices();
         await fetchAgents();
         updateEnterSendUI();
         await populateSystemPromptDropdown();

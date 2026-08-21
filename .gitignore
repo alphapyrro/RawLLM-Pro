@@ -1,5 +1,6 @@
 .DS_Store
 Thumbs.db
 *.zip
-assets/js/eruda.min.js
+assets/js/eruda.js
+eruda.js
 index2.html
