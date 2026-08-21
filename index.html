@@ -56,6 +56,12 @@
     };
   </script>
   <link rel="stylesheet" href="./assets/css/github-dark.min.css">
+  <script src="./assets/js/eruda.js" onerror="this.onerror=null;"></script>
+  <script>
+    if (typeof window.eruda !== 'undefined' && typeof window.eruda.init === 'function') {
+      window.eruda.init();
+    }
+  </script>
   <script src="./assets/js/marked.min.js"></script>
   <script src="./assets/js/highlight.min.js"></script>
   <style>
@@ -825,6 +831,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
   <script type="module">
     import { LaylaSDK } from './assets/js/layla-sdk.min.js';
     const layla = new LaylaSDK();
+    window.layla = layla;
     const APP_VERSION = '7.5.0';
     const CONFIG_PATHS = {
       SETTINGS: 'config/settings.json',
@@ -2797,6 +2804,20 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     });
     async function boot() {
       try {
+        // --- LAYLA SDK & BRIDGE INTROSPECTION ---
+        console.log("=== LAYLA SDK PROBE ===");
+        console.log("layla instance:", layla);
+        if (layla) {
+          console.log("layla prototype methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(layla)));
+          console.log("layla keys:", Object.keys(layla));
+          ['audio', 'voice', 'tts', 'stt', 'speech', 'media', 'sound'].forEach(k => {
+            if (layla[k]) console.log(`Found layla.${k}:`, layla[k]);
+          });
+        }
+        console.log("window.Bridge:", window.Bridge);
+        console.log("window.ReactNativeWebView:", window.ReactNativeWebView);
+        console.log("=======================");
+
         document.title = `RawLLM Pro v${APP_VERSION}`;
         const verDisplay = document.getElementById('app-version-display');
         if (verDisplay) verDisplay.textContent = `v${APP_VERSION}`;
