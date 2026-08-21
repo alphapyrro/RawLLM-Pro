@@ -16,7 +16,7 @@ A modular web-based mini-application designed to run local language models direc
 
 ---
 
-# 🚀 RawLLM Pro v7.5.0
+**What's New in v7.5.0**
 
 ### ✨ New Features
 * 💾 **Incremental Stream Persistence:** Stream progress is now flushed to storage periodically to prevent data loss if the app is closed or interrupted mid-generation.
@@ -45,8 +45,8 @@ A modular web-based mini-application designed to run local language models direc
 
 | 1. 💬 Main Chat & HUD | 2. 🗂️ Thread Manager | 3. 🧠 Samplers & Tuning | 4. 📝 Prompts & Stops |
 | :---: | :---: | :---: | :---: |
-| <img width="465" height="1024" alt="1mainChat" src="https://github.com/user-attachments/assets/0c9e84b4-3022-42ae-bd2c-9b21660397cb" /> | <img width="465" height="1024" alt="2chatManifest" src="https://github.com/user-attachments/assets/e1717288-85c2-4493-a650-714c4536797e" /> | <img width="465" height="1024" alt="3samplers" src="https://github.com/user-attachments/assets/82b23c6e-925b-47ef-ac64-a3cc199a72db" /> | <img width="465" height="1024" alt="4prompts" src="https://github.com/user-attachments/assets/a42a4701-11d0-4280-a1c0-c25fc18b990a" /> |
+| <img width="522" height="1024" alt="mainChat" src="https://github.com/user-attachments/assets/2b496ad2-9ed4-4db9-ab63-a3b70c24daaf" /> | <img width="520" height="1024" alt="allChats" src="https://github.com/user-attachments/assets/e7f87709-6e12-4cb0-bec9-3026f39b68e5" /> | <img width="525" height="1024" alt="Imagepipe_2" src="https://github.com/user-attachments/assets/d62e7a70-d259-439a-83d8-b858c77e1c2d" /> | <img width="525" height="1024" alt="Imagepipe_3" src="https://github.com/user-attachments/assets/4bc9da58-f97b-4d77-9741-d5d940e45637" /> |
 
 | 5. ⚡ Web & Agents | 6. 📱 App Settings | 7. 💾 Backup & Data | 8. 🔍 Payload Inspector |
 | :---: | :---: | :---: | :---: |
-| <img width="465" height="1024" alt="5agents" src="https://github.com/user-attachments/assets/a5433552-297e-4ac7-813a-5a34aed423df" /> | <img width="465" height="1024" alt="6appSettings" src="https://github.com/user-attachments/assets/e917759c-91e7-42e9-9b78-528c876d2b38" /> | <img width="465" height="1024" alt="7dataTab" src="https://github.com/user-attachments/assets/1cb99992-2b6e-497b-abab-0940e081120e" /> | <img width="465" height="1024" alt="8apiInspector" src="https://github.com/user-attachments/assets/440f6034-0487-4e8e-b41e-1644c24f8624" /> |
+| <img width="525" height="1024" alt="Imagepipe_4" src="https://github.com/user-attachments/assets/6be76a55-940b-489a-9382-12a933233ddb" /> | <img width="524" height="1024" alt="appSett" src="https://github.com/user-attachments/assets/9cf2b3f8-4789-4f31-ad2a-0140d98028de" /> | <img width="525" height="1024" alt="Imagepipe_6" src="https://github.com/user-attachments/assets/9d148489-02ac-4eff-b235-cf8fe70093bd" /> | <img width="525" height="1024" alt="Imagepipe_7" src="https://github.com/user-attachments/assets/a636b3e8-f428-4bd4-93f6-cfca0da8bcce" /> |
