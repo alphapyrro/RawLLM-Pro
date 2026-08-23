@@ -4,34 +4,35 @@
   Copyright (c) 2026 alphapyrro. All Rights Reserved.
   ==============================================================================
 
-  TERMS OF USE & DISTRIBUTION LICENSE:
+  TERMS OF USE & PUBLIC DISTRIBUTION LICENSE:
 
-  1. PERSONAL USE & MODIFICATION:
-     You are granted a personal, non-exclusive, non-transferable license to use,
-     inspect, and modify this software solely for your own private, personal,
-     and non-commercial use on your own devices.
+  1. OFFICIAL PLATFORM DISTRIBUTION:
+     Permission is hereby granted for this software to be hosted, listed, and
+     distributed directly through the official Layla Mini-Apps Catalog, Layla
+     application ecosystem, and authorized repositories maintained by the author
+     (alphapyrro) and the Layla development team.
 
-  2. REDISTRIBUTION RESTRICTIONS:
-     You may NOT redistribute, publish, mirror, sublicense, sell, or upload
-     this software (in whole or in part), including any modified versions,
-     forks, or derivative works, to the official Layla Mini-Apps Catalog/Repo,
-     any third-party application directories, package managers, or app stores
-     without explicit prior written consent from the author (alphapyrro).
+  2. USER RIGHTS & MODIFICATION:
+     End-users are granted a non-exclusive license to run, inspect, and modify
+     this software locally on their own devices for private, non-commercial use.
 
-  3. DERIVATIVE WORKS & ATTRIBUTION:
-     Creating public rebrands, mirrors, or repackaged versions for public
-     distribution is strictly prohibited. Any unauthorized clones or republications
-     within the Layla platform or external repositories will be subject to
-     immediate takedown requests and copyright enforcement.
+  3. THIRD-PARTY REDISTRIBUTION & CLONING RESTRICTIONS:
+     Third-party republishing, unauthorized mirrors, public rebrands, repackaging,
+     or commercial resale of this software (in whole or in part, modified or
+     unmodified) to third-party app stores, package managers, or alternate public
+     directories is strictly prohibited without explicit written consent from
+     alphapyrro.
 
-  4. WARRANTY & LIABILITY DISCLAIMER:
+  4. ATTRIBUTION & DERIVATIVES:
+     Any authorized forks or community enhancements must retain this original
+     copyright notice and clearly credit the author (alphapyrro).
+
+  5. WARRANTY & LIABILITY DISCLAIMER:
      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
      IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
      FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-     SOFTWARE.
+     AUTHOR OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+     LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.
   ==============================================================================
 -->
 <html lang="en">
@@ -56,10 +57,15 @@
     };
   </script>
   <link rel="stylesheet" href="./assets/css/github-dark.min.css">
-  <script src="./assets/js/eruda.js" onerror="this.onerror=null;"></script>
+  <!-- DEBUG TOOLKIT (Set to false or delete block for production releases) -->
   <script>
-    if (typeof window.eruda !== 'undefined' && typeof window.eruda.init === 'function') {
-      window.eruda.init();
+    const ENABLE_DEBUG_CONSOLE = false;
+    if (ENABLE_DEBUG_CONSOLE) {
+      const script = document.createElement('script');
+      script.src = './assets/js/eruda.js';
+      script.onload = () => { if (window.eruda?.init) window.eruda.init(); };
+      script.onerror = () => console.warn('Eruda not loaded');
+      document.head.appendChild(script);
     }
   </script>
   <script src="./assets/js/marked.min.js"></script>
@@ -122,13 +128,20 @@
     }
     #sidebar-overlay.open { opacity: 1; pointer-events: auto; }
     .sidebar-header { padding: 12px 16px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; }
+    .sidebar-btn-row { display: flex; gap: 6px; width: 100%; }
     #search-threads-input { width: 100%; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 10px; border-radius: 6px; font-size: 13px; }
     .new-chat-btn {
-      width: 100%; background: var(--accent); color: white; border: none; padding: 10px;
+      flex: 1; background: var(--accent); color: white; border: none; padding: 10px 14px;
       border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px;
+      display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px;
     }
     .new-chat-btn:hover, .new-chat-btn:active { background: var(--accent-hover); }
+    .import-chat-btn {
+      flex: 0 0 42px; background: var(--bg-base); color: var(--text-muted); border: 1px solid var(--border-color);
+      padding: 0; border-radius: 8px; font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; min-height: 40px; width: 42px; transition: all 0.2s;
+    }
+    .import-chat-btn:hover, .import-chat-btn:active { background: var(--bg-surface-hover); color: var(--text-main); border-color: var(--text-muted); }
     #thread-list { flex-grow: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
     .thread-item {
       padding: 10px 12px; border-radius: 8px; cursor: pointer; display: flex;
@@ -150,7 +163,7 @@
     #params-panel {
       position: absolute; top: 60px; right: 12px; left: 12px; width: calc(100vw - 24px); max-width: 440px; margin: 0 auto; max-height: calc(100vh - 80px);
       background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;
-      padding: 0 16px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); display: none; z-index: 100; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden;
+      padding: 0 16px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); display: none; z-index: 250; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden;
     }
     .params-sticky-header {
       position: sticky; top: 0; background: var(--bg-surface); z-index: 20;
@@ -264,6 +277,49 @@
     .msg-user { align-self: flex-end; background: var(--user-bubble); color: white; border-bottom-right-radius: 2px; }
     .msg-user .message-content { white-space: pre-wrap !important; word-wrap: break-word; }
     .msg-ai { align-self: flex-start; background: var(--ai-bubble); border: 1px solid var(--border-color); border-bottom-left-radius: 2px; width: 100%; }
+    .message.msg-pruned {
+      opacity: 0.45;
+      filter: grayscale(40%);
+      transition: opacity 0.3s ease, filter 0.3s ease;
+    }
+    .message.msg-pruned:hover {
+      opacity: 0.85;
+      filter: none;
+    }
+    .pruned-badge {
+      display: none;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--error);
+      border: 1px solid var(--error);
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+    .message.msg-pruned .pruned-badge {
+      display: inline-block;
+    }
+    .context-cutoff-line {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 8px 0;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      user-select: none;
+    }
+    .context-cutoff-line::before, .context-cutoff-line::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+      border-top: 1px dashed var(--text-muted);
+      opacity: 0.5;
+    }
     .msg-header { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 2px; width: 100%; }
     .msg-timestamp { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); opacity: 0.75; user-select: none; }
     .msg-user .msg-timestamp { color: rgba(255,255,255,0.7); }
@@ -318,6 +374,81 @@
     .context-bar-track { width: 100%; height: 6px; background: var(--bg-base); border-radius: 3px; overflow: hidden; border: 1px solid var(--border-color); }
     .context-bar-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s ease, background-color 0.3s ease; }
     .context-warning-text { color: var(--error); font-weight: 600; display: none; }
+    #floating-sampler-btn {
+      position: fixed;
+      top: 66px;
+      right: 14px;
+      z-index: 80;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: background-color 0.2s, transform 0.15s;
+    }
+    #floating-sampler-btn:hover, #floating-sampler-btn:active {
+      background: var(--bg-surface-hover);
+      transform: scale(1.05);
+    }
+    #sampler-popup-menu {
+      position: fixed;
+      top: 108px;
+      right: 14px;
+      width: 260px;
+      max-height: calc(100vh - 150px);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 85;
+      padding: 6px 0;
+    }
+    #sampler-popup-menu.open {
+      display: flex;
+    }
+    .sampler-popup-header {
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sampler-popup-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 12px;
+      font-size: 13px;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .sampler-popup-item:hover, .sampler-popup-item:active {
+      background: var(--bg-surface-hover);
+    }
+    .sampler-popup-item.active {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .sampler-popup-item-check {
+      font-size: 12px;
+      color: var(--accent);
+    }
     #prefill-drawer { display: none !important; background: var(--bg-surface); border-top: 1px solid var(--border-color); padding: 8px 16px; flex-direction: column; gap: 6px; }
     #prefill-drawer.open { display: flex !important; }
     .prefill-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; color: var(--text-muted); }
@@ -379,7 +510,11 @@
   <div id="sidebar-overlay"></div>
   <div id="sidebar">
     <div class="sidebar-header">
-      <button class="new-chat-btn" id="btn-new-chat"><span>+</span> New Chat</button>
+      <div class="sidebar-btn-row">
+        <button class="new-chat-btn" id="btn-new-chat"><span>+</span> New Chat</button>
+        <button class="import-chat-btn" id="btn-import-thread" title="Import Conversation JSON">📥</button>
+        <input type="file" id="file-import-thread-input" accept=".json,.md,.txt" style="display:none;">
+      </div>
       <input type="text" id="search-threads-input" placeholder="🔍 Search conversations...">
     </div>
     <div id="thread-list"></div>
@@ -529,6 +664,9 @@
         </div>
       </div>
       <div class="param-section-title">Context & Limits</div>
+      <div style="background: rgba(210, 153, 34, 0.08); border: 1px solid rgba(210, 153, 34, 0.35); border-radius: 8px; padding: 10px 12px; font-size: 11.5px; color: var(--text-main); line-height: 1.4; margin: 4px 0 8px 0;">
+        💡 <b style="color: var(--warning);">Engine Allocation Note:</b> Max Tokens and Context Window requested here cannot exceed the hardware allocation configured in Layla's Model Settings.
+      </div>
       <div class="param-group">
         <label class="param-header">Max Tokens</label>
         <input type="number" id="param-maxtokens" value="2048" min="1">
@@ -612,6 +750,12 @@
       </div>
       <div class="param-section-title">Chat & Display Preferences</div>
       <div class="param-group">
+        <div class="toggle-group">
+          <label class="toggle-label" for="setting-show-sampler-quickmenu">Show Sampler Quick-Menu (🧠)</label>
+          <input type="checkbox" id="setting-show-sampler-quickmenu" class="toggle-checkbox" checked>
+        </div>
+      </div>
+      <div class="param-group">
         <div class="param-header">
           <span>Chat Font Size</span>
           <span id="font-size-val-display" style="font-family: var(--font-mono); color: var(--accent);">15px</span>
@@ -638,26 +782,22 @@
         </select>
       </div>
 
-      <div class="param-section-title">🎙️ Voice & Speech (Hands-Free)</div>
+      <div class="param-section-title">🎙️ Voice & Speech (Beta / Hands-Free)</div>
       <div class="param-group">
         <div class="toggle-group">
-          <label class="toggle-label" for="setting-voice-features-enabled">Enable Voice Features</label>
+          <label class="toggle-label" for="setting-voice-features-enabled">Enable Voice Features <span style="font-size: 10px; color: var(--warning); font-weight: 700; border: 1px solid var(--warning); padding: 1px 4px; border-radius: 4px; margin-left: 4px;">BETA</span></label>
           <input type="checkbox" id="setting-voice-features-enabled" class="toggle-checkbox">
         </div>
       </div>
       <div id="voice-settings-subpanel" style="display: none; flex-direction: column; gap: 10px;">
+        <div style="background: rgba(210, 153, 34, 0.1); border: 1px solid var(--warning); border-radius: 8px; padding: 8px 10px; font-size: 11px; color: var(--text-main); line-height: 1.4;">
+          ⚠️ <b>SDK Notice:</b> Due to current Layla SDK bridge limitations, AI speech plays immediately after text generation finishes.
+        </div>
         <div class="param-group">
           <div class="toggle-group">
             <label class="toggle-label" for="setting-auto-tts">Auto-Read AI Responses (TTS)</label>
-            <input type="checkbox" id="setting-auto-tts" class="toggle-checkbox">
+            <input type="checkbox" id="setting-auto-tts" class="toggle-checkbox" checked>
           </div>
-        </div>
-        <div class="param-group">
-          <label class="param-header">TTS Playback Timing</label>
-          <select id="setting-tts-timing">
-            <option value="stream">⚡ Speak As Soon As Possible (Sentence Stream)</option>
-            <option value="end">⌛ Speak When Generation Has Finished</option>
-          </select>
         </div>
         <div class="param-group">
           <div class="toggle-group">
@@ -668,7 +808,7 @@
         <div class="param-group">
           <label class="param-header">Voice Engine / Model</label>
           <select id="setting-tts-voice">
-            <option value="auto">Auto (Best Natural English)</option>
+            <option value="auto">Auto (Best Natural Voice)</option>
           </select>
         </div>
         <div class="param-group">
@@ -707,6 +847,10 @@
 
       <div class="param-section-title" style="color:var(--error); margin-top:10px;">Danger Zone</div>
       <button class="btn-danger-outline" id="btn-reset-params">Reset All Parameters to Factory Defaults</button>
+      <button class="btn-danger-outline" id="btn-wipe-all-chats" style="margin-top: 8px;">🗑️ Delete All Conversations & History</button>
+      <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; padding: 4px 2px 0;">
+        ⚠️ <b>Irreversible:</b> Permanently deletes all chat threads and messages from the database. Use <b>💾 Backup All Data</b> first if you want to keep an archive.
+      </div>
     </div>
   </div>
   <div class="modal" id="modal-payload">
@@ -730,6 +874,8 @@
       <button class="icon-btn" id="btn-params" aria-label="Settings">⚙️</button>
     </div>
   </header>
+  <button id="floating-sampler-btn" title="Quick Sampler Presets">🧠</button>
+  <div id="sampler-popup-menu"></div>
   <div id="chat-viewport">
     <div class="typing-indicator" id="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
   </div>
@@ -759,7 +905,7 @@
 Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"></textarea>
   </div>
   <div id="input-dock">
-    <button id="btn-stop-voice" style="position: absolute; bottom: calc(100% + 12px); right: 16px; background: rgba(248, 81, 73, 0.9); color: white; border: 1px solid var(--border-color); border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 110;" title="Stop Voice Playback">
+    <button id="btn-stop-voice" style="position: absolute; bottom: calc(100% + 12px); right: 16px; background: rgba(248, 81, 73, 0.9); color: white; border: 1px solid var(--border-color); border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 90;" title="Stop Voice Playback">
       <span>🔇</span> Stop Voice
     </button>
     <button id="scroll-bottom-btn" title="Scroll to bottom">↓</button>
@@ -783,7 +929,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
   <script>
   (function(){
     if (window.Bridge && window.Bridge.__makeitBridgeLib) return;
-    var queue = [], active = null, listening = false;
+    var pendingHandlers = [], streamJob = null, listening = false;
     function post(msg){
       if (typeof window === 'undefined' || !window.ReactNativeWebView) return false;
       window.ReactNativeWebView.postMessage(JSON.stringify(msg));
@@ -799,45 +945,66 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       var parsed;
       try { parsed = JSON.parse(e.data); } catch(err) { return; }
       if (!parsed || typeof parsed.event !== 'string') return;
-      var job = active;
-      if (!job) return;
-      try {
-        if (parsed.event === 'on_error') {
-          job.reject(new Error((parsed.data && parsed.data.message) || 'Layla bridge error'));
-          finishActive();
+      
+      if (streamJob && (parsed.event === 'on_message' || parsed.event === 'on_message_end')) {
+        try {
+          if (streamJob.accept(parsed)) streamJob = null;
+        } catch (err) {
+          streamJob.reject(err);
+          streamJob = null;
+        }
+        return;
+      }
+      
+      for (var i = 0; i < pendingHandlers.length; i++) {
+        var h = pendingHandlers[i];
+        if (h.event === parsed.event || parsed.event === 'on_error') {
+          pendingHandlers.splice(i, 1);
+          if (parsed.event === 'on_error') {
+            h.reject(new Error((parsed.data && parsed.data.message) || 'Layla bridge error'));
+          } else {
+            try { h.resolve(h.extract ? h.extract(parsed) : parsed.data); } catch(err){ h.reject(err); }
+          }
           return;
         }
-        if (job.accept(parsed)) finishActive();
-      } catch (err) {
-        job.reject(err instanceof Error ? err : new Error(String(err)));
-        finishActive();
-      }
-    }
-    function finishActive(){ active = null; pump(); }
-    function pump(){
-      if (active) return;
-      var next = queue.shift();
-      if (!next) return;
-      active = next;
-      if (!post(next.message)) {
-        active = null;
-        next.reject(new Error('Bridge unavailable — not running inside Layla'));
-        pump();
       }
     }
     function oneShot(cmd, data, responseEvent, extract){
       ensureListening();
       return new Promise(function(resolve, reject){
-        queue.push({
-          message: { cmd: cmd, data: data },
+        pendingHandlers.push({
+          event: responseEvent,
+          extract: extract,
+          resolve: resolve,
+          reject: reject
+        });
+        if (!post({ cmd: cmd, data: data })) {
+          pendingHandlers.pop();
+          reject(new Error('Bridge unavailable — not running inside Layla'));
+        }
+      });
+    }
+    function streamChat(messages, onToken){
+      ensureListening();
+      return new Promise(function(resolve, reject){
+        var full = '';
+        streamJob = {
           reject: reject,
           accept: function(evt){
-            if (evt.event !== responseEvent) return false;
-            try { resolve(extract ? extract(evt) : evt.data); } catch(err){ reject(err); }
-            return true;
+            if (evt.event === 'on_message') {
+              var d = evt.data || {};
+              full = d.msg || (full + (d.delta || ''));
+              if (onToken) onToken(d.delta || '', full);
+              return false;
+            }
+            if (evt.event === 'on_message_end') { resolve(full); return true; }
+            return false;
           }
-        });
-        pump();
+        };
+        if (!post({ cmd: 'send_message', data: messages })) {
+          streamJob = null;
+          reject(new Error('Bridge unavailable — not running inside Layla'));
+        }
       });
     }
     function streamChat(messages, onToken){
@@ -879,7 +1046,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     import { LaylaSDK } from './assets/js/layla-sdk.min.js';
     const layla = new LaylaSDK();
     window.layla = layla;
-    const APP_VERSION = '7.5.0';
+    const APP_VERSION = '7.6.0';
     const CONFIG_PATHS = {
       SETTINGS: 'config/settings.json',
       SYS_PROMPTS: 'config/system_prompts.json',
@@ -913,6 +1080,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       close_keyboard_on_send: true,
       font_size: 15,
       show_stats: true,
+      show_sampler_quickmenu: true,
       timestamp_mode: 'off',
       voice_enabled: false,
       auto_tts: false,
@@ -922,8 +1090,14 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       stt_mode: 'pause'
     };
     const ui = {
-      sidebar: document.getElementById('sidebar'), overlay: document.getElementById('sidebar-overlay'),
-      btnMenu: document.getElementById('btn-menu'), btnNewChat: document.getElementById('btn-new-chat'),
+        floatingSamplerBtn: document.getElementById('floating-sampler-btn'),
+        samplerPopupMenu: document.getElementById('sampler-popup-menu'),
+        settingShowSamplerQuickmenu: document.getElementById('setting-show-sampler-quickmenu'),
+        sidebar: document.getElementById('sidebar'),
+        overlay: document.getElementById('sidebar-overlay'),
+        btnMenu: document.getElementById('btn-menu'),
+        btnNewChat: document.getElementById('btn-new-chat'),
+      btnImportThread: document.getElementById('btn-import-thread'), fileImportThreadInput: document.getElementById('file-import-thread-input'),
       searchThreadsInput: document.getElementById('search-threads-input'), threadList: document.getElementById('thread-list'),
       paramsPanel: document.getElementById('params-panel'), agentsContainer: document.getElementById('agents-container'),
       customPromptsList: document.getElementById('custom-prompts-list'), btnAddPromptTemplate: document.getElementById('btn-add-prompt-template'),
@@ -931,6 +1105,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       fileImportInput: document.getElementById('file-import-input'), btnParams: document.getElementById('btn-params'),
       btnSaveCustomDefault: document.getElementById('btn-save-custom-default'), btnOverwritePreset: document.getElementById('btn-overwrite-preset'),
       btnResetCustomDefault: document.getElementById('btn-reset-custom-default'), btnResetParams: document.getElementById('btn-reset-params'),
+      btnWipeAllChats: document.getElementById('btn-wipe-all-chats'),
       presetSelect: document.getElementById('preset-select'),
       pureParamPresetSelect: document.getElementById('pure-param-preset-select'),
       btnSavePureParam: document.getElementById('btn-save-pure-param'),
@@ -957,7 +1132,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       settingVoiceEnabled: document.getElementById('setting-voice-features-enabled'),
       voiceSettingsSubpanel: document.getElementById('voice-settings-subpanel'),
       settingAutoTts: document.getElementById('setting-auto-tts'),
-      settingTtsTiming: document.getElementById('setting-tts-timing'),
       settingAutoListen: document.getElementById('setting-auto-listen'),
       settingTtsVoice: document.getElementById('setting-tts-voice'),
       settingSttMode: document.getElementById('setting-stt-mode'),
@@ -997,6 +1171,77 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     };
     let activeThread = null, isAutoScrolling = true, isUserInteracting = false, currentStreamTokens = 0, isProgrammaticUpdate = false;
     const activeGenerations = new Map();
+    const promptQueues = new Map();
+    const threadsCache = new Map();
+
+    window.updateQueueUI = function() {
+      if (!activeThread) return;
+      
+      const hasGlobalGeneration = activeGenerations.size > 0;
+      const activeQId = (activeThread && promptQueues.has(activeThread.id))
+        ? activeThread.id 
+        : (promptQueues.size > 0 ? promptQueues.keys().next().value : null);
+      const qText = activeQId ? promptQueues.get(activeQId) : null;
+
+      let badge = document.getElementById('queue-badge-container');
+      if (!badge) {
+        badge = document.createElement('div');
+        badge.id = 'queue-badge-container';
+        badge.style.cssText = 'display: none; align-items: center; justify-content: space-between; background: rgba(210,153,34,0.15); border: 1px solid var(--warning); padding: 6px 12px; border-radius: 8px; font-size: 12px; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+        badge.innerHTML = `<span id="queue-badge-text" style="color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%;"></span><button id="btn-cancel-queue" style="background: none; border: none; color: var(--error); cursor: pointer; font-size: 14px; margin-left: 8px; font-weight: 700; padding: 2px 6px;" title="Unqueue & Edit">✕</button>`;
+        ui.userInput.parentNode.parentNode.insertBefore(badge, ui.userInput.parentNode);
+      }
+
+      // Rebind click listener live on every render so it never goes stale
+      const cancelBtn = badge.querySelector('#btn-cancel-queue');
+      if (cancelBtn) {
+        cancelBtn.onclick = (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          const targetQId = (activeThread && promptQueues.has(activeThread.id))
+            ? activeThread.id 
+            : (promptQueues.size > 0 ? promptQueues.keys().next().value : null);
+
+          if (targetQId && promptQueues.has(targetQId)) {
+            const restoredText = promptQueues.get(targetQId);
+            promptQueues.delete(targetQId);
+
+            // Safe unqueue: if the input field already has new text, merge them so nothing is lost
+            const currentDraft = ui.userInput.value.trim();
+            ui.userInput.value = currentDraft ? `${restoredText}\n\n${currentDraft}` : restoredText;
+            updateCharCount();
+            ui.userInput.style.height = 'auto';
+            ui.userInput.style.height = (ui.userInput.scrollHeight) + 'px';
+            ui.userInput.focus();
+            
+            window.updateQueueUI();
+          }
+        };
+      }
+
+      if (qText) {
+        badge.style.display = 'flex';
+        document.getElementById('queue-badge-text').textContent = `⏳ Queued: ${qText}`;
+      } else {
+        badge.style.display = 'none';
+      }
+      
+      ui.btnSend.style.display = 'flex';
+      ui.btnStop.style.display = hasGlobalGeneration ? 'flex' : 'none';
+
+      if (hasGlobalGeneration) {
+        ui.userInput.placeholder = "Type next prompt to queue...";
+        ui.btnSend.innerHTML = "⏳";
+        ui.btnSend.title = "Queue Prompt";
+        ui.btnSend.style.background = "var(--warning)";
+      } else {
+        ui.userInput.placeholder = "Type a message or / for templates...";
+        ui.btnSend.innerHTML = "➤";
+        ui.btnSend.title = "Send Prompt";
+        ui.btnSend.style.background = "var(--accent)";
+      }
+    };
+
     let loadedSettings = { ...DEFAULT_SETTINGS };
     let enterSends = true;
     let loadedAgents = [
@@ -1446,6 +1691,77 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         saveSettings({ show_stats: e.target.checked });
       });
     }
+    
+    function applySamplerQuickMenuVisibility(visible) {
+      if (ui.floatingSamplerBtn) {
+        ui.floatingSamplerBtn.style.display = visible ? 'flex' : 'none';
+      }
+      if (!visible && ui.samplerPopupMenu) {
+        ui.samplerPopupMenu.classList.remove('open');
+      }
+      if (ui.settingShowSamplerQuickmenu) {
+        ui.settingShowSamplerQuickmenu.checked = visible;
+      }
+    }
+    if (ui.settingShowSamplerQuickmenu) {
+      ui.settingShowSamplerQuickmenu.addEventListener('change', (e) => {
+        const isVisible = e.target.checked;
+        applySamplerQuickMenuVisibility(isVisible);
+        saveSettings({ show_sampler_quickmenu: isVisible });
+      });
+    }
+    async function populateSamplerQuickMenu() {
+      if (!ui.samplerPopupMenu) return;
+      const presets = await loadPureParamPresets();
+      ui.samplerPopupMenu.innerHTML = '<div class="sampler-popup-header"><span>🧠 Sampler Presets</span></div>';
+      
+      const currentSamplers = getCurrentSamplerParams();
+      const activeKey = await getPureParamPresetKeyForValues(currentSamplers);
+      
+      Object.keys(presets).forEach(name => {
+        const item = document.createElement('div');
+        const isActive = activeKey === name;
+        item.className = `sampler-popup-item ${isActive ? 'active' : ''}`;
+        item.innerHTML = `<span>${name}</span>${isActive ? '<span class="sampler-popup-item-check">✓</span>' : ''}`;
+        
+        item.onclick = (e) => {
+          e.stopPropagation();
+          isProgrammaticUpdate = true;
+          const currentLimits = {
+            max_tokens: parseInt(ui.paramMax.value, 10),
+            context_window: parseInt(ui.paramContextWindow.value, 10)
+          };
+          updateSynchronizedInputs({ ...presets[name], ...currentLimits });
+          if (ui.pureParamPresetSelect) ui.pureParamPresetSelect.value = name;
+          isProgrammaticUpdate = false;
+          syncThreadParametersLive();
+          
+          ui.samplerPopupMenu.classList.remove('open');
+          ui.statusText.textContent = `Applied ${name}`;
+          setTimeout(() => {
+            if (!activeGenerations.has(activeThread?.id) && ui.statusText.textContent === `Applied ${name}`) {
+              ui.statusText.textContent = "Ready";
+            }
+          }, 1600);
+        };
+        ui.samplerPopupMenu.appendChild(item);
+      });
+    }
+    
+    if (ui.floatingSamplerBtn) {
+      ui.floatingSamplerBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (ui.paramsPanel) ui.paramsPanel.style.display = 'none';
+        const isOpen = ui.samplerPopupMenu.classList.contains('open');
+        if (!isOpen) {
+          await populateSamplerQuickMenu();
+          ui.samplerPopupMenu.classList.add('open');
+        } else {
+          ui.samplerPopupMenu.classList.remove('open');
+        }
+      });
+    }
+
     if (ui.settingTimestampMode) {
       ui.settingTimestampMode.addEventListener('change', (e) => {
         const mode = e.target.value;
@@ -1799,7 +2115,100 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         syncThreadParametersLive();
       }
     }
-    async function dbGetAll() {
+    async function initDatabase() {
+      if (!window.layla?.db?.executeSql) return false;
+      await window.layla.db.executeSql(`
+        CREATE TABLE IF NOT EXISTS threads (
+          id TEXT PRIMARY KEY,
+          title TEXT,
+          created_at INTEGER,
+          updated_at INTEGER,
+          is_pinned INTEGER DEFAULT 0,
+          is_forked INTEGER DEFAULT 0,
+          preset_name TEXT,
+          sys_prompt_preset_name TEXT,
+          system_prompt TEXT,
+          parameters_json TEXT
+        );
+      `);
+      await window.layla.db.executeSql(`
+        CREATE TABLE IF NOT EXISTS messages (
+          id TEXT PRIMARY KEY,
+          thread_id TEXT,
+          role TEXT,
+          content TEXT,
+          thinking TEXT,
+          raw_stream TEXT,
+          search_context TEXT,
+          stats_json TEXT,
+          timestamp INTEGER,
+          is_streaming INTEGER DEFAULT 0
+        );
+      `);
+      await window.layla.db.executeSql(`
+        CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(thread_id, timestamp);
+      `);
+      
+      // Recovery guard: mark all in-flight streaming rows as finalized messages so they survive reboots
+      await window.layla.db.executeSql('UPDATE messages SET is_streaming = 0 WHERE is_streaming = 1;');
+      await checkAndMigrateLegacyFiles();
+      return true;
+    }
+
+    async function checkAndMigrateLegacyFiles() {
+      try {
+        const countRes = await window.layla.db.executeSql('SELECT count(*) as count FROM threads;');
+        const rowCount = countRes.rows[0]?.count || 0;
+        if (rowCount > 0) return;
+
+        const manifest = await loadManifest();
+        if (!manifest || !manifest.length) return;
+
+        for (const meta of manifest) {
+          try {
+            const res = await window.Bridge.files.read(meta.file);
+            if (res && res.content_base64) {
+              const parsed = JSON.parse(fromB64(stripB64Prefix(res.content_base64)));
+              if (parsed && parsed.id) {
+                await dbPut(parsed);
+              }
+            }
+          } catch (e) {}
+        }
+      } catch (err) {
+        console.warn('Migration Notice:', err);
+      }
+    }
+
+    async function dbGetAll(searchFilter = '') {
+      if (window.layla?.db?.executeSql) {
+        let sql = 'SELECT * FROM threads ORDER BY is_pinned DESC, updated_at DESC;';
+        let params = [];
+        if (searchFilter) {
+          sql = `
+            SELECT DISTINCT t.* FROM threads t
+            LEFT JOIN messages m ON t.id = m.thread_id
+            WHERE t.title LIKE ? OR m.content LIKE ?
+            ORDER BY t.is_pinned DESC, t.updated_at DESC;
+          `;
+          const term = `%${searchFilter}%`;
+          params = [term, term];
+        }
+        const res = await window.layla.db.executeSql(sql, params);
+        return (res.rows || []).map(r => ({
+          id: r.id,
+          title: r.title,
+          created_at: r.created_at,
+          updated_at: r.updated_at,
+          is_pinned: r.is_pinned === 1,
+          is_forked: r.is_forked === 1,
+          preset_name: r.preset_name,
+          sys_prompt_preset_name: r.sys_prompt_preset_name,
+          system_prompt: r.system_prompt,
+          parameters: r.parameters_json ? JSON.parse(r.parameters_json) : { ...DEFAULT_PARAMS }
+        }));
+      }
+
       const manifest = await loadManifest();
       const threads = [];
       for (const meta of manifest) {
@@ -1810,11 +2219,148 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       }
       return threads.sort((a, b) => (a.is_pinned !== b.is_pinned ? (a.is_pinned ? -1 : 1) : b.updated_at - a.updated_at));
     }
+
+    async function warmThreadsCache() {
+      if (window.layla?.db?.executeSql) {
+        try {
+          const tRes = await window.layla.db.executeSql('SELECT * FROM threads ORDER BY is_pinned DESC, updated_at DESC;');
+          const mRes = await window.layla.db.executeSql('SELECT * FROM messages ORDER BY timestamp ASC;');
+          const msgsMap = new Map();
+          (mRes.rows || []).forEach(m => {
+            if (!msgsMap.has(m.thread_id)) msgsMap.set(m.thread_id, []);
+            msgsMap.get(m.thread_id).push({
+              id: m.id,
+              role: m.role,
+              content: m.content || '',
+              thinking: m.thinking || undefined,
+              rawStream: m.raw_stream || undefined,
+              searchContext: m.search_context || undefined,
+              stats: m.stats_json ? JSON.parse(m.stats_json) : null,
+              timestamp: m.timestamp || Date.now(),
+              _isStreaming: false
+            });
+          });
+          (tRes.rows || []).forEach(r => {
+            threadsCache.set(r.id, {
+              id: r.id,
+              title: r.title,
+              created_at: r.created_at,
+              updated_at: r.updated_at,
+              is_pinned: r.is_pinned === 1,
+              is_forked: r.is_forked === 1,
+              preset_name: r.preset_name,
+              sys_prompt_preset_name: r.sys_prompt_preset_name,
+              system_prompt: r.system_prompt,
+              parameters: r.parameters_json ? JSON.parse(r.parameters_json) : { ...DEFAULT_PARAMS },
+              messages: msgsMap.get(r.id) || []
+            });
+          });
+        } catch (e) {}
+      }
+    }
+
     async function dbGet(id) {
-      try { const res = await window.Bridge.files.read(`chats/thread_${id}.json`); if (res && res.content_base64) return JSON.parse(fromB64(stripB64Prefix(res.content_base64))); } catch (e) {}
+      if (threadsCache.has(id)) return JSON.parse(JSON.stringify(threadsCache.get(id)));
+      
+      if (window.layla?.db?.executeSql) {
+        const tRes = await window.layla.db.executeSql('SELECT * FROM threads WHERE id = ? LIMIT 1;', [id]);
+        if (!tRes.rows || !tRes.rows.length) return null;
+        const r = tRes.rows[0];
+        const mRes = await window.layla.db.executeSql('SELECT * FROM messages WHERE thread_id = ? ORDER BY timestamp ASC;', [id]);
+        const messages = (mRes.rows || []).map(m => ({
+          id: m.id,
+          role: m.role,
+          content: m.content || '',
+          thinking: m.thinking || undefined,
+          rawStream: m.raw_stream || undefined,
+          searchContext: m.search_context || undefined,
+          stats: m.stats_json ? JSON.parse(m.stats_json) : null,
+          timestamp: m.timestamp || Date.now(),
+          _isStreaming: false
+        }));
+        const finalThread = {
+          id: r.id,
+          title: r.title,
+          created_at: r.created_at,
+          updated_at: r.updated_at,
+          is_pinned: r.is_pinned === 1,
+          is_forked: r.is_forked === 1,
+          preset_name: r.preset_name,
+          sys_prompt_preset_name: r.sys_prompt_preset_name,
+          system_prompt: r.system_prompt,
+          parameters: r.parameters_json ? JSON.parse(r.parameters_json) : { ...DEFAULT_PARAMS },
+          messages: messages
+        };
+        threadsCache.set(id, JSON.parse(JSON.stringify(finalThread)));
+        return finalThread;
+      }
+
+      try { 
+        const res = await window.Bridge.files.read(`chats/thread_${id}.json`); 
+        if (res && res.content_base64) {
+          const finalThread = JSON.parse(fromB64(stripB64Prefix(res.content_base64)));
+          threadsCache.set(id, JSON.parse(JSON.stringify(finalThread)));
+          return finalThread;
+        }
+      } catch (e) {}
       return null;
     }
+
     async function dbPut(thread) {
+      threadsCache.set(thread.id, JSON.parse(JSON.stringify(thread)));
+      if (window.layla?.db?.executeSql) {
+        await window.layla.db.executeSql(`
+          INSERT OR REPLACE INTO threads (id, title, created_at, updated_at, is_pinned, is_forked, preset_name, sys_prompt_preset_name, system_prompt, parameters_json)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        `, [
+          thread.id,
+          thread.title,
+          thread.created_at || Date.now(),
+          thread.updated_at || Date.now(),
+          thread.is_pinned ? 1 : 0,
+          thread.is_forked ? 1 : 0,
+          thread.preset_name || 'Default',
+          thread.sys_prompt_preset_name || 'Default Prompt',
+          thread.system_prompt || DEFAULT_SYS,
+          JSON.stringify(thread.parameters || DEFAULT_PARAMS)
+        ]);
+
+        if (thread.messages && thread.messages.length) {
+          const keepIds = [];
+          for (let i = 0; i < thread.messages.length; i++) {
+            const m = thread.messages[i];
+            if (!m.id) {
+              m.id = `${thread.id}_${m.timestamp || (Date.now() + i)}`;
+            }
+            keepIds.push(m.id);
+            await window.layla.db.executeSql(`
+              INSERT OR REPLACE INTO messages (id, thread_id, role, content, thinking, raw_stream, search_context, stats_json, timestamp, is_streaming)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            `, [
+              m.id,
+              thread.id,
+              m.role,
+              m.content || '',
+              m.thinking || '',
+              m.rawStream || '',
+              m.searchContext || '',
+              m.stats ? JSON.stringify(m.stats) : null,
+              m.timestamp || Date.now(),
+              m._isStreaming ? 1 : 0
+            ]);
+          }
+
+          const placeholders = keepIds.map(() => '?').join(',');
+          await window.layla.db.executeSql(
+            `DELETE FROM messages WHERE thread_id = ? AND is_streaming = 0 AND id NOT IN (${placeholders});`,
+            [thread.id, ...keepIds]
+          );
+        } else {
+          await window.layla.db.executeSql('DELETE FROM messages WHERE thread_id = ?;', [thread.id]);
+        }
+        return;
+      }
+
       const filename = `chats/thread_${thread.id}.json`;
       await window.Bridge.files.save(filename, toB64(JSON.stringify(thread)), false);
       let manifest = await loadManifest();
@@ -1822,7 +2368,14 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       manifest.unshift({ id: thread.id, title: thread.title, file: filename, updated_at: thread.updated_at, is_pinned: !!thread.is_pinned });
       await saveManifest(manifest);
     }
+
     async function dbDelete(id) {
+      threadsCache.delete(id);
+      if (window.layla?.db?.executeSql) {
+        await window.layla.db.executeSql('DELETE FROM messages WHERE thread_id = ?;', [id]);
+        await window.layla.db.executeSql('DELETE FROM threads WHERE id = ?;', [id]);
+        return;
+      }
       try {
         await window.Bridge.files.save(`chats/thread_${id}.json`, toB64(JSON.stringify({})), false);
         let manifest = await loadManifest(); manifest = manifest.filter(m => m.id !== id); await saveManifest(manifest);
@@ -1835,33 +2388,77 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
     async function createNewThread() {
       const lastPreset = localStorage.getItem('last_selected_preset') || 'Default';
-      const presets = await loadPresets();
-      const initPreset = presets[lastPreset] || { system_prompt: DEFAULT_SYS, parameters: { ...DEFAULT_PARAMS } };
-      const matchedSys = await getSystemPromptKeyForText(initPreset.system_prompt || DEFAULT_SYS);
       const newThread = {
-        id: generateId(), title: 'New Conversation', created_at: Date.now(), updated_at: Date.now(),
-        is_pinned: false, system_prompt: initPreset.system_prompt || DEFAULT_SYS,
-        sys_prompt_preset_name: matchedSys || 'Default Prompt',
-        parameters: JSON.parse(JSON.stringify({ ...DEFAULT_PARAMS, ...initPreset.parameters })),
-        preset_name: lastPreset, messages: []
+        id: generateId(), 
+        title: 'New Conversation', 
+        created_at: Date.now(), 
+        updated_at: Date.now(),
+        is_pinned: false, 
+        system_prompt: ui.paramSys.value || DEFAULT_SYS,
+        sys_prompt_preset_name: ui.sysPromptSelect.value || 'Default Prompt',
+        parameters: JSON.parse(JSON.stringify({
+          ...DEFAULT_PARAMS,
+          temperature: parseFloat(ui.paramTemp.value),
+          top_p: parseFloat(ui.paramTopP.value),
+          top_k: parseInt(ui.paramTopK.value, 10),
+          min_p: parseFloat(ui.paramMinP.value),
+          repeat_penalty: parseFloat(ui.paramRepeat.value),
+          repeat_penalty_range: parseInt(ui.paramRepeatRange.value, 10) || 512,
+          xtc_probability: parseFloat(ui.paramXtcProb.value),
+          xtc_threshold: parseFloat(ui.paramXtcThresh.value),
+          dry_multiplier: parseFloat(ui.paramDryMult.value),
+          dry_base: parseFloat(ui.paramDryBase.value),
+          dry_allowed_length: parseInt(ui.paramDryAllowed.value, 10) || 2,
+          dry_penalty_range: parseInt(ui.paramDryRange.value, 10) || 1024,
+          max_tokens: parseInt(ui.paramMax.value, 10),
+          context_window: parseInt(ui.paramContextWindow.value, 10) || 8192,
+          enable_thinking: ui.paramThinking.checked,
+          stop_sequences: ui.paramStopSequences.value.trim(),
+          agents: getAgentToggleStates()
+        })),
+        preset_name: lastPreset, 
+        messages: []
       };
-      await dbPut(newThread); await loadThread(newThread.id); await renderSidebar();
+      
+      threadsCache.set(newThread.id, JSON.parse(JSON.stringify(newThread)));
+      await loadThread(newThread.id);
+      renderSidebar();
+      dbPut(newThread);
     }
     async function branchChat(msgIndex) {
       if (!activeThread || activeGenerations.has(activeThread.id)) return;
+      const newId = generateId();
+      const now = Date.now();
+      const rawSlice = activeThread.messages.slice(0, msgIndex + 1);
+      const clonedMessages = rawSlice.map((m, idx) => ({
+        ...JSON.parse(JSON.stringify(m)),
+        id: `${newId}_msg_${now + idx}`
+      }));
+
       const newThread = {
-        id: generateId(), title: activeThread.title, created_at: Date.now(), updated_at: Date.now(),
-        is_pinned: false, system_prompt: activeThread.system_prompt, sys_prompt_preset_name: activeThread.sys_prompt_preset_name || 'custom_modified',
-        parameters: JSON.parse(JSON.stringify(activeThread.parameters)), preset_name: activeThread.preset_name || 'Default',
-        messages: JSON.parse(JSON.stringify(activeThread.messages.slice(0, msgIndex + 1))), is_forked: true
+        id: newId,
+        title: activeThread.title ? `${activeThread.title} (Branch)` : 'Branched Conversation',
+        created_at: now,
+        updated_at: now,
+        is_pinned: false,
+        system_prompt: activeThread.system_prompt,
+        sys_prompt_preset_name: activeThread.sys_prompt_preset_name || 'custom_modified',
+        parameters: JSON.parse(JSON.stringify(activeThread.parameters)),
+        preset_name: activeThread.preset_name || 'Default',
+        messages: clonedMessages,
+        is_forked: true
       };
-      await dbPut(newThread); await loadThread(newThread.id); await renderSidebar();
+      await dbPut(newThread);
+      await loadThread(newThread.id);
+      await renderSidebar();
     }
     window.branchChat = branchChat;
     let isLoadingThread = false;
     async function loadThread(id) {
-      if (isLoadingThread && activeThread?.id === id) return;
+      if (!id) return;
+      if (activeThread?.id === id && !isLoadingThread) return;
       isLoadingThread = true;
+
       try {
         const thread = await dbGet(id);
         if (!thread) { isLoadingThread = false; return; }
@@ -1871,7 +2468,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         if (!activeThread.parameters.agents) activeThread.parameters.agents = { ...DEFAULT_PARAMS.agents };
         localStorage.setItem('last_active_thread_id', activeThread.id);
         loadedSettings.last_active_thread_id = activeThread.id;
-        saveSettings({ last_active_thread_id: activeThread.id });
+        
         isProgrammaticUpdate = true;
         ui.activeTitle.textContent = activeThread.title;
         ui.paramSys.value = activeThread.system_prompt;
@@ -1886,16 +2483,38 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         if (!targetSysPreset || targetSysPreset === 'custom_modified') targetSysPreset = await getSystemPromptKeyForText(activeThread.system_prompt);
         await populateSystemPromptDropdown(targetSysPreset || 'custom_modified');
         isProgrammaticUpdate = false;
-        renderChatViewport(); updateSidebarActiveState(); updateContextBar();
+
+        renderChatViewport();
+        updateSidebarActiveState();
+        updateContextBar();
+
         if (activeGenerations.has(id)) {
           const genState = activeGenerations.get(id);
           ui.chatViewport.insertBefore(genState.bubble, ui.typingIndicator);
-          ui.typingIndicator.style.display = 'none'; ui.btnSend.style.display = 'none'; ui.btnStop.style.display = 'flex';
-          if (!genState.thinkingInterval) ui.statusText.textContent = "Generating...";
+          genState.bubble.style.display = genState.hasReceivedTokens ? 'flex' : 'none';
+          ui.typingIndicator.style.display = genState.hasReceivedTokens ? 'none' : 'flex';
+          ui.statusText.textContent = genState.currentStatus || "Generating...";
           scrollToBottom(true);
         } else {
-          currentStreamTokens = 0; ui.btnSend.style.display = 'flex'; ui.btnStop.style.display = 'none';
-          ui.typingIndicator.style.display = 'none'; ui.statusText.textContent = "Ready";
+          currentStreamTokens = 0;
+          ui.typingIndicator.style.display = 'none';
+          ui.statusText.textContent = activeGenerations.size > 0 ? "Generating in background..." : "Ready";
+        }
+        
+        if (window.updateQueueUI) window.updateQueueUI();
+        
+        if (activeGenerations.size === 0 && promptQueues.has(id)) {
+          const nextText = promptQueues.get(id);
+          promptQueues.delete(id);
+          setTimeout(() => { sendMessage(nextText); }, 100);
+        }
+        
+        window.updateQueueUI();
+        
+        if (activeGenerations.size === 0 && promptQueues.has(id)) {
+          const nextText = promptQueues.get(id);
+          promptQueues.delete(id);
+          setTimeout(() => { sendMessage(nextText); }, 100);
         }
       } catch (err) { 
         isProgrammaticUpdate = false; 
@@ -1906,11 +2525,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     }
     async function renderSidebar() {
       try {
-        let threads = await dbGetAll();
-        const filter = ui.searchThreadsInput ? ui.searchThreadsInput.value.trim().toLowerCase() : '';
-        if (filter) {
-          threads = threads.filter(t => t.title.toLowerCase().includes(filter) || (t.messages && t.messages.some(m => m.content && m.content.toLowerCase().includes(filter))));
-        }
+        const filter = ui.searchThreadsInput ? ui.searchThreadsInput.value.trim() : '';
+        let threads = await dbGetAll(filter);
         ui.threadList.innerHTML = '';
         threads.forEach(t => {
           const dateOpts = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: false };
@@ -1938,6 +2554,10 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           });
           div.querySelector('.del-btn').addEventListener('click', async (e) => {
             e.stopPropagation();
+            if (activeGenerations.has(t.id) || activeGenerations.size > 0) {
+              alert("Cannot delete conversations while a generation is actively running. Stop active generations first.");
+              return;
+            }
             if (confirm("Delete this conversation?")) {
               await dbDelete(t.id);
               if (activeThread && activeThread.id === t.id) {
@@ -1974,7 +2594,25 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         md += `${m.content}\n\n---\n\n`;
       });
       window.Bridge.files.save(`chats/${activeThread.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export.md`, toB64(md), true)
-        .then(() => alert("Exported Markdown file!"))
+        .then(() => alert("Exported Markdown (.md) file!"))
+        .catch(err => showError("Export failed: " + err.message));
+    }
+
+    function exportThreadJSON() {
+      if (!activeThread) return;
+      const exportObj = {
+        title: activeThread.title,
+        created_at: activeThread.created_at,
+        updated_at: activeThread.updated_at,
+        system_prompt: activeThread.system_prompt,
+        sys_prompt_preset_name: activeThread.sys_prompt_preset_name,
+        parameters: activeThread.parameters,
+        preset_name: activeThread.preset_name,
+        messages: activeThread.messages
+      };
+      const jsonStr = JSON.stringify(exportObj, null, 2);
+      window.Bridge.files.save(`chats/${activeThread.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_backup.json`, toB64(jsonStr), true)
+        .then(() => alert("Exported Conversation (.json) file!"))
         .catch(err => showError("Export failed: " + err.message));
     }
     function applyFontSize(size) {
@@ -2040,23 +2678,34 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         headerRight.insertBefore(constantDiv, headerRight.querySelector('.gear-toggle-btn'));
       } else if (constantDiv) { constantDiv.innerHTML = ''; }
       if (constantDiv) {
-        const copyBtn = document.createElement('button'); copyBtn.className = 'bubble-action-btn'; copyBtn.textContent = '📋 Copy';
+        const copyBtn = document.createElement('button'); copyBtn.className = 'bubble-action-btn'; copyBtn.textContent = '📋'; copyBtn.title = 'Copy text';
         copyBtn.onclick = (e) => {
           e.stopPropagation();
           const src = (msgIndex !== undefined && activeThread?.messages[msgIndex]) ? activeThread.messages[msgIndex].content : rawText;
           const plain = src.replace(/(\*\*|__)(?=\S)([\s\S]*?\S)\1/g, '$2').replace(/(?<![*_\w])(\*|_)(?=\S)([\s\S]*?\S)\1(?![*_\w])/g, '$2').replace(/~~(?=\S)([\s\S]*?\S)~~/g, '$2').replace(/^#+\s+/gm, '').replace(/`{3}[\s\S]*?`{3}/g, m => m.replace(/`{3}\w*\n?/g, '')).replace(/`([^`]+)`/g, '$1').replace(/^\s*>+\s?/gm, '');
-          navigator.clipboard.writeText(plain.trim()); copyBtn.textContent = 'Copied!'; setTimeout(() => { copyBtn.textContent = '📋 Copy'; }, 2000);
+          navigator.clipboard.writeText(plain.trim()); copyBtn.textContent = '✓'; setTimeout(() => { copyBtn.textContent = '📋'; }, 2000);
         };
         constantDiv.appendChild(copyBtn);
         if (msgIndex !== undefined) {
-          const branchBtn = document.createElement('button'); branchBtn.className = 'bubble-action-btn'; branchBtn.textContent = '🔀 Branch';
+          const branchBtn = document.createElement('button'); branchBtn.className = 'bubble-action-btn'; branchBtn.textContent = '🔀'; branchBtn.title = 'Branch conversation from here';
           branchBtn.onclick = (e) => { e.stopPropagation(); window.branchChat(msgIndex); };
           constantDiv.appendChild(branchBtn);
         }
-        if (role === 'assistant' && msgIndex === activeThread.messages.length - 1 && !activeGenerations.has(activeThread.id)) {
-          const regenBtn = document.createElement('button'); regenBtn.className = 'bubble-action-btn'; regenBtn.textContent = '🔄 Retry';
+        if (role === 'assistant' && msgIndex === activeThread?.messages?.length - 1 && !activeGenerations.has(activeThread.id)) {
+          document.querySelectorAll('.btn-regen').forEach(btn => btn.remove());
+          const regenBtn = document.createElement('button'); regenBtn.className = 'bubble-action-btn btn-regen'; regenBtn.textContent = '🔄'; regenBtn.title = 'Regenerate response';
           regenBtn.onclick = (e) => { e.stopPropagation(); regenerateLastResponse(); };
           constantDiv.appendChild(regenBtn);
+        }
+        if (role === 'assistant' && loadedSettings.voice_enabled) {
+          const speakBtn = document.createElement('button'); speakBtn.className = 'bubble-action-btn'; speakBtn.textContent = '🔊';
+          speakBtn.title = 'Read message aloud';
+          speakBtn.onclick = (e) => {
+            e.stopPropagation();
+            const src = (msgIndex !== undefined && activeThread?.messages[msgIndex]) ? activeThread.messages[msgIndex].content : rawText;
+            speakFullResponse(src, false);
+          };
+          constantDiv.appendChild(speakBtn);
         }
       }
       if (role === 'user') {
@@ -2104,9 +2753,15 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           setTimeout(() => { codeBtn.textContent = '💻 Code Only'; }, 2000);
         };
         actionsDiv.appendChild(codeBtn);
-        const expBtn = document.createElement('button'); expBtn.className = 'bubble-action-btn'; expBtn.textContent = '📥 Export';
-        expBtn.onclick = (e) => { e.stopPropagation(); exportThreadMarkdown(); };
-        actionsDiv.appendChild(expBtn);
+        const expJsonBtn = document.createElement('button'); expJsonBtn.className = 'bubble-action-btn'; expJsonBtn.textContent = '💾 Export JSON';
+        expJsonBtn.title = 'Export full thread for importing/backup';
+        expJsonBtn.onclick = (e) => { e.stopPropagation(); exportThreadJSON(); };
+        actionsDiv.appendChild(expJsonBtn);
+
+        const expMdBtn = document.createElement('button'); expMdBtn.className = 'bubble-action-btn'; expMdBtn.textContent = '📄 Export MD';
+        expMdBtn.title = 'Export formatted markdown document';
+        expMdBtn.onclick = (e) => { e.stopPropagation(); exportThreadMarkdown(); };
+        actionsDiv.appendChild(expMdBtn);
       }
     }
     function enableMessageEditing(container, msgIndex) {
@@ -2117,25 +2772,108 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       container.querySelector('.cancel-edit-btn').onclick = (e) => { e.stopPropagation(); renderChatViewport(); };
       container.querySelector('.save-edit-btn').onclick = async (e) => {
         e.stopPropagation(); const text = ta.value.replace(/^\s+|\s+$/g, ''); if (!text) return;
-        const editMsgTs = Date.now();
-        activeThread.messages = activeThread.messages.slice(0, msgIndex);
-        activeThread.messages.push({ role: 'user', content: text, timestamp: editMsgTs });
-        activeThread.updated_at = editMsgTs; await dbPut(activeThread);
-        renderChatViewport(); executeGeneration();
+        
+        // TRUE FORK: Create a new branch instead of overwriting the original thread
+        const newId = generateId();
+        const now = Date.now();
+        const rawSlice = activeThread.messages.slice(0, msgIndex);
+        const clonedMessages = rawSlice.map((m, idx) => ({
+          ...JSON.parse(JSON.stringify(m)),
+          id: `${newId}_msg_${now + idx}`
+        }));
+        
+        clonedMessages.push({
+          id: `${newId}_msg_${now + 9999}`,
+          role: 'user',
+          content: text,
+          timestamp: now
+        });
+
+        const newThread = {
+          id: newId,
+          title: activeThread.title ? `${activeThread.title} (Fork)` : 'Forked Conversation',
+          created_at: now,
+          updated_at: now,
+          is_pinned: false,
+          system_prompt: activeThread.system_prompt,
+          sys_prompt_preset_name: activeThread.sys_prompt_preset_name || 'custom_modified',
+          parameters: JSON.parse(JSON.stringify(activeThread.parameters)),
+          preset_name: activeThread.preset_name || 'Default',
+          messages: clonedMessages,
+          is_forked: true
+        };
+        
+        await dbPut(newThread);
+        await loadThread(newThread.id);
+        await renderSidebar();
+        executeGeneration();
       };
     }
+    function getContextCutoffIndex() {
+      if (!activeThread || !activeThread.messages || activeThread.messages.length === 0) return 0;
+      const effectiveSys = buildEffectiveSystemPrompt(activeThread.system_prompt, activeThread.parameters?.agents);
+      const prefillVal = ui.prefillInput?.value || "";
+      const limit = activeThread.parameters?.context_window || 4096;
+      const maxGen = activeThread.parameters?.max_tokens || 1024;
+      const hardCeiling = Math.max(512, limit - maxGen);
+      
+      const allMsgs = activeThread.messages;
+      let totalCost = estimateTokens(effectiveSys) + estimateTokens(prefillVal);
+      allMsgs.forEach(m => {
+        totalCost += estimateTokens(m.searchContext || m.content || "") + (m.thinking ? estimateTokens(m.thinking) : 0);
+      });
+
+      if (totalCost <= hardCeiling) return 0;
+
+      const effectiveBudget = Math.max(256, hardCeiling - 512);
+      let tokenBudget = effectiveBudget - estimateTokens(effectiveSys) - estimateTokens(prefillVal);
+      let cutoff = 0;
+
+      for (let i = allMsgs.length - 1; i >= 0; i--) {
+        const m = allMsgs[i];
+        const cost = estimateTokens(m.searchContext || m.content || "") + (m.thinking ? estimateTokens(m.thinking) : 0);
+        if (tokenBudget - cost < 0) {
+          cutoff = i + 1;
+          break;
+        }
+        tokenBudget -= cost;
+      }
+      return cutoff;
+    }
+
     function renderChatViewport() {
       Array.from(ui.chatViewport.children).forEach(child => { if (child.id !== 'typing-indicator') child.remove(); });
       if (activeThread?.messages) {
+        const cutoffIdx = getContextCutoffIndex();
+        let cutoffInserted = false;
+
         activeThread.messages.forEach((msg, idx) => {
           if (!msg.timestamp) msg.timestamp = activeThread.created_at || Date.now();
-          appendMessageDOM(msg.role, msg.content, false, msg.stats, idx, msg.thinking, msg.rawStream, msg.timestamp);
+          
+          // Skip rendering the static DB message if the live stream bubble is actively handling it
+          if (activeGenerations.has(activeThread.id) && idx === activeThread.messages.length - 1 && msg.role === 'assistant') {
+            return;
+          }
+
+          const isPruned = idx < cutoffIdx;
+
+          if (cutoffIdx > 0 && idx === cutoffIdx && !cutoffInserted) {
+            const line = document.createElement('div');
+            line.className = 'context-cutoff-line';
+            line.textContent = '✂️ Active Memory Horizon (Prior Messages Pruned)';
+            ui.chatViewport.insertBefore(line, ui.typingIndicator);
+            cutoffInserted = true;
+          }
+
+          appendMessageDOM(msg.role, msg.content, false, msg.stats, idx, msg.thinking, msg.rawStream, msg.timestamp, isPruned);
         });
       }
       scrollToBottom(true);
     }
-    function appendMessageDOM(role, content, animated = true, stats = null, msgIndex = undefined, thinking = null, rawStream = '', timestamp = null) {
-      const div = document.createElement('div'); div.className = `message ${role === 'user' ? 'msg-user' : 'msg-ai'}`;
+
+    function appendMessageDOM(role, content, animated = true, stats = null, msgIndex = undefined, thinking = null, rawStream = '', timestamp = null, isPruned = false) {
+      const div = document.createElement('div');
+      div.className = `message ${role === 'user' ? 'msg-user' : 'msg-ai'} ${isPruned ? 'msg-pruned' : ''}`;
       const ts = timestamp || Date.now();
       div.dataset.timestamp = ts;
       const headerDiv = document.createElement('div'); headerDiv.className = 'msg-header';
@@ -2145,6 +2883,11 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       tsSpan.textContent = formattedTs;
       tsSpan.style.display = formattedTs ? 'inline-block' : 'none';
       headerDiv.appendChild(tsSpan);
+
+      const prunedBadge = document.createElement('span');
+      prunedBadge.className = 'pruned-badge';
+      prunedBadge.textContent = '✂️ Pruned';
+      headerDiv.appendChild(prunedBadge);
 
       const headerRight = document.createElement('div'); headerRight.className = 'msg-header-right';
       const gearBtn = document.createElement('button'); gearBtn.className = 'gear-toggle-btn'; gearBtn.innerHTML = '⚙️'; gearBtn.title = 'More Options';
@@ -2283,33 +3026,111 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         activeThread.messages.pop(); await dbPut(activeThread); renderChatViewport(); executeGeneration();
       }
     }
-    async function persistStreamProgress(targetThreadId, replyText, thoughtText, rawStreamText) {
+    async function persistStreamProgress(targetThreadId, replyText, thoughtText, rawStreamText, genTimestamp) {
       if (!targetThreadId) return;
       try {
-        const thread = await dbGet(targetThreadId);
-        if (!thread) return;
-        const cleanContent = cleanEosTokens(replyText.replace(/\n\n\*\*\[Error:.*\]\*\*$/, ''));
-        const msgObj = { role: 'assistant', content: cleanContent, rawStream: rawStreamText };
+        const cleanContent = cleanEosTokens((replyText || '').replace(/\n\n\*\*\[Error:.*\]\*\*$/, ''));
+        const now = Date.now();
+        const msgTs = genTimestamp || now;
+        const messageId = `${targetThreadId}_ai_${msgTs}`;
+
+        const msgObj = {
+          id: messageId,
+          role: 'assistant',
+          content: cleanContent,
+          rawStream: rawStreamText,
+          timestamp: msgTs,
+          _isStreaming: true
+        };
         if (thoughtText) msgObj.thinking = thoughtText;
-        
-        // If the last message is already the current in-flight stream, update it; otherwise append
-        const lastIdx = thread.messages.length - 1;
-        if (lastIdx >= 0 && thread.messages[lastIdx]._isStreaming) {
-          thread.messages[lastIdx] = { ...msgObj, _isStreaming: true };
-        } else {
-          thread.messages.push({ ...msgObj, _isStreaming: true });
+
+        // 1. Keep UI in-memory array perfectly in sync
+        if (activeThread && activeThread.id === targetThreadId) {
+          const lastIdx = activeThread.messages.length - 1;
+          if (lastIdx >= 0 && activeThread.messages[lastIdx]._isStreaming) {
+            activeThread.messages[lastIdx] = msgObj;
+          } else {
+            activeThread.messages.push(msgObj);
+          }
+          activeThread.updated_at = now;
         }
-        thread.updated_at = Date.now();
-        await dbPut(thread);
+
+        // 2. Micro-payload over bridge to prevent freezing/dropped SQL commands
+        if (window.layla?.db?.executeSql) {
+          await window.layla.db.executeSql(`
+            INSERT OR REPLACE INTO messages (id, thread_id, role, content, thinking, raw_stream, stats_json, timestamp, is_streaming)
+            VALUES (?, ?, 'assistant', ?, ?, ?, NULL, ?, 1);
+          `, [messageId, targetThreadId, cleanContent, thoughtText || '', rawStreamText || '', msgTs]);
+          await window.layla.db.executeSql('UPDATE threads SET updated_at = ? WHERE id = ?;', [now, targetThreadId]);
+          return;
+        }
+
+        // Fallback for JSON mode
+        const thread = (activeThread && activeThread.id === targetThreadId) ? activeThread : await dbGet(targetThreadId);
+        if (thread && thread.id !== activeThread?.id) {
+           const lastIdx = thread.messages.length - 1;
+           if (lastIdx >= 0 && thread.messages[lastIdx]._isStreaming) {
+             thread.messages[lastIdx] = msgObj;
+           } else {
+             thread.messages.push(msgObj);
+           }
+           thread.updated_at = now;
+           await dbPut(thread);
+        } else if (thread) {
+           await window.Bridge.files.save(`chats/thread_${thread.id}.json`, toB64(JSON.stringify(thread)), false);
+        }
       } catch (e) {}
     }
 
-    async function sendMessage() {
-      let text = ui.userInput.value.replace(/^\s+|\s+$/g, '');
-      if (!text || !activeThread || activeGenerations.has(activeThread.id)) return;
-      if (loadedSettings.close_keyboard_on_send !== false) {
+    async function sendMessage(textOverride) {
+      const isOverride = typeof textOverride === 'string';
+      let text = isOverride ? textOverride : ui.userInput.value.replace(/^\s+|\s+$/g, '');
+      if (!text || !activeThread) return;
+      
+      if (activeGenerations.size > 0 && !isOverride) {
+        // Prevent accidental overwrite: flash badge and alert user without wiping input
+        if (promptQueues.has(activeThread.id)) {
+          const badge = document.getElementById('queue-badge-container');
+          if (badge) {
+            badge.style.transition = 'transform 0.15s ease, background 0.15s ease, border-color 0.15s ease';
+            badge.style.background = 'rgba(248,81,73,0.3)';
+            badge.style.borderColor = 'var(--error)';
+            badge.style.transform = 'scale(1.02)';
+            
+            setTimeout(() => {
+              badge.style.background = 'rgba(210,153,34,0.15)';
+              badge.style.borderColor = 'var(--warning)';
+              badge.style.transform = 'scale(1)';
+            }, 300);
+          }
+          
+          ui.statusText.textContent = "Queue full (1 max)";
+          setTimeout(() => {
+            if (activeGenerations.size > 0 && ui.statusText.textContent === "Queue full (1 max)") {
+              const curRec = activeGenerations.get(activeThread.id);
+              ui.statusText.textContent = curRec?.currentStatus || "Generating...";
+            }
+          }, 1800);
+          return;
+        }
+
+        promptQueues.set(activeThread.id, text);
+        ui.userInput.value = '';
+        ui.userInput.style.height = 'auto';
+        updateCharCount();
+        if (window.updateQueueUI) window.updateQueueUI();
+        return;
+      }
+
+      if (activeGenerations.has(activeThread.id)) return;
+
+      if (loadedSettings.close_keyboard_on_send !== false && !isOverride) {
         ui.userInput.blur();
       }
+      
+      // Strip any visible retry buttons from previous messages when user sends a new message
+      document.querySelectorAll('.btn-regen').forEach(btn => btn.remove());
+
       if (text.startsWith('/search')) {
         const query = text.replace('/search', '').trim();
         if (!query) {
@@ -2320,7 +3141,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         ui.typingIndicator.style.display = 'flex'; ui.statusText.textContent = "Searching web...";
         const searchResults = await performWebSearch(query);
         ui.typingIndicator.style.display = 'none';
-          const searchMsgTs = Date.now();
+        const searchMsgTs = Date.now();
         activeThread.messages.push({
           role: 'user',
           content: text,
@@ -2339,9 +3160,14 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       }
       ui.userInput.value = ''; ui.userInput.style.height = 'auto'; ui.slashPopup.classList.remove('open'); updateCharCount();
       const userMsgTs = Date.now();
-      activeThread.messages.push({ role: 'user', content: text, timestamp: userMsgTs }); activeThread.updated_at = userMsgTs;
-      await dbPut(activeThread); appendMessageDOM('user', text, true, null, activeThread.messages.length - 1, null, '', userMsgTs);
-      renderSidebar(); updateContextBar(); executeGeneration();
+      const userMsgObj = { id: `${activeThread.id}_user_${userMsgTs}`, role: 'user', content: text, timestamp: userMsgTs };
+      activeThread.messages.push(userMsgObj);
+      activeThread.updated_at = userMsgTs;
+      await dbPut(activeThread);
+      appendMessageDOM('user', text, true, null, activeThread.messages.length - 1, null, '', userMsgTs);
+      renderSidebar();
+      updateContextBar();
+      executeGeneration();
     }
     async function executeGeneration() {
       if (!activeThread) return;
@@ -2349,7 +3175,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const targetThread = await dbGet(targetThreadId);
       if (!targetThread) return;
       if (activeThread?.id === targetThreadId) {
-        ui.btnSend.style.display = 'none'; ui.btnStop.style.display = 'flex';
         ui.typingIndicator.style.display = 'flex'; ui.statusText.textContent = "Loading model...";
       }
       const abortCtrl = new AbortController();
@@ -2392,7 +3217,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const payloadMessages = [{ role: 'system', content: effectiveSys }, ...trimmedHistory];
 
       if (prefillVal) payloadMessages.push({ role: 'assistant', content: prefillVal });
-      let genTimestamp = null;
+      const streamMessageId = `${targetThreadId}_ai_${Date.now()}`;
+      let genTimestamp = Date.now();
       const aiBubble = document.createElement('div'); aiBubble.className = 'message msg-ai';
       const headerDiv = document.createElement('div'); headerDiv.className = 'msg-header';
       const tsSpan = document.createElement('span'); tsSpan.className = 'msg-timestamp';
@@ -2412,6 +3238,10 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const genId = generateId();
       applyHighlightAndCopy(aiBubble, prefillVal || "", 'assistant');
       activeGenerations.set(targetThreadId, { id: genId, bubble: aiBubble, abortController: abortCtrl, thinkingInterval: null, loadingInterval: null, hasReceivedTokens: false, targetThreadId });
+      
+      // Force UI update now that activeGenerations contains the running stream
+      window.updateQueueUI();
+
       if (activeThread?.id === targetThreadId) {
         aiBubble.style.display = 'none';
         ui.chatViewport.insertBefore(aiBubble, ui.typingIndicator);
@@ -2438,6 +3268,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const stopArray = parseStopSequences(targetThread.parameters?.stop_sequences);
       try {
         if (abortCtrl.signal.aborted || activeGenerations.get(targetThreadId)?.id !== genId) return;
+        const maxTokensVal = targetThread.parameters.max_tokens || 2048;
         const stream = await layla.chat.completions.create({
           messages: payloadMessages,
           temperature: targetThread.parameters.temperature,
@@ -2452,14 +3283,27 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           dry_base: targetThread.parameters.dry_base,
           dry_allowed_length: targetThread.parameters.dry_allowed_length,
           dry_penalty_range: targetThread.parameters.dry_penalty_range,
-          max_tokens: targetThread.parameters.max_tokens,
+          max_tokens: maxTokensVal,
+          max_new_tokens: maxTokensVal,
+          n_predict: maxTokensVal,
           enable_thinking: targetThread.parameters.enable_thinking,
           stop: stopArray,
           stream: true
         });
+        const maxTokensLimit = targetThread.parameters?.max_tokens ?? DEFAULT_PARAMS.max_tokens;
         for await (const chunk of stream) {
+          // CRITICAL: Unconditionally micro-yield event loop to process UI clicks instantly
+          await new Promise(resolve => setTimeout(resolve, 0));
+
           const curGen = activeGenerations.get(targetThreadId);
           if (!curGen || curGen.id !== genId || curGen.isAborted || abortCtrl.signal.aborted) break;
+
+          // Client-side hard ceiling enforcement (App setting takes precedence over engine)
+          if (tokenCount >= maxTokensLimit) {
+            abortCtrl.abort();
+            break;
+          }
+
           const delta = chunk.choices[0]?.delta?.content || "";
           if (delta) {
             if (!firstTokenTime) {
@@ -2467,7 +3311,10 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
               genTimestamp = Date.now();
               aiBubble.dataset.timestamp = genTimestamp;
               const curRecord = activeGenerations.get(targetThreadId);
-              if (curRecord) curRecord.hasReceivedTokens = true;
+              if (curRecord) {
+                curRecord.hasReceivedTokens = true;
+                curRecord.currentStatus = targetThread.parameters.enable_thinking ? "Thinking." : "Generating...";
+              }
               if (activeThread?.id === targetThreadId) {
                 ui.typingIndicator.style.display = 'none';
                 aiBubble.style.display = 'flex';
@@ -2480,15 +3327,25 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
               }
               if (loadingInterval) { clearInterval(loadingInterval); loadingInterval = null; }
               if (targetThread.parameters.enable_thinking) {
-                let dots = 1; if (activeThread?.id === targetThreadId) ui.statusText.textContent = "Thinking.";
+                let dots = 1;
+                if (activeThread?.id === targetThreadId) ui.statusText.textContent = "Thinking.";
                 thinkingInterval = setInterval(() => {
-                  if (activeThread?.id === targetThreadId && activeGenerations.get(targetThreadId)?.id === genId) { dots = (dots % 3) + 1; ui.statusText.textContent = `Thinking${'.'.repeat(dots)}`; }
+                  dots = (dots % 3) + 1;
+                  const statusStr = `Thinking${'.'.repeat(dots)}`;
+                  const rec = activeGenerations.get(targetThreadId);
+                  if (rec) rec.currentStatus = statusStr;
+                  if (activeThread?.id === targetThreadId && activeGenerations.get(targetThreadId)?.id === genId) {
+                    ui.statusText.textContent = statusStr;
+                  }
                 }, 500);
-              } else { if (activeThread?.id === targetThreadId) ui.statusText.textContent = "Generating..."; }
+              } else {
+                if (activeThread?.id === targetThreadId) ui.statusText.textContent = "Generating...";
+              }
             }
-            const deltaTokens = estimateTokens(delta);
+            // Real stream delta token increment (prevents char-guess drift)
+            const deltaTokens = Math.max(1, Math.round(delta.length / 3.4));
             tokenCount += deltaTokens;
-            if (activeThread?.id === targetThreadId) currentStreamTokens += deltaTokens;
+            if (activeThread?.id === targetThreadId) currentStreamTokens = tokenCount;
             rawGeneratedText += delta;
             if (prefillVal) {
               const cleanP = prefillVal.trim(), cleanG = rawGeneratedText.trim();
@@ -2527,7 +3384,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
               displayReply = displayReply.replace(/<\/?(?:think\d*|thought\d*|endthink\d*)>/gi, '').replace(/<\|end_of_thought\|>|\[\/?END_THOUGHT\]/gi, '').trim();
             } else { displayReply = aiResponseContent; }
             displayReply = cleanEosTokens(displayReply);
-            if (activeThread?.id === targetThreadId && activeGenerations.get(targetThreadId)?.id === genId) {
+            if (activeGenerations.get(targetThreadId)?.id === genId) {
               const existingDetails = aiBubble.querySelector('details.think-block');
               const finalIsOpen = existingDetails ? existingDetails.open : isOpen;
               let msgContent = aiBubble.querySelector('.message-content');
@@ -2537,26 +3394,38 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
                 aiBubble.appendChild(msgContent);
               }
               msgContent.innerHTML = (displayThought ? `<details class="think-block" ${finalIsOpen ? 'open' : ''}><summary>🧠 View Thinking Process</summary><div class="think-content">${displayThought.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div></details>` : '') + marked.parse(displayReply);
-              renderStatsHUD(aiBubble, { tps: tokenCount / Math.max(0.001, (performance.now() - firstTokenTime) / 1000), ttft: firstTokenTime - startTime, totalTime: performance.now() - startTime, tokens: tokenCount });
-              updateContextBar();
-              scrollToBottom();
-
-              if (displayReply) {
-                handleStreamingTtsTokens(displayReply);
+              
+              if (activeThread?.id === targetThreadId) {
+                currentStreamTokens = tokenCount;
+                renderStatsHUD(aiBubble, { tps: tokenCount / Math.max(0.001, (performance.now() - firstTokenTime) / 1000), ttft: firstTokenTime - startTime, totalTime: performance.now() - startTime, tokens: tokenCount });
+                updateContextBar();
+                scrollToBottom();
               }
             }
-            // Periodic incremental flush: every 15 tokens or every 1.5 seconds
+            // Single-File Write-Ahead Log (every 15 tokens or 1500ms)
             const nowTime = performance.now();
             if (!isDiskSaving && (tokenCount - lastSavedTokenCount >= 15 || nowTime - lastSavedTime >= 1500)) {
               isDiskSaving = true;
               lastSavedTokenCount = tokenCount;
               lastSavedTime = nowTime;
-              persistStreamProgress(targetThreadId, displayReply, displayThought, aiResponseContent)
+              
+              const recoveryPayload = JSON.stringify({
+                threadId: targetThreadId,
+                content: displayReply,
+                thinking: displayThought,
+                rawStream: aiResponseContent,
+                timestamp: genTimestamp
+              });
+
+              window.Bridge.files.save('chats/stream_recovery.json', toB64(recoveryPayload), false)
                 .finally(() => { isDiskSaving = false; });
+                
+              // CRITICAL: Yield the JS thread for 10ms so the RN Bridge can execute the physical file write!
+              await new Promise(resolve => setTimeout(resolve, 10));
             }
           }
         }
-        if (activeThread?.id === targetThreadId && activeGenerations.get(targetThreadId)?.id === genId) {
+        if (activeGenerations.get(targetThreadId)?.id === genId) {
           applyHighlightAndCopy(aiBubble, displayReply, 'assistant', targetThread.messages.length, aiResponseContent);
         }
         if (firstTokenTime && tokenCount > 0) {
@@ -2586,46 +3455,82 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           if (activeThread?.id === targetThreadId) {
             currentStreamTokens = 0; 
             ui.typingIndicator.style.display = 'none'; 
-            ui.btnStop.style.display = 'none';
-            ui.btnSend.style.display = 'flex';
-            if (ui.statusText.textContent !== "Aborted." && !isTtsPlaying && !ttsQueue.length) {
-              ui.statusText.textContent = "Ready";
-            }
           }
-          // Persist and finalize message even if stopped mid-stream
+
+          // Persist and finalize message even if stopped mid-stream or viewed from background
           if (displayReply.trim() !== "" || displayThought.trim() !== "") {
             const cleanContent = cleanEosTokens(displayReply.replace(/\n\n\*\*\[Error:.*\]\*\*$/, ''));
             const finalTimestamp = genTimestamp || Date.now();
-            const msgObj = { role: 'assistant', content: cleanContent, rawStream: aiResponseContent, timestamp: finalTimestamp };
+            const msgObj = {
+              id: `${targetThreadId}_ai_${finalTimestamp}`,
+              role: 'assistant',
+              content: cleanContent,
+              rawStream: aiResponseContent,
+              timestamp: finalTimestamp,
+              _isStreaming: false
+            };
             if (displayThought) msgObj.thinking = displayThought;
             if (computedStats) msgObj.stats = computedStats;
-            const latest = await dbGet(targetThreadId);
-            if (latest) {
-              const lastIdx = latest.messages.length - 1;
-              if (lastIdx >= 0 && latest.messages[lastIdx]._isStreaming) {
-                latest.messages[lastIdx] = msgObj;
+
+            const targetRecord = await dbGet(targetThreadId);
+            if (targetRecord && targetRecord.messages) {
+              const lastIdx = targetRecord.messages.length - 1;
+              if (lastIdx >= 0 && (targetRecord.messages[lastIdx].role === 'assistant' || targetRecord.messages[lastIdx]._isStreaming)) {
+                targetRecord.messages[lastIdx] = msgObj;
               } else {
-                latest.messages.push(msgObj);
+                targetRecord.messages.push(msgObj);
               }
-              latest.updated_at = Date.now();
-              await dbPut(latest);
+              targetRecord.updated_at = Date.now();
+              await dbPut(targetRecord);
+              
+              // WIPE FLAT FILE BLANK ONLY AFTER DB SAVE IS SECURED
+              try { await window.Bridge.files.save('chats/stream_recovery.json', toB64('{}'), false); } catch(e) {}
+
               if (activeThread?.id === targetThreadId) {
-                activeThread = latest;
-                applyHighlightAndCopy(aiBubble, displayReply, 'assistant', latest.messages.length - 1, aiResponseContent);
+                activeThread = targetRecord;
+                applyHighlightAndCopy(aiBubble, displayReply, 'assistant', targetRecord.messages.length - 1, aiResponseContent);
                 renderSidebar();
                 updateContextBar();
 
-                if (loadedSettings.voice_enabled && loadedSettings.auto_tts && displayReply) {
-                  finalizeStreamingTts(displayReply);
+                if (loadedSettings.voice_enabled && loadedSettings.auto_tts && displayReply && !abortCtrl.signal.aborted) {
+                  speakFullResponse(displayReply, true);
                 }
               } else {
-                renderSidebar();
+                await renderSidebar();
               }
             }
           }
+          
+            window.updateQueueUI();
+            if (activeGenerations.size === 0) {
+              if (activeThread?.id === targetThreadId && ui.statusText.textContent !== "Aborted." && !isTtsPlaying) {
+                ui.statusText.textContent = "Ready";
+              }
+              
+              // Only auto-trigger the single queued prompt if generation finished naturally (not halted by Stop)
+              if (!window.isManualAbort) {
+                const qId = promptQueues.has(targetThreadId) ? targetThreadId : (promptQueues.size > 0 ? promptQueues.keys().next().value : null);
+                if (qId && promptQueues.has(qId)) {
+                  const nextText = promptQueues.get(qId);
+                  promptQueues.delete(qId);
+                  window.updateQueueUI();
+                  
+                  if (activeThread?.id === qId) {
+                    setTimeout(() => { sendMessage(nextText); }, 100);
+                  } else {
+                    loadThread(qId).then(() => {
+                      setTimeout(() => { sendMessage(nextText); }, 100);
+                    });
+                  }
+                }
+              } else {
+                window.isManualAbort = false;
+              }
+            }
         }
       }
     }
+    
     function toggleSidebar() { ui.sidebar.classList.toggle('open'); ui.overlay.classList.toggle('open'); }
     function closeSidebar() { ui.sidebar.classList.remove('open'); ui.overlay.classList.remove('open'); }
     ui.btnMenu.addEventListener('click', toggleSidebar);
@@ -2643,8 +3548,15 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       });
     }
 
-    // Dismiss settings panel when tapping outside
+    // Dismiss settings panel and quick sampler menu when tapping outside
     document.addEventListener('click', (e) => {
+      if (ui.samplerPopupMenu && ui.samplerPopupMenu.classList.contains('open')) {
+        const isClickInsideSampler = ui.samplerPopupMenu.contains(e.target);
+        const isClickOnSamplerBtn = ui.floatingSamplerBtn && ui.floatingSamplerBtn.contains(e.target);
+        if (!isClickInsideSampler && !isClickOnSamplerBtn) {
+          ui.samplerPopupMenu.classList.remove('open');
+        }
+      }
       if (ui.paramsPanel && ui.paramsPanel.style.display === 'flex') {
         const isClickInsidePanel = ui.paramsPanel.contains(e.target);
         const isClickOnToggleBtn = ui.btnParams && ui.btnParams.contains(e.target);
@@ -2655,6 +3567,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     });
 
     ui.btnParams.addEventListener('click', async () => {
+      if (ui.samplerPopupMenu) ui.samplerPopupMenu.classList.remove('open');
       const visible = ui.paramsPanel.style.display === 'flex';
       if (!visible) {
         await populatePresetDropdown();
@@ -2690,6 +3603,76 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         alert("Full backup exported successfully!");
       } catch (e) { showError("Backup Failed: " + e.message); }
     };
+        if (ui.btnImportThread) {
+      ui.btnImportThread.onclick = () => ui.fileImportThreadInput.click();
+    }
+    if (ui.fileImportThreadInput) {
+      ui.fileImportThreadInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+          try {
+            const rawContent = evt.target.result;
+            let importedThread = null;
+
+            if (file.name.toLowerCase().endsWith('.json')) {
+              const parsed = JSON.parse(rawContent);
+              if (!parsed.messages || !Array.isArray(parsed.messages)) {
+                throw new Error("JSON file must contain a 'messages' array.");
+              }
+              importedThread = {
+                id: generateId(),
+                title: parsed.title || file.name.replace(/\.json$/i, '') || 'Imported Chat',
+                created_at: parsed.created_at || Date.now(),
+                updated_at: Date.now(),
+                is_pinned: !!parsed.is_pinned,
+                system_prompt: parsed.system_prompt || DEFAULT_SYS,
+                sys_prompt_preset_name: parsed.sys_prompt_preset_name || 'custom_modified',
+                parameters: { ...DEFAULT_PARAMS, ...(parsed.parameters || {}) },
+                preset_name: parsed.preset_name || 'Default',
+                messages: parsed.messages
+              };
+            } else {
+              // Parse Markdown / Text exports back into chat turns
+              const sections = rawContent.split(/^### (👤 User|🤖 Assistant)/gm);
+              const msgs = [];
+              for (let i = 1; i < sections.length; i += 2) {
+                const role = sections[i].includes('User') ? 'user' : 'assistant';
+                const content = sections[i + 1]?.replace(/^[\s\S]*?---\s*$/m, '').trim();
+                if (content) msgs.push({ role, content, timestamp: Date.now() });
+              }
+              if (!msgs.length) {
+                throw new Error("Could not parse conversation turns from Markdown file.");
+              }
+              importedThread = {
+                id: generateId(),
+                title: file.name.replace(/\.(md|txt)$/i, '') || 'Imported Document',
+                created_at: Date.now(),
+                updated_at: Date.now(),
+                is_pinned: false,
+                system_prompt: DEFAULT_SYS,
+                sys_prompt_preset_name: 'Default Prompt',
+                parameters: { ...DEFAULT_PARAMS },
+                preset_name: 'Default',
+                messages: msgs
+              };
+            }
+
+            await dbPut(importedThread);
+            await renderSidebar();
+            await loadThread(importedThread.id);
+            closeSidebar();
+            alert(`Conversation "${importedThread.title}" imported successfully!`);
+          } catch (err) {
+            showError("Import Failed: " + err.message);
+          } finally {
+            ui.fileImportThreadInput.value = '';
+          }
+        };
+        reader.readAsText(file);
+      };
+    }
     ui.btnImportBackup.onclick = () => ui.fileImportInput.click();
     ui.fileImportInput.onchange = (e) => {
       const file = e.target.files[0]; if (!file) return;
@@ -2832,6 +3815,49 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         ui.statusText.textContent = "Settings Reset"; setTimeout(() => { if (!activeGenerations.has(activeThread.id)) ui.statusText.textContent = "Ready"; }, 2000);
       }
     });
+
+    if (ui.btnWipeAllChats) {
+      ui.btnWipeAllChats.addEventListener('click', async () => {
+        if (activeGenerations.size > 0) {
+          alert("Cannot delete conversations while a generation is actively running. Stop active generations first.");
+          return;
+        }
+
+        const firstConfirm = confirm("⚠️ PERMANENT ACTION\n\nAre you sure you want to permanently delete ALL conversation threads and chat history?\n\nThis will completely purge the SQLite database. Presets, system prompts, and app settings will NOT be touched.");
+        if (!firstConfirm) return;
+
+        const confirmationPrompt = prompt("Type DELETE in capital letters to confirm full database wipe:");
+        if (confirmationPrompt !== "DELETE") {
+          alert("Wipe cancelled. The confirmation phrase did not match.");
+          return;
+        }
+
+        try {
+          if (window.layla?.db?.executeSql) {
+            await window.layla.db.executeSql('DELETE FROM messages;');
+            await window.layla.db.executeSql('DELETE FROM threads;');
+          }
+          await saveManifest([]);
+          localStorage.removeItem('last_active_thread_id');
+          activeThread = null;
+
+          await createNewThread();
+          await renderSidebar();
+
+          ui.paramsPanel.style.display = 'none';
+          ui.statusText.textContent = "All Chats Deleted";
+          setTimeout(() => {
+            if (ui.statusText.textContent === "All Chats Deleted") {
+              ui.statusText.textContent = "Ready";
+            }
+          }, 2000);
+
+          alert("All conversations and message history have been wiped successfully.");
+        } catch (err) {
+          showError("Failed to wipe conversations: " + err.message);
+        }
+      });
+    }
     ui.userInput.addEventListener('input', function() {
       this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';
       if (this.value.trim() === '') this.style.height = 'auto';
@@ -2842,29 +3868,45 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     });
     function updateCharCount() { ui.charCount.textContent = `${ui.userInput.value.length.toLocaleString()} / ∞ chars • ~${estimateTokens(ui.userInput.value).toLocaleString()} tokens`; }
     ui.btnSend.addEventListener('click', sendMessage);
-ui.btnStop.addEventListener('click', () => {
-      if (activeThread && activeGenerations.has(activeThread.id)) {
-        const genState = activeGenerations.get(activeThread.id);
-        if (genState.loadingInterval) clearInterval(genState.loadingInterval);
-        if (genState.thinkingInterval) clearInterval(genState.thinkingInterval);
+    ui.btnStop.addEventListener('click', () => {
+      if (activeGenerations.size > 0) {
+        window.isManualAbort = true;
+        activeGenerations.forEach((genState) => {
+          if (genState.loadingInterval) clearInterval(genState.loadingInterval);
+          if (genState.thinkingInterval) clearInterval(genState.thinkingInterval);
+          genState.isAborted = true;
+          genState.abortController?.abort();
+          if (genState.bubble && genState.bubble.parentNode && !genState.hasReceivedTokens) {
+            genState.bubble.remove();
+          }
+        });
+        activeGenerations.clear();
         
-        genState.isAborted = true;
-        genState.abortController?.abort();
-        
-        if (genState.bubble && genState.bubble.parentNode && !genState.hasReceivedTokens) {
-          genState.bubble.remove();
+        // Return active chat's queued text safely, merging with any in-progress draft
+        if (activeThread && promptQueues.has(activeThread.id)) {
+          const restoredText = promptQueues.get(activeThread.id);
+          promptQueues.delete(activeThread.id);
+          
+          const currentDraft = ui.userInput.value.trim();
+          ui.userInput.value = currentDraft ? `${restoredText}\n\n${currentDraft}` : restoredText;
+          updateCharCount();
+          ui.userInput.style.height = 'auto';
+          ui.userInput.style.height = (ui.userInput.scrollHeight) + 'px';
         }
-
-        activeGenerations.delete(activeThread.id);
         
         currentStreamTokens = 0;
         ui.typingIndicator.style.display = 'none';
-        ui.btnStop.style.display = 'none';
-        ui.btnSend.style.display = 'flex';
         ui.statusText.textContent = "Aborted.";
         
+        // Safely wipe recovery file to prevent leftover buffer reads
+        if (window.Bridge?.files?.save) {
+          window.Bridge.files.save('chats/stream_recovery.json', toB64('{}'), false).catch(() => {});
+        }
+
+        if (window.updateQueueUI) window.updateQueueUI();
+        
         setTimeout(() => {
-          if (!activeGenerations.has(activeThread?.id) && ui.statusText.textContent === "Aborted.") {
+          if (activeGenerations.size === 0 && ui.statusText.textContent === "Aborted.") {
             ui.statusText.textContent = "Ready";
           }
         }, 1500);
@@ -2875,26 +3917,62 @@ ui.btnStop.addEventListener('click', () => {
     let activeSpeechRecognition = null;
     let isListening = false;
     let isTtsPlaying = false;
-    let isTtsProcessingLoop = false;
-    let ttsQueue = [];
-    let streamTtsSentIndex = 0;
+    let userExplicitlyStoppedStt = false;
     let sttSilenceTimer = null;
     let hasCapturedSpeech = false;
     let isHoldingMic = false;
+    let currentTtsSession = 0;
+    let activeHtmlAudio = null;
+    let ttsEndResolver = null;
+
+    // Unified completion listener for all Layla React Native bridge events
+    function handleBridgeMessage(eventData) {
+      if (!eventData) return;
+      let parsed = eventData;
+      if (typeof eventData === 'string') {
+        try { parsed = JSON.parse(eventData); } catch (e) { return; }
+      }
+      const ev = (parsed?.event || parsed?.type || parsed?.cmd || '').toLowerCase();
+      if (
+        ev === 'on_tts_end' ||
+        ev === 'on_tts_finish' ||
+        ev === 'on_tts_finished' ||
+        ev === 'on_speech_end' ||
+        ev === 'on_speech_finish' ||
+        ev === 'on_audio_ended' ||
+        ev === 'on_audio_end' ||
+        ev === 'tts_finished' ||
+        ev === 'tts_end' ||
+        ev === 'on_tts_complete' ||
+        ev === 'on_tts_stopped' ||
+        ev === 'on_stop_tts'
+      ) {
+        if (ttsEndResolver) {
+          ttsEndResolver();
+          ttsEndResolver = null;
+        }
+      }
+    }
+
+    window.addEventListener('message', (e) => handleBridgeMessage(e.data));
+    document.addEventListener('message', (e) => handleBridgeMessage(e.data));
 
     async function loadVoices() {
       try {
         if (layla && layla.tts && typeof layla.tts.getVoices === 'function') {
-          availableVoices = await layla.tts.getVoices();
-          if (ui.settingTtsVoice) {
-            ui.settingTtsVoice.innerHTML = '<option value="auto">Auto (Best Natural Voice)</option>';
-            availableVoices.forEach(v => {
-              const opt = document.createElement('option');
-              opt.value = v.id;
-              opt.textContent = `${v.name || v.id} (${v.type || 'model'})`;
-              ui.settingTtsVoice.appendChild(opt);
-            });
-            ui.settingTtsVoice.value = loadedSettings.tts_voice_id || 'auto';
+          const res = await layla.tts.getVoices();
+          if (Array.isArray(res) && res.length > 0) {
+            availableVoices = res.map(v => typeof v === 'string' ? { id: v, name: v, type: 'model' } : v);
+            if (ui.settingTtsVoice) {
+              ui.settingTtsVoice.innerHTML = '<option value="auto">Auto (Best Natural Voice)</option>';
+              availableVoices.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id;
+                opt.textContent = `${v.name || v.id} (${v.type || 'voice'})`;
+                ui.settingTtsVoice.appendChild(opt);
+              });
+              ui.settingTtsVoice.value = loadedSettings.tts_voice_id || 'auto';
+            }
           }
         }
       } catch (e) {
@@ -2905,11 +3983,12 @@ ui.btnStop.addEventListener('click', () => {
     function getSelectedVoiceId() {
       const pref = loadedSettings.tts_voice_id || 'auto';
       if (pref !== 'auto' && availableVoices.some(v => v.id === pref)) return pref;
-      const best = availableVoices.find(v => v.type !== 'native') ||
-                   availableVoices.find(v => v.tags?.includes('en') && (v.name?.includes('US') || v.name?.includes('en_US'))) ||
-                   availableVoices.find(v => v.tags?.includes('en')) ||
-                   availableVoices[0];
-      return best ? best.id : 'native-en-language';
+      if (availableVoices && availableVoices.length > 0) {
+        const nonNative = availableVoices.find(v => v.type && v.type !== 'native');
+        if (nonNative) return nonNative.id;
+        return availableVoices[0].id;
+      }
+      return null;
     }
 
     function cleanForSpeech(raw) {
@@ -2923,19 +4002,34 @@ ui.btnStop.addEventListener('click', () => {
     }
 
     function updateVoiceStopButton() {
-      const isVoiceActive = isTtsPlaying || ttsQueue.length > 0;
       if (ui.btnStopVoice) {
-        ui.btnStopVoice.style.display = isVoiceActive ? 'inline-flex' : 'none';
+        ui.btnStopVoice.style.display = isTtsPlaying ? 'inline-flex' : 'none';
       }
     }
 
     function stopAllAudio() {
-      ttsQueue = [];
-      streamTtsSentIndex = 0;
+      currentTtsSession++;
+      if (ttsEndResolver) {
+        ttsEndResolver();
+        ttsEndResolver = null;
+      }
+      if (activeHtmlAudio) {
+        try {
+          activeHtmlAudio.pause();
+          activeHtmlAudio.currentTime = 0;
+        } catch (e) {}
+        activeHtmlAudio = null;
+      }
+      if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch (e) {}
+      }
+      window.activeSpeechUtterance = null;
       isTtsPlaying = false;
-      isTtsProcessingLoop = false;
       try {
-        if (layla?.tts?.stopSpeaking) layla.tts.stopSpeaking();
+        if (layla && layla.tts) {
+          if (typeof layla.tts.stopSpeaking === 'function') layla.tts.stopSpeaking();
+          if (typeof layla.tts.stop === 'function') layla.tts.stop();
+        }
       } catch (e) {}
       updateVoiceStopButton();
       if (!activeGenerations.has(activeThread?.id) && ui.statusText.textContent === "Speaking...") {
@@ -2943,89 +4037,89 @@ ui.btnStop.addEventListener('click', () => {
       }
     }
 
-    async function processTtsQueue() {
-      if (isTtsProcessingLoop) return;
-      isTtsProcessingLoop = true;
+    async function speakFullResponse(rawText, isAutoRead = false) {
+      if (!loadedSettings.voice_enabled || !rawText) return;
+      const cleaned = cleanForSpeech(rawText);
+      if (!cleaned) return;
 
-      while (ttsQueue.length > 0) {
-        const textBlock = ttsQueue.shift();
-        if (!textBlock || !textBlock.trim()) continue;
-        
-        isTtsPlaying = true;
-        updateVoiceStopButton();
-        if (!activeGenerations.has(activeThread?.id)) {
-          ui.statusText.textContent = "Speaking...";
-        }
+      stopAllAudio();
+      await new Promise(r => setTimeout(r, 60));
 
-        try {
-          const voiceId = getSelectedVoiceId();
-          await layla.tts.generateVoice(voiceId, textBlock);
-        } catch (err) {
-          console.error("Layla TTS Error:", err);
-        }
-      }
-
-      isTtsPlaying = false;
-      isTtsProcessingLoop = false;
+      currentTtsSession++;
+      const thisSession = currentTtsSession;
+      isTtsPlaying = true;
       updateVoiceStopButton();
 
-      if (!activeGenerations.has(activeThread?.id) && ui.statusText.textContent === "Speaking...") {
-        ui.statusText.textContent = "Ready";
+      if (!activeGenerations.has(activeThread?.id)) {
+        ui.statusText.textContent = "Speaking...";
       }
 
-      if (loadedSettings.voice_enabled && loadedSettings.auto_listen !== false && !activeGenerations.has(activeThread?.id) && !isListening && !isHoldingMic) {
-        setTimeout(() => {
-          if (!isListening && !isTtsPlaying && !ttsQueue.length) startSpeechRecognition();
-        }, 300);
-      }
-    }
+      try {
+        const voiceId = getSelectedVoiceId();
 
-    function queueTtsChunk(cleanChunk) {
-      if (!loadedSettings.voice_enabled || !loadedSettings.auto_tts || !cleanChunk) return;
-      ttsQueue.push(cleanChunk);
-      // Spawn synthesis in an unblocked microtask to avoid freezing the LLM stream
-      setTimeout(processTtsQueue, 0);
-    }
+        // 1. Prepare completion promise attached to native bridge events
+        const bridgeEndPromise = new Promise((resolve) => {
+          ttsEndResolver = resolve;
+        });
 
-    function handleStreamingTtsTokens(rawDisplayReply) {
-      const timingMode = loadedSettings.tts_timing || 'stream';
-      if (!loadedSettings.voice_enabled || !loadedSettings.auto_tts || timingMode !== 'stream') return;
-
-      const cleanFull = cleanForSpeech(rawDisplayReply);
-      if (!cleanFull || cleanFull.length <= streamTtsSentIndex) return;
-
-      let unreadText = cleanFull.substring(streamTtsSentIndex);
-      // Require trailing whitespace so we don't chop a sentence currently generating
-      let match = /(.*?[.!?\n]+)(?:\s+)/s.exec(unreadText);
-      
-      while (match && match[1].trim().length >= 2) {
-        const segment = match[1].trim();
-        streamTtsSentIndex += match[0].length;
-        queueTtsChunk(segment);
-        
-        // Check for subsequent complete sentences in the same chunk
-        unreadText = cleanFull.substring(streamTtsSentIndex);
-        match = /(.*?[.!?\n]+)(?:\s+)/s.exec(unreadText);
-      }
-    }
-
-    function finalizeStreamingTts(rawDisplayReply) {
-      if (!loadedSettings.voice_enabled || !loadedSettings.auto_tts) return;
-      const timingMode = loadedSettings.tts_timing || 'stream';
-      const cleanFull = cleanForSpeech(rawDisplayReply);
-      if (!cleanFull) return;
-
-      if (timingMode === 'stream') {
-        const remaining = cleanFull.substring(streamTtsSentIndex).trim();
-        if (remaining) {
-          streamTtsSentIndex = cleanFull.length;
-          queueTtsChunk(remaining);
+        // 2. Dispatch synthesis to Layla SDK
+        let res = null;
+        if (layla && layla.tts) {
+          if (typeof layla.tts.generateVoice === 'function') {
+            res = voiceId ? await layla.tts.generateVoice(voiceId, cleaned) : await layla.tts.generateVoice(cleaned);
+          } else if (typeof layla.tts.generate === 'function') {
+            res = await layla.tts.generate(cleaned);
+          } else if (typeof layla.tts.speak === 'function') {
+            res = await layla.tts.speak(cleaned);
+          }
         }
-      } else {
-        stopAllAudio();
-        queueTtsChunk(cleanFull);
+
+        // 3. Handle HTML5 Audio playback if SDK returns a playable stream/URL/base64
+        const audioSrc = (typeof res === 'string' && (res.startsWith('http') || res.startsWith('data:audio') || res.startsWith('blob:')))
+          ? res
+          : (res?.audio || res?.url || res?.uri);
+
+        if (audioSrc) {
+          await new Promise((resolve) => {
+            const audio = new Audio(audioSrc);
+            activeHtmlAudio = audio;
+            audio.onended = () => { activeHtmlAudio = null; resolve(); };
+            audio.onerror = () => { activeHtmlAudio = null; resolve(); };
+            audio.play().catch(() => resolve());
+          });
+        } else if (!res && !layla?.tts && 'speechSynthesis' in window) {
+          // Web Speech fallback with direct onend lifecycle resolution
+          await new Promise((resolve) => {
+            const utterance = new SpeechSynthesisUtterance(cleaned);
+            window.activeSpeechUtterance = utterance;
+            utterance.onend = () => { window.activeSpeechUtterance = null; resolve(); };
+            utterance.onerror = () => { window.activeSpeechUtterance = null; resolve(); };
+            window.speechSynthesis.speak(utterance);
+          });
+        } else {
+          // Realistic speech pacing (~14 chars/sec) so button disappears right when audio finishes
+          const estimatedDurationMs = Math.max(2500, (cleaned.length / 14) * 1000 + 1200);
+          await Promise.race([
+            bridgeEndPromise,
+            new Promise(r => setTimeout(r, estimatedDurationMs))
+          ]);
+        }
+      } catch (err) {
+        console.error("[Layla TTS Error]", err);
+      } finally {
+        if (currentTtsSession === thisSession) {
+          isTtsPlaying = false;
+          updateVoiceStopButton();
+          if (!activeGenerations.has(activeThread?.id) && ui.statusText.textContent === "Speaking...") {
+            ui.statusText.textContent = "Ready";
+          }
+          if (isAutoRead && loadedSettings.voice_enabled && loadedSettings.auto_listen !== false && !activeGenerations.has(activeThread?.id) && !isListening && !isHoldingMic) {
+            if (!isListening && !isTtsPlaying) startSpeechRecognition();
+          }
+        }
       }
     }
+
 
     function startSpeechRecognition() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -3037,6 +4131,7 @@ ui.btnStop.addEventListener('click', () => {
 
       stopAllAudio();
       hasCapturedSpeech = false;
+      userExplicitlyStoppedStt = false;
 
       try {
         activeSpeechRecognition = new SpeechRecognition();
@@ -3053,8 +4148,9 @@ ui.btnStop.addEventListener('click', () => {
 
         activeSpeechRecognition.onresult = (event) => {
           let transcript = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            transcript += event.results[i][0].transcript;
+          for (let i = event.results.length - 1; i >= 0; i--) {
+            transcript = event.results[i][0].transcript;
+            break;
           }
           if (transcript.trim().length > 0) {
             hasCapturedSpeech = true;
@@ -3075,24 +4171,31 @@ ui.btnStop.addEventListener('click', () => {
 
         activeSpeechRecognition.onerror = (e) => {
           console.warn("STT Error:", e.error);
+          isListening = false;
+          ui.btnMic.style.background = 'var(--bg-surface-hover)';
+          ui.btnMic.style.color = 'var(--text-main)';
+          ui.statusText.textContent = 'Ready';
         };
 
         activeSpeechRecognition.onend = () => {
           if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
 
-          if (isListening && !hasCapturedSpeech && !isHoldingMic && loadedSettings.stt_mode !== 'hold') {
+          if (isListening && !userExplicitlyStoppedStt && !hasCapturedSpeech && !isHoldingMic && loadedSettings.stt_mode !== 'hold') {
             try {
               activeSpeechRecognition.start();
               return;
             } catch (e) {}
           }
 
+          const shouldSend = isListening && !userExplicitlyStoppedStt && loadedSettings.stt_mode !== 'manual' && hasCapturedSpeech && ui.userInput.value.trim().length > 0;
           isListening = false;
           ui.btnMic.style.background = 'var(--bg-surface-hover)';
           ui.btnMic.style.color = 'var(--text-main)';
-          ui.statusText.textContent = 'Ready';
+          if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
+            ui.statusText.textContent = 'Ready';
+          }
 
-          if (loadedSettings.stt_mode !== 'manual' && ui.userInput.value.trim().length > 0) {
+          if (shouldSend) {
             sendMessage();
           }
         };
@@ -3100,14 +4203,25 @@ ui.btnStop.addEventListener('click', () => {
         activeSpeechRecognition.start();
       } catch (err) {
         isListening = false;
+        ui.btnMic.style.background = 'var(--bg-surface-hover)';
+        ui.btnMic.style.color = 'var(--text-main)';
         showError("Mic Access Error: " + err.message);
       }
     }
 
     function stopSpeechRecognition() {
+      userExplicitlyStoppedStt = true;
       if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
-      if (activeSpeechRecognition && isListening) {
-        activeSpeechRecognition.stop();
+      if (activeSpeechRecognition) {
+        try {
+          activeSpeechRecognition.stop();
+        } catch (e) {}
+      }
+      isListening = false;
+      ui.btnMic.style.background = 'var(--bg-surface-hover)';
+      ui.btnMic.style.color = 'var(--text-main)';
+      if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
+        ui.statusText.textContent = 'Ready';
       }
     }
 
@@ -3125,23 +4239,23 @@ ui.btnStop.addEventListener('click', () => {
       if (!enabled && ui.btnStopVoice) ui.btnStopVoice.style.display = 'none';
     }
 
-    if (ui.settingVoiceEnabled) {
+        if (ui.settingVoiceEnabled) {
       ui.settingVoiceEnabled.addEventListener('change', (e) => {
         const enabled = e.target.checked;
+        if (enabled) {
+          alert("🎙️ Voice & Speech Features (Beta)\n\nDue to current Layla SDK bridge limitations, AI speech will play immediately after text generation finishes.\n\nAuto-Read AI Responses has been turned ON by default.");
+          loadedSettings.auto_tts = true;
+          if (ui.settingAutoTts) ui.settingAutoTts.checked = true;
+        }
         applyVoiceVisibility(enabled);
-        saveSettings({ voice_enabled: enabled });
+        saveSettings({ voice_enabled: enabled, auto_tts: loadedSettings.auto_tts });
+        renderChatViewport();
       });
     }
 
     if (ui.settingAutoTts) {
       ui.settingAutoTts.addEventListener('change', (e) => {
         saveSettings({ auto_tts: e.target.checked });
-      });
-    }
-
-    if (ui.settingTtsTiming) {
-      ui.settingTtsTiming.addEventListener('change', (e) => {
-        saveSettings({ tts_timing: e.target.value });
       });
     }
 
@@ -3201,20 +4315,6 @@ ui.btnStop.addEventListener('click', () => {
 
     async function boot() {
       try {
-        // --- LAYLA SDK & BRIDGE INTROSPECTION ---
-        console.log("=== LAYLA SDK PROBE ===");
-        console.log("layla instance:", layla);
-        if (layla) {
-          console.log("layla prototype methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(layla)));
-          console.log("layla keys:", Object.keys(layla));
-          ['audio', 'voice', 'tts', 'stt', 'speech', 'media', 'sound'].forEach(k => {
-            if (layla[k]) console.log(`Found layla.${k}:`, layla[k]);
-          });
-        }
-        console.log("window.Bridge:", window.Bridge);
-        console.log("window.ReactNativeWebView:", window.ReactNativeWebView);
-        console.log("=======================");
-
         document.title = `RawLLM Pro v${APP_VERSION}`;
         const verDisplay = document.getElementById('app-version-display');
         if (verDisplay) verDisplay.textContent = `v${APP_VERSION}`;
@@ -3229,10 +4329,63 @@ ui.btnStop.addEventListener('click', () => {
           });
         }
 
+        await initDatabase();
+        await warmThreadsCache();
+
+        // ---------------------------------------------------------
+        // ROBUST BOOT RECOVERY: Check single JSON file
+        // ---------------------------------------------------------
+        try {
+          const recFile = await window.Bridge.files.read('chats/stream_recovery.json');
+          if (recFile && recFile.content_base64) {
+            const rawText = fromB64(stripB64Prefix(recFile.content_base64));
+            if (rawText && rawText !== '{}') {
+              const snap = JSON.parse(rawText);
+              if (snap && snap.threadId && (snap.content || snap.thinking || snap.rawStream)) {
+                console.log('[RECOVERY] Found unfinalized generation in flat file for thread:', snap.threadId);
+                const recThread = await dbGet(snap.threadId);
+                
+                if (recThread) {
+                  const cleanContent = cleanEosTokens((snap.content || '').replace(/\n\n\*\*\[Error:.*\]\*\*$/, ''));
+                  const recMsgTs = snap.timestamp || Date.now();
+                  const recMsg = {
+                    id: `${snap.threadId}_ai_${recMsgTs}`,
+                    role: 'assistant',
+                    content: cleanContent,
+                    rawStream: snap.rawStream || '',
+                    timestamp: recMsgTs,
+                    _isStreaming: false
+                  };
+                  if (snap.thinking) recMsg.thinking = snap.thinking;
+
+                  if (!recThread.messages) recThread.messages = [];
+                  const lastIdx = recThread.messages.length - 1;
+                  
+                  if (lastIdx >= 0 && (recThread.messages[lastIdx].role === 'assistant' || recThread.messages[lastIdx]._isStreaming)) {
+                    recThread.messages[lastIdx] = recMsg;
+                  } else {
+                    recThread.messages.push(recMsg);
+                  }
+                  
+                  recThread.updated_at = Date.now();
+                  await dbPut(recThread);
+                  console.log('[RECOVERY] Thread successfully updated in DB.');
+                }
+              }
+            }
+          }
+          // ONCE SAFELY IN DB (or if invalid format), WIPE THE FILE BLANK
+          await window.Bridge.files.save('chats/stream_recovery.json', toB64('{}'), false);
+        } catch (recErr) {
+          console.warn('[RECOVERY] No recovery file found or read error:', recErr);
+        }
+        // ---------------------------------------------------------
+
         await loadSettings();
         enterSends = loadedSettings.enter_sends !== false;
         applyFontSize(loadedSettings.font_size || 15);
         applyShowStats(loadedSettings.show_stats !== false && loadedSettings.show_stats !== 'false');
+        applySamplerQuickMenuVisibility(loadedSettings.show_sampler_quickmenu !== false && loadedSettings.show_sampler_quickmenu !== 'false');
         if (ui.settingShowStats) {
           ui.settingShowStats.checked = loadedSettings.show_stats !== false && loadedSettings.show_stats !== 'false';
         }
@@ -3243,10 +4396,7 @@ ui.btnStop.addEventListener('click', () => {
           ui.settingVoiceEnabled.checked = !!loadedSettings.voice_enabled;
         }
         if (ui.settingAutoTts) {
-          ui.settingAutoTts.checked = !!loadedSettings.auto_tts;
-        }
-        if (ui.settingTtsTiming) {
-          ui.settingTtsTiming.value = loadedSettings.tts_timing || 'stream';
+          ui.settingAutoTts.checked = loadedSettings.auto_tts !== false;
         }
         if (ui.settingAutoListen) {
           ui.settingAutoListen.checked = loadedSettings.auto_listen !== false;
