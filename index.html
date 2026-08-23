@@ -59,7 +59,7 @@
   <link rel="stylesheet" href="./assets/css/github-dark.min.css">
   <!-- DEBUG TOOLKIT (Set to false or delete block for production releases) -->
   <script>
-    const ENABLE_DEBUG_CONSOLE = false;
+    const ENABLE_DEBUG_CONSOLE = true;
     if (ENABLE_DEBUG_CONSOLE) {
       const script = document.createElement('script');
       script.src = './assets/js/eruda.js';
@@ -911,7 +911,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     <button id="scroll-bottom-btn" title="Scroll to bottom">↓</button>
     <div id="slash-popup"></div>
     <div class="input-wrapper">
-      <button class="action-btn" id="mic-btn" style="display: none; background: var(--bg-surface-hover); color: var(--text-main); font-size: 16px; border: 1px solid var(--border-color);" title="Voice Input">🎙️</button>
+      <button class="action-btn" id="mic-btn" style="display: none; background: var(--bg-surface-hover); color: var(--text-main); font-size: 16px; border: 1px solid var(--border-color); touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;" title="Voice Input">🎙️</button>
       <textarea id="user-input" rows="1" placeholder="Type a message or / for templates..." enterkeyhint="send" spellcheck="true" autocapitalize="sentences" autocomplete="on"></textarea>
       <button class="action-btn" id="send-btn">➤</button>
       <button class="action-btn" id="stop-btn">⏹</button>
@@ -3083,6 +3083,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     }
 
     async function sendMessage(textOverride) {
+      stopSpeechRecognition(false);
       const isOverride = typeof textOverride === 'string';
       let text = isOverride ? textOverride : ui.userInput.value.replace(/^\s+|\s+$/g, '');
       if (!text || !activeThread) return;
@@ -3917,7 +3918,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     let activeSpeechRecognition = null;
     let isListening = false;
     let isTtsPlaying = false;
+    let shouldSendOnEnd = false;
     let userExplicitlyStoppedStt = false;
+    let sttPrefixText = '';
     let sttSilenceTimer = null;
     let hasCapturedSpeech = false;
     let isHoldingMic = false;
@@ -3932,21 +3935,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       if (typeof eventData === 'string') {
         try { parsed = JSON.parse(eventData); } catch (e) { return; }
       }
-      const ev = (parsed?.event || parsed?.type || parsed?.cmd || '').toLowerCase();
-      if (
-        ev === 'on_tts_end' ||
-        ev === 'on_tts_finish' ||
-        ev === 'on_tts_finished' ||
-        ev === 'on_speech_end' ||
-        ev === 'on_speech_finish' ||
-        ev === 'on_audio_ended' ||
-        ev === 'on_audio_end' ||
-        ev === 'tts_finished' ||
-        ev === 'tts_end' ||
-        ev === 'on_tts_complete' ||
-        ev === 'on_tts_stopped' ||
-        ev === 'on_stop_tts'
-      ) {
+      const ev = parsed?.event || parsed?.type || parsed?.cmd || '';
+      
+      if (ev === 'on_finished_speaking' || ev === 'on_tts_end' || ev === 'on_audio_ended') {
         if (ttsEndResolver) {
           ttsEndResolver();
           ttsEndResolver = null;
@@ -3954,8 +3945,14 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       }
     }
 
-    window.addEventListener('message', (e) => handleBridgeMessage(e.data));
-    document.addEventListener('message', (e) => handleBridgeMessage(e.data));
+    function logAndHandleBridge(e, source) {
+      // Print every raw message directly to the Eruda console
+      console.log(`[BRIDGE RX from ${source}]`, e.data);
+      handleBridgeMessage(e.data);
+    }
+
+    window.addEventListener('message', (e) => logAndHandleBridge(e, 'window'));
+    document.addEventListener('message', (e) => logAndHandleBridge(e, 'document'));
 
     async function loadVoices() {
       try {
@@ -4057,12 +4054,12 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       try {
         const voiceId = getSelectedVoiceId();
 
-        // 1. Prepare completion promise attached to native bridge events
+        // 1. Arm bridge resolver FIRST so no event can be missed during synthesis
         const bridgeEndPromise = new Promise((resolve) => {
           ttsEndResolver = resolve;
         });
 
-        // 2. Dispatch synthesis to Layla SDK
+        // 2. Dispatch synthesis
         let res = null;
         if (layla && layla.tts) {
           if (typeof layla.tts.generateVoice === 'function') {
@@ -4074,7 +4071,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           }
         }
 
-        // 3. Handle HTML5 Audio playback if SDK returns a playable stream/URL/base64
+        // 3. Audio End Handlers (HTML5 Audio, Web Speech, or Native Bridge Event)
         const audioSrc = (typeof res === 'string' && (res.startsWith('http') || res.startsWith('data:audio') || res.startsWith('blob:')))
           ? res
           : (res?.audio || res?.url || res?.uri);
@@ -4088,7 +4085,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
             audio.play().catch(() => resolve());
           });
         } else if (!res && !layla?.tts && 'speechSynthesis' in window) {
-          // Web Speech fallback with direct onend lifecycle resolution
           await new Promise((resolve) => {
             const utterance = new SpeechSynthesisUtterance(cleaned);
             window.activeSpeechUtterance = utterance;
@@ -4097,12 +4093,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
             window.speechSynthesis.speak(utterance);
           });
         } else {
-          // Realistic speech pacing (~14 chars/sec) so button disappears right when audio finishes
-          const estimatedDurationMs = Math.max(2500, (cleaned.length / 14) * 1000 + 1200);
-          await Promise.race([
-            bridgeEndPromise,
-            new Promise(r => setTimeout(r, estimatedDurationMs))
-          ]);
+          // Strictly await the on_finished_speaking bridge event
+          await bridgeEndPromise;
         }
       } catch (err) {
         console.error("[Layla TTS Error]", err);
@@ -4132,6 +4124,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       stopAllAudio();
       hasCapturedSpeech = false;
       userExplicitlyStoppedStt = false;
+      shouldSendOnEnd = false;
+      sttPrefixText = ui.userInput.value.trim() ? ui.userInput.value.trim() + ' ' : '';
 
       try {
         activeSpeechRecognition = new SpeechRecognition();
@@ -4147,22 +4141,30 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         };
 
         activeSpeechRecognition.onresult = (event) => {
-          let transcript = '';
-          for (let i = event.results.length - 1; i >= 0; i--) {
-            transcript = event.results[i][0].transcript;
-            break;
+          // Android WebView Bug Workaround: Only grab the absolute latest transcript
+          // index because Android cumulatively dumps phrase history into new indices.
+          let sessionText = '';
+          if (event.results.length > 0) {
+            sessionText = event.results[event.results.length - 1][0].transcript;
           }
-          if (transcript.trim().length > 0) {
+
+          if (sessionText.trim().length > 0) {
             hasCapturedSpeech = true;
-            ui.userInput.value = transcript;
+            ui.userInput.value = sttPrefixText + sessionText;
             updateCharCount();
             updateContextBar();
+            ui.userInput.style.height = 'auto';
+            ui.userInput.style.height = ui.userInput.scrollHeight + 'px';
 
+            // Pause Mode: auto-send after 1400ms of true silence
             if (loadedSettings.stt_mode === 'pause' && !isHoldingMic) {
               if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
               sttSilenceTimer = setTimeout(() => {
                 if (isListening && hasCapturedSpeech && ui.userInput.value.trim().length > 0) {
-                  stopSpeechRecognition();
+                  shouldSendOnEnd = true;
+                  if (activeSpeechRecognition) {
+                    try { activeSpeechRecognition.stop(); } catch (e) {}
+                  }
                 }
               }, 1400);
             }
@@ -4171,31 +4173,53 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
         activeSpeechRecognition.onerror = (e) => {
           console.warn("STT Error:", e.error);
+          if (e.error === 'no-speech' && (isHoldingMic || (loadedSettings.stt_mode === 'manual' && !userExplicitlyStoppedStt))) {
+            return; // Normal Android silence dropout, let onend restart seamlessly
+          }
           isListening = false;
+          isHoldingMic = false;
+          shouldSendOnEnd = false;
           ui.btnMic.style.background = 'var(--bg-surface-hover)';
           ui.btnMic.style.color = 'var(--text-main)';
-          ui.statusText.textContent = 'Ready';
+          if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
+            ui.statusText.textContent = 'Ready';
+          }
         };
 
         activeSpeechRecognition.onend = () => {
           if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
 
-          if (isListening && !userExplicitlyStoppedStt && !hasCapturedSpeech && !isHoldingMic && loadedSettings.stt_mode !== 'hold') {
-            try {
-              activeSpeechRecognition.start();
-              return;
-            } catch (e) {}
+          // Sync the full field text into the prefix to preserve it across dropouts
+          sttPrefixText = ui.userInput.value.trim() ? ui.userInput.value.trim() + ' ' : '';
+
+          // 1. Hold Mode: If finger is still physically held down, keep listening across Android silence drops
+          if (isHoldingMic && loadedSettings.stt_mode === 'hold') {
+            try { activeSpeechRecognition.start(); return; } catch (e) {}
           }
 
-          const shouldSend = isListening && !userExplicitlyStoppedStt && loadedSettings.stt_mode !== 'manual' && hasCapturedSpeech && ui.userInput.value.trim().length > 0;
+          // 2. Manual Mode: Keep listening continuously until user explicitly stops or sends
+          if (loadedSettings.stt_mode === 'manual' && !userExplicitlyStoppedStt && isListening) {
+            try { activeSpeechRecognition.start(); return; } catch (e) {}
+          }
+
+          // 3. Pause Mode: Keep listening if silence timer hasn't expired yet
+          if (loadedSettings.stt_mode === 'pause' && !userExplicitlyStoppedStt && isListening && !shouldSendOnEnd) {
+            try { activeSpeechRecognition.start(); return; } catch (e) {}
+          }
+
+          // Finalize session
           isListening = false;
+          isHoldingMic = false;
           ui.btnMic.style.background = 'var(--bg-surface-hover)';
           ui.btnMic.style.color = 'var(--text-main)';
           if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
             ui.statusText.textContent = 'Ready';
           }
 
-          if (shouldSend) {
+          const canSend = shouldSendOnEnd && hasCapturedSpeech && ui.userInput.value.trim().length > 0;
+          shouldSendOnEnd = false;
+
+          if (canSend) {
             sendMessage();
           }
         };
@@ -4203,31 +4227,28 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         activeSpeechRecognition.start();
       } catch (err) {
         isListening = false;
+        isHoldingMic = false;
+        shouldSendOnEnd = false;
         ui.btnMic.style.background = 'var(--bg-surface-hover)';
         ui.btnMic.style.color = 'var(--text-main)';
         showError("Mic Access Error: " + err.message);
       }
     }
 
-    function stopSpeechRecognition() {
-      userExplicitlyStoppedStt = true;
+    function stopSpeechRecognition(autoSend = false) {
+      userExplicitlyStoppedStt = !autoSend;
+      shouldSendOnEnd = autoSend;
       if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
       if (activeSpeechRecognition) {
         try {
           activeSpeechRecognition.stop();
         } catch (e) {}
       }
-      isListening = false;
-      ui.btnMic.style.background = 'var(--bg-surface-hover)';
-      ui.btnMic.style.color = 'var(--text-main)';
-      if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
-        ui.statusText.textContent = 'Ready';
-      }
     }
 
     function toggleSpeechRecognition() {
       if (isListening) {
-        stopSpeechRecognition();
+        stopSpeechRecognition(false);
       } else {
         startSpeechRecognition();
       }
@@ -4286,24 +4307,34 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
     // Push-to-Talk & Tap Handlers for Mic
     if (ui.btnMic) {
-      const handleMicDown = (e) => {
+      ui.btnMic.addEventListener('contextmenu', (e) => e.preventDefault());
+
+      const handlePressStart = (e) => {
         if (loadedSettings.stt_mode === 'hold') {
-          e.preventDefault();
+          if (e.cancelable) e.preventDefault();
+          e.stopPropagation();
           isHoldingMic = true;
+          userExplicitlyStoppedStt = false;
+          shouldSendOnEnd = false; // Do NOT arm send until finger is physically lifted
           startSpeechRecognition();
         }
       };
 
-      const handleMicUp = (e) => {
+      const handlePressEnd = (e) => {
         if (loadedSettings.stt_mode === 'hold' && isHoldingMic) {
-          e.preventDefault();
+          if (e && e.cancelable) e.preventDefault();
+          if (e) e.stopPropagation();
           isHoldingMic = false;
-          stopSpeechRecognition();
+          stopSpeechRecognition(true); // Arms send and stops recognition
         }
       };
 
-      ui.btnMic.addEventListener('pointerdown', handleMicDown);
-      window.addEventListener('pointerup', handleMicUp);
+      ui.btnMic.addEventListener('touchstart', handlePressStart, { passive: false });
+      window.addEventListener('touchend', handlePressEnd, { passive: false });
+      window.addEventListener('touchcancel', handlePressEnd, { passive: false });
+
+      ui.btnMic.addEventListener('mousedown', handlePressStart);
+      window.addEventListener('mouseup', handlePressEnd);
 
       ui.btnMic.addEventListener('click', (e) => {
         if (loadedSettings.stt_mode !== 'hold') {
@@ -4311,7 +4342,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         }
       });
     }
-
 
     async function boot() {
       try {
