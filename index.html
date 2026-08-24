@@ -59,7 +59,7 @@
   <link rel="stylesheet" href="./assets/css/github-dark.min.css">
   <!-- DEBUG TOOLKIT (Set to false or delete block for production releases) -->
   <script>
-    const ENABLE_DEBUG_CONSOLE = true;
+    const ENABLE_DEBUG_CONSOLE = false;
     if (ENABLE_DEBUG_CONSOLE) {
       const script = document.createElement('script');
       script.src = './assets/js/eruda.js';
@@ -1046,7 +1046,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     import { LaylaSDK } from './assets/js/layla-sdk.min.js';
     const layla = new LaylaSDK();
     window.layla = layla;
-    const APP_VERSION = '7.6.0';
+    const APP_VERSION = '7.6.1';
     const CONFIG_PATHS = {
       SETTINGS: 'config/settings.json',
       SYS_PROMPTS: 'config/system_prompts.json',
@@ -1174,6 +1174,27 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     const promptQueues = new Map();
     const threadsCache = new Map();
 
+    window.processPromptQueue = function() {
+      if (activeGenerations.size > 0 || isTtsPlaying) return false;
+      if (window.isManualAbort) {
+        window.isManualAbort = false;
+        return false;
+      }
+      const qId = activeThread && promptQueues.has(activeThread.id) ? activeThread.id : (promptQueues.size > 0 ? promptQueues.keys().next().value : null);
+      if (qId && promptQueues.has(qId)) {
+        const nextText = promptQueues.get(qId);
+        promptQueues.delete(qId);
+        window.updateQueueUI();
+        if (activeThread?.id === qId) {
+          setTimeout(() => { sendMessage(nextText); }, 100);
+        } else {
+          loadThread(qId).then(() => { setTimeout(() => { sendMessage(nextText); }, 100); });
+        }
+        return true;
+      }
+      return false;
+    };
+
     window.updateQueueUI = function() {
       if (!activeThread) return;
       
@@ -1226,10 +1247,11 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         badge.style.display = 'none';
       }
       
+      const shouldShowQueueState = hasGlobalGeneration || isTtsPlaying;
       ui.btnSend.style.display = 'flex';
       ui.btnStop.style.display = hasGlobalGeneration ? 'flex' : 'none';
 
-      if (hasGlobalGeneration) {
+      if (shouldShowQueueState) {
         ui.userInput.placeholder = "Type next prompt to queue...";
         ui.btnSend.innerHTML = "⏳";
         ui.btnSend.title = "Queue Prompt";
@@ -2421,9 +2443,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       };
       
       threadsCache.set(newThread.id, JSON.parse(JSON.stringify(newThread)));
-      await loadThread(newThread.id);
-      renderSidebar();
-      dbPut(newThread);
+      await dbPut(newThread);
+      await loadThread(newThread.id); // Must load first so the app knows it's active
+      await renderSidebar();          // Then render so the CSS highlight applies
     }
     async function branchChat(msgIndex) {
       if (!activeThread || activeGenerations.has(activeThread.id)) return;
@@ -2468,6 +2490,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         if (!activeThread.parameters.agents) activeThread.parameters.agents = { ...DEFAULT_PARAMS.agents };
         localStorage.setItem('last_active_thread_id', activeThread.id);
         loadedSettings.last_active_thread_id = activeThread.id;
+        saveSettings({ last_active_thread_id: activeThread.id });
         
         isProgrammaticUpdate = true;
         ui.activeTitle.textContent = activeThread.title;
@@ -3088,7 +3111,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       let text = isOverride ? textOverride : ui.userInput.value.replace(/^\s+|\s+$/g, '');
       if (!text || !activeThread) return;
       
-      if (activeGenerations.size > 0 && !isOverride) {
+      if ((activeGenerations.size > 0 || isTtsPlaying) && !isOverride) {
         // Prevent accidental overwrite: flash badge and alert user without wiping input
         if (promptQueues.has(activeThread.id)) {
           const badge = document.getElementById('queue-badge-container');
@@ -3107,9 +3130,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           
           ui.statusText.textContent = "Queue full (1 max)";
           setTimeout(() => {
-            if (activeGenerations.size > 0 && ui.statusText.textContent === "Queue full (1 max)") {
+            if ((activeGenerations.size > 0 || isTtsPlaying) && ui.statusText.textContent === "Queue full (1 max)") {
               const curRec = activeGenerations.get(activeThread.id);
-              ui.statusText.textContent = curRec?.currentStatus || "Generating...";
+              ui.statusText.textContent = curRec?.currentStatus || (isTtsPlaying ? "Speaking..." : "Generating...");
             }
           }, 1800);
           return;
@@ -3508,24 +3531,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
                 ui.statusText.textContent = "Ready";
               }
               
-              // Only auto-trigger the single queued prompt if generation finished naturally (not halted by Stop)
-              if (!window.isManualAbort) {
-                const qId = promptQueues.has(targetThreadId) ? targetThreadId : (promptQueues.size > 0 ? promptQueues.keys().next().value : null);
-                if (qId && promptQueues.has(qId)) {
-                  const nextText = promptQueues.get(qId);
-                  promptQueues.delete(qId);
-                  window.updateQueueUI();
-                  
-                  if (activeThread?.id === qId) {
-                    setTimeout(() => { sendMessage(nextText); }, 100);
-                  } else {
-                    loadThread(qId).then(() => {
-                      setTimeout(() => { sendMessage(nextText); }, 100);
-                    });
-                  }
-                }
-              } else {
-                window.isManualAbort = false;
+              if (typeof window.processPromptQueue === 'function') {
+                window.processPromptQueue();
               }
             }
         }
@@ -3589,19 +3596,34 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     });
     ui.btnExportBackup.onclick = async () => {
       try {
+        const userTag = prompt("Enter a custom tag or label for this backup file name:\n(Leave blank and click OK to use the default name)", "");
+        if (userTag === null) return; // User clicked Cancel
+
+        const cleanTag = userTag.trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+        const tagSuffix = cleanTag ? `_${cleanTag}` : '';
+        const filename = `rawllm_v${APP_VERSION}_backup${tagSuffix}_${Date.now()}.json`;
+
+        const summaryThreads = await dbGetAll();
+        const fullThreads = [];
+        for (const st of summaryThreads) {
+          const full = await dbGet(st.id);
+          if (full) fullThreads.push(full);
+        }
+
         const backup = {
           version: APP_VERSION,
           exported_at: Date.now(),
+          tag: cleanTag || undefined,
           manifest: await loadManifest(),
-          threads: await dbGetAll(),
+          threads: fullThreads,
           env_presets: await loadPresets(),
           parameter_presets: await loadPureParamPresets(),
           custom_prompts: getCustomPrompts(),
           system_prompts: await getSystemPromptPresets(),
           settings: loadedSettings
         };
-        await window.Bridge.files.save(`rawllm_pro_v${APP_VERSION}_backup_${Date.now()}.json`, toB64(JSON.stringify(backup, null, 2)), true);
-        alert("Full backup exported successfully!");
+        await window.Bridge.files.save(filename, toB64(JSON.stringify(backup, null, 2)), true);
+        alert(`Full backup exported successfully as:\n${filename}`);
       } catch (e) { showError("Backup Failed: " + e.message); }
     };
         if (ui.btnImportThread) {
@@ -3681,7 +3703,11 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       reader.onload = async (evt) => {
         try {
           const parsed = JSON.parse(evt.target.result);
-          if (parsed.threads) for (const t of parsed.threads) await dbPut(t);
+          if (parsed.threads && Array.isArray(parsed.threads)) {
+            for (const t of parsed.threads) {
+              await dbPut(t);
+            }
+          }
           if (parsed.manifest) await saveManifest(parsed.manifest);
           if (parsed.env_presets || parsed.presets) await savePresets(parsed.env_presets || parsed.presets);
           if (parsed.parameter_presets) await savePureParamPresets(parsed.parameter_presets);
@@ -3689,7 +3715,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           if (parsed.system_prompts) await saveSystemPromptPresets(parsed.system_prompts);
           if (parsed.settings) await saveSettings(parsed.settings);
           alert("Backup restored successfully!"); location.reload();
-        } catch (err) { showError("Import failed: Invalid JSON file format."); }
+        } catch (err) { showError("Import failed: " + err.message); }
       };
       reader.readAsText(file);
     };
@@ -3872,6 +3898,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     ui.btnStop.addEventListener('click', () => {
       if (activeGenerations.size > 0) {
         window.isManualAbort = true;
+        
         activeGenerations.forEach((genState) => {
           if (genState.loadingInterval) clearInterval(genState.loadingInterval);
           if (genState.thinkingInterval) clearInterval(genState.thinkingInterval);
@@ -3921,7 +3948,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     let shouldSendOnEnd = false;
     let userExplicitlyStoppedStt = false;
     let sttPrefixText = '';
-    let sttSilenceTimer = null;
+    let sttSilenceTimer = null; // CRITICAL FIX: Restores the missing timer variable
     let hasCapturedSpeech = false;
     let isHoldingMic = false;
     let currentTtsSession = 0;
@@ -3945,14 +3972,15 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       }
     }
 
-    function logAndHandleBridge(e, source) {
-      // Print every raw message directly to the Eruda console
-      console.log(`[BRIDGE RX from ${source}]`, e.data);
+    function onBridgeEvent(e, source) {
+      // Set to true to inspect raw React Native bridge messages in Eruda
+      const DEBUG_BRIDGE = false;
+      if (DEBUG_BRIDGE) console.log(`[BRIDGE RX from ${source}]`, e.data);
       handleBridgeMessage(e.data);
     }
 
-    window.addEventListener('message', (e) => logAndHandleBridge(e, 'window'));
-    document.addEventListener('message', (e) => logAndHandleBridge(e, 'document'));
+    window.addEventListener('message', (e) => onBridgeEvent(e, 'window'));
+    document.addEventListener('message', (e) => onBridgeEvent(e, 'document'));
 
     async function loadVoices() {
       try {
@@ -4032,6 +4060,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       if (!activeGenerations.has(activeThread?.id) && ui.statusText.textContent === "Speaking...") {
         ui.statusText.textContent = "Ready";
       }
+      if (typeof window.updateQueueUI === 'function') {
+        window.updateQueueUI();
+      }
     }
 
     async function speakFullResponse(rawText, isAutoRead = false) {
@@ -4039,17 +4070,18 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const cleaned = cleanForSpeech(rawText);
       if (!cleaned) return;
 
+      if (isListening) stopSpeechRecognition(false);
       stopAllAudio();
-      await new Promise(r => setTimeout(r, 60));
-
-      currentTtsSession++;
-      const thisSession = currentTtsSession;
       isTtsPlaying = true;
       updateVoiceStopButton();
 
       if (!activeGenerations.has(activeThread?.id)) {
         ui.statusText.textContent = "Speaking...";
       }
+
+      await new Promise(r => setTimeout(r, 60));
+      currentTtsSession++;
+      const thisSession = currentTtsSession;
 
       try {
         const voiceId = getSelectedVoiceId();
@@ -4105,13 +4137,23 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           if (!activeGenerations.has(activeThread?.id) && ui.statusText.textContent === "Speaking...") {
             ui.statusText.textContent = "Ready";
           }
-          if (isAutoRead && loadedSettings.voice_enabled && loadedSettings.auto_listen !== false && !activeGenerations.has(activeThread?.id) && !isListening && !isHoldingMic) {
+          
+          let didProcessQueue = false;
+          if (typeof window.processPromptQueue === 'function') {
+            didProcessQueue = window.processPromptQueue();
+          }
+
+          if (typeof window.updateQueueUI === 'function') {
+            window.updateQueueUI();
+          }
+          
+          // Only trigger auto-listen if Auto-Pause mode is specifically selected AND nothing was queued
+          if (!didProcessQueue && isAutoRead && loadedSettings.voice_enabled && loadedSettings.auto_listen !== false && loadedSettings.stt_mode === 'pause' && !activeGenerations.has(activeThread?.id) && !isListening && !isHoldingMic) {
             if (!isListening && !isTtsPlaying) startSpeechRecognition();
           }
         }
       }
     }
-
 
     function startSpeechRecognition() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -4141,8 +4183,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         };
 
         activeSpeechRecognition.onresult = (event) => {
-          // Android WebView Bug Workaround: Only grab the absolute latest transcript
-          // index because Android cumulatively dumps phrase history into new indices.
+          if (isTtsPlaying) return; // Hard block: prevent mic from capturing AI's voice
+          
+          // Absolute clean extraction using your verified single-index method (zero echo)
           let sessionText = '';
           if (event.results.length > 0) {
             sessionText = event.results[event.results.length - 1][0].transcript;
@@ -4155,30 +4198,26 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
             updateContextBar();
             ui.userInput.style.height = 'auto';
             ui.userInput.style.height = ui.userInput.scrollHeight + 'px';
+            ui.userInput.scrollTop = ui.userInput.scrollHeight;
+          }
 
-            // Pause Mode: auto-send after 1400ms of true silence
-            if (loadedSettings.stt_mode === 'pause' && !isHoldingMic) {
-              if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
-              sttSilenceTimer = setTimeout(() => {
-                if (isListening && hasCapturedSpeech && ui.userInput.value.trim().length > 0) {
-                  shouldSendOnEnd = true;
-                  if (activeSpeechRecognition) {
-                    try { activeSpeechRecognition.stop(); } catch (e) {}
-                  }
-                }
-              }, 1400);
-            }
+          // Pause Mode: auto-send after 1400ms of true silence
+          if (loadedSettings.stt_mode === 'pause' && !isHoldingMic) {
+            if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
+            sttSilenceTimer = setTimeout(() => {
+              if (isListening && hasCapturedSpeech && ui.userInput.value.trim().length > 0) {
+                stopSpeechRecognition(true);
+              }
+            }, 1400);
           }
         };
 
         activeSpeechRecognition.onerror = (e) => {
           console.warn("STT Error:", e.error);
-          if (e.error === 'no-speech' && (isHoldingMic || (loadedSettings.stt_mode === 'manual' && !userExplicitlyStoppedStt))) {
-            return; // Normal Android silence dropout, let onend restart seamlessly
-          }
+          if (e.error === 'no-speech' || e.error === 'aborted') return;
+
           isListening = false;
           isHoldingMic = false;
-          shouldSendOnEnd = false;
           ui.btnMic.style.background = 'var(--bg-surface-hover)';
           ui.btnMic.style.color = 'var(--text-main)';
           if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
@@ -4189,38 +4228,63 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         activeSpeechRecognition.onend = () => {
           if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
 
-          // Sync the full field text into the prefix to preserve it across dropouts
-          sttPrefixText = ui.userInput.value.trim() ? ui.userInput.value.trim() + ' ' : '';
+          // 1. Explicit Stop (User hit Send, tapped Mic off, or let go of Push-to-Talk)
+          if (userExplicitlyStoppedStt || (loadedSettings.stt_mode === 'hold' && !isHoldingMic)) {
+            isListening = false;
+            isHoldingMic = false;
+            ui.btnMic.style.background = 'var(--bg-surface-hover)';
+            ui.btnMic.style.color = 'var(--text-main)';
+            if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
+              ui.statusText.textContent = 'Ready';
+            }
+            return;
+          }
 
-          // 1. Hold Mode: If finger is still physically held down, keep listening across Android silence drops
-          if (isHoldingMic && loadedSettings.stt_mode === 'hold') {
+          // 2. Pause Mode: Native Android silence dropped the mic. Auto-Send!
+          if (loadedSettings.stt_mode === 'pause') {
+            if (hasCapturedSpeech && ui.userInput.value.trim().length > 0) {
+              isListening = false;
+              ui.btnMic.style.background = 'var(--bg-surface-hover)';
+              ui.btnMic.style.color = 'var(--text-main)';
+              ui.statusText.textContent = 'Ready';
+              hasCapturedSpeech = false;
+              sendMessage();
+              return;
+            } else {
+              // Didn't hear anything yet, seamlessly keep listening
+              sttPrefixText = ui.userInput.value.trim() ? ui.userInput.value.trim() + ' ' : '';
+              try { activeSpeechRecognition.start(); return; } catch (e) {}
+            }
+          }
+
+          // 3. Hold Mode: If finger is still physically down, reconnect seamlessly
+          if (loadedSettings.stt_mode === 'hold') {
+            if (isHoldingMic) {
+              sttPrefixText = ui.userInput.value.trim() ? ui.userInput.value.trim() + ' ' : '';
+              try { activeSpeechRecognition.start(); return; } catch (e) {}
+            } else {
+              // Finger is off, let it die cleanly
+              isListening = false;
+              ui.btnMic.style.background = 'var(--bg-surface-hover)';
+              ui.btnMic.style.color = 'var(--text-main)';
+              ui.statusText.textContent = 'Ready';
+              return;
+            }
+          }
+
+          // 4. Manual Mode: ALWAYS reconnect seamlessly on silence
+          if (loadedSettings.stt_mode === 'manual') {
+            sttPrefixText = ui.userInput.value.trim() ? ui.userInput.value.trim() + ' ' : '';
             try { activeSpeechRecognition.start(); return; } catch (e) {}
           }
 
-          // 2. Manual Mode: Keep listening continuously until user explicitly stops or sends
-          if (loadedSettings.stt_mode === 'manual' && !userExplicitlyStoppedStt && isListening) {
-            try { activeSpeechRecognition.start(); return; } catch (e) {}
-          }
-
-          // 3. Pause Mode: Keep listening if silence timer hasn't expired yet
-          if (loadedSettings.stt_mode === 'pause' && !userExplicitlyStoppedStt && isListening && !shouldSendOnEnd) {
-            try { activeSpeechRecognition.start(); return; } catch (e) {}
-          }
-
-          // Finalize session
+          // Fallback cleanup
           isListening = false;
           isHoldingMic = false;
           ui.btnMic.style.background = 'var(--bg-surface-hover)';
           ui.btnMic.style.color = 'var(--text-main)';
           if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
             ui.statusText.textContent = 'Ready';
-          }
-
-          const canSend = shouldSendOnEnd && hasCapturedSpeech && ui.userInput.value.trim().length > 0;
-          shouldSendOnEnd = false;
-
-          if (canSend) {
-            sendMessage();
           }
         };
 
@@ -4235,14 +4299,32 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       }
     }
 
+        
     function stopSpeechRecognition(autoSend = false) {
-      userExplicitlyStoppedStt = !autoSend;
-      shouldSendOnEnd = autoSend;
+      userExplicitlyStoppedStt = true;
       if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
+      
+      // Force immediate UI cleanup to bypass Android's unreliable onend delivery
+      isListening = false;
+      isHoldingMic = false;
+      if (ui.btnMic) {
+        ui.btnMic.style.background = 'var(--bg-surface-hover)';
+        ui.btnMic.style.color = 'var(--text-main)';
+      }
+      if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
+        ui.statusText.textContent = 'Ready';
+      }
+      
       if (activeSpeechRecognition) {
-        try {
-          activeSpeechRecognition.stop();
-        } catch (e) {}
+        try { activeSpeechRecognition.stop(); } catch (e) {}
+      }
+      
+      // Force synchronous message dispatch instantly
+      const canSend = autoSend && hasCapturedSpeech && ui.userInput.value.trim().length > 0;
+      hasCapturedSpeech = false;
+      
+      if (canSend) {
+        sendMessage();
       }
     }
 
@@ -4302,6 +4384,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       ui.btnStopVoice.addEventListener('click', (e) => {
         e.stopPropagation();
         stopAllAudio();
+        if (typeof window.processPromptQueue === 'function') {
+          window.processPromptQueue();
+        }
       });
     }
 

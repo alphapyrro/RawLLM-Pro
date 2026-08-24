@@ -6,7 +6,7 @@ A modular web-based mini-application designed to run local language models direc
 
 **Installation & Setup**
 
-1. Download the latest **`RawLLM-Pro-v7.6.0.zip`** package from the Releases page (`https://github.com/alphapyrro/RawLLM/releases`).
+1. Download the latest **`RawLLM-Pro-v7.6.1.zip`** package from the Releases page (`https://github.com/alphapyrro/RawLLM/releases`).
 2. Open **Layla** and navigate to **Your Apps**.
 3. Tap the **`+`** icon in the top right corner to open **Browse Apps**.
 4. Tap **Import** in the top right corner.
@@ -16,27 +16,22 @@ A modular web-based mini-application designed to run local language models direc
 
 ---
 
-**What's New in v7.6.0**
+**What's New in v7.6.1**
 
-### ✨ New Features
-* 🎙️ **Voice & Speech Controls (Beta):** Adds hands-free voice chat with automatic text-to-speech playback, customizable dictation modes (pause detection, push-to-talk, manual), voice engine selection, and dedicated audio playback stop controls.
-* ✂️ **Context Pruning & Memory Horizon Visualizer:** Real-time token budgeting visualizer dims pruned messages that exceed the context budget, labels trimmed history with a `✂️ Pruned` badge, and renders an active memory horizon divider in the chat viewport.
-* ⏳ **Smart Message Queueing & Draft Protection:** Queue a follow-up message while generation is actively running via the dynamic `⏳` button. Includes single-slot queue buffering, cross-thread handoff upon completion, Master Halt (`⏹`) draft preservation, and non-destructive unqueueing (`✕`) that merges safely with in-progress text.
-* 📥 **Single-Thread Import & Dual-Format Export:** Adds a dedicated sidebar button to import individual `.json`, `.md`, or `.txt` conversations, alongside per-message `💾 Export JSON` (full backup) and `📄 Export MD` (formatted document) export options.
-* 🧠 **Floating Sampler Preset Quick-Menu:** Quick-access floating `🧠` button allows instant switching between saved sampler presets from anywhere in the app without opening the settings drawer (toggleable in App Settings).
-* 💾 **SQLite Database Auto-Migration:** Automatically migrates conversation storage from individual flat JSON files to a unified SQLite database (`app.db`) for improved performance, data integrity, and instant thread loading.
-* 📦 **Updated Core SDK Bridge:** Upgraded internal Layla SDK and bridge integration layers to the latest version.
+### ✨ New Features & Enhancements
+* 🎙️ **Complete Voice-to-Text Architecture Overhaul:** Fully resolves speech recognition reliability by hardening silence detection, fixing native Android silence dropout reconnections, eliminating duplicate transcription echoes, and preventing accidental state desyncs.
+* 📦 **SQLite Full Backup & Multi-Turn Restore:** Resolved an issue where exports only captured thread metadata; backups now query and package all message history turns, ensuring complete multi-turn conversation recovery across SQLite restores.
+* 🏷️ **Custom Backup File Tagging:** Added an optional custom labeling prompt when creating system backups, enabling easy identifier tags (e.g., `_my_tag`) while supporting one-tap default exports.
+* 🔇 **Zero-Feedback Acoustic Echo Guard:** Implemented synchronous suppression of STT processing while Text-to-Speech audio is actively playing, preventing the microphone from capturing the AI's voice output and causing false input loops.
+* 📜 **Real-Time Dictation Auto-Scroll:** Added active auto-scroll tracking to the main input dock to automatically scroll the textarea downward as you dictate, keeping the active text horizon continuously in view for long hands-free inputs.
 
 ---
 
-### 🛠️ Bug Fixes & Improvements
-* ⚡ **Non-Blocking Thread Navigation & Streaming:** Upgraded bridge architecture to allow instant new chat creation (`+ New Chat`), uninterrupted thread switching, and sidebar navigation while streaming continues in the background.
-* 🚀 **Engine Performance & Latency Optimization:** Eliminated internal bridge bottlenecks to drastically reduce Time-to-First-Token (TTFT), resolve long loading times, and improve tokens-per-second throughput.
-* 🛑 **Token Limit Enforcement:** Fixed an issue where text generation continued streaming past the client-side configured maximum token ceiling.
-* 🔀 **True Conversation Forking:** Fixed a critical issue where editing a prior message deleted or overwrote the original conversation thread instead of branching a new fork.
-* 🛡️ **Stream Thread Deletion Safeguards:** Prevented chat thread deletions while a generation is actively running to prevent database desynchronization and ghost threads.
-* 🔄 **Dynamic Retry Button Visibility:** Corrected retry button persistence so it appears exclusively on the single latest assistant response and disappears immediately once a new user message is submitted.
-* 💡 **Hardware Engine Allocation Guidance:** Added an in-app notice clarifying that Max Tokens and Context Window settings in RawLLM Pro cannot exceed the allocations configured in Layla's native model settings.
+### 🛠️ Bug Fixes & Stability
+* ⏳ **Queue & Voice Handoff Hardening:** Fixed a race condition where queued messages vanished into a limbo state while Text-to-Speech was speaking; queued prompts now remain visible, editable, and cancelable in the queue banner until speech concludes.
+* 🛑 **Decoupled Master Stop & Send Lifecycle:** Automatically hides the master red Stop control the instant text generation completes, seamlessly restoring the interactive Send and Queue buttons during speech playback.
+* 🔄 **UI Queue Reactivity:** Fixed stale button state bugs by ensuring `updateQueueUI()` fires immediately upon global audio termination or natural speech completion.
+* 🧹 **Clean Bridge Event Handling:** Streamlined native bridge message passing with integrated feature flags for lightweight diagnostics.
 
 ---
 
