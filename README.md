@@ -6,7 +6,7 @@ A modular web-based mini-application designed to run local language models direc
 
 **Installation & Setup**
 
-1. Download the latest **`RawLLM-Pro-v7.6.1.zip`** package from the Releases page (`https://github.com/alphapyrro/RawLLM/releases`).
+1. Download the latest **`RawLLM-Pro-v7.6.2.zip`** package from the Releases page (`https://github.com/alphapyrro/RawLLM/releases`).
 2. Open **Layla** and navigate to **Your Apps**.
 3. Tap the **`+`** icon in the top right corner to open **Browse Apps**.
 4. Tap **Import** in the top right corner.
@@ -16,9 +16,10 @@ A modular web-based mini-application designed to run local language models direc
 
 ---
 
-**What's New in v7.6.1**
+**What's New in v7.6.2**
 
 ### ✨ New Features & Enhancements
+* ☕ **Official Ko-fi Support Links:** Added direct one-tap donation buttons in the Data Settings tab and the sidebar footer for users who want to support ongoing updates, new features, and local AI experiments.
 * 🎙️ **Complete Voice-to-Text Architecture Overhaul:** Fully resolves speech recognition reliability by hardening silence detection, fixing native Android silence dropout reconnections, eliminating duplicate transcription echoes, and preventing accidental state desyncs.
 * 📦 **SQLite Full Backup & Multi-Turn Restore:** Resolved an issue where exports only captured thread metadata; backups now query and package all message history turns, ensuring complete multi-turn conversation recovery across SQLite restores.
 * 🏷️ **Custom Backup File Tagging:** Added an optional custom labeling prompt when creating system backups, enabling easy identifier tags (e.g., `_my_tag`) while supporting one-tap default exports.
