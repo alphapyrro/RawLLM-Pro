@@ -6,7 +6,7 @@ A modular web-based mini-application designed to run local language models direc
 
 **Installation & Setup**
 
-1. Download the latest **`RawLLM-Pro-v7.6.2.zip`** package from the Releases page (`https://github.com/alphapyrro/RawLLM/releases`).
+1. Download the latest **`RawLLM-Pro-v7.6.3.zip`** package from the Releases page (`https://github.com/alphapyrro/RawLLM/releases`).
 2. Open **Layla** and navigate to **Your Apps**.
 3. Tap the **`+`** icon in the top right corner to open **Browse Apps**.
 4. Tap **Import** in the top right corner.
@@ -16,32 +16,34 @@ A modular web-based mini-application designed to run local language models direc
 
 ---
 
-**What's New in v7.6.2**
+**What's New in v7.6.3**
 
 ### ✨ New Features & Enhancements
-* ☕ **Official Ko-fi Support Links:** Added direct one-tap donation buttons in the Data Settings tab and the sidebar footer for users who want to support ongoing updates, new features, and local AI experiments.
-* 🎙️ **Complete Voice-to-Text Architecture Overhaul:** Fully resolves speech recognition reliability by hardening silence detection, fixing native Android silence dropout reconnections, eliminating duplicate transcription echoes, and preventing accidental state desyncs.
-* 📦 **SQLite Full Backup & Multi-Turn Restore:** Resolved an issue where exports only captured thread metadata; backups now query and package all message history turns, ensuring complete multi-turn conversation recovery across SQLite restores.
-* 🏷️ **Custom Backup File Tagging:** Added an optional custom labeling prompt when creating system backups, enabling easy identifier tags (e.g., `_my_tag`) while supporting one-tap default exports.
-* 🔇 **Zero-Feedback Acoustic Echo Guard:** Implemented synchronous suppression of STT processing while Text-to-Speech audio is actively playing, preventing the microphone from capturing the AI's voice output and causing false input loops.
-* 📜 **Real-Time Dictation Auto-Scroll:** Added active auto-scroll tracking to the main input dock to automatically scroll the textarea downward as you dictate, keeping the active text horizon continuously in view for long hands-free inputs.
+* 🎙️ **Concurrent Real-Time TTS Streaming:** Overhauled audio delivery from an end-of-turn blocker into an asynchronous clause-level stream dispatcher that speaks text in real time as tokens generate.
+* 📦 **Speech Delivery Timing Selector:** Added a dedicated mode toggle inside the Voice panel between low-latency clause streaming (ideal for system voices) and batch delivery on completion (ideal for neural Kokoro models).
+* 🧠 **Intelligent Voice Profiling & Metadata Parsing:** Added regex-based decoding for serialized JSON Kokoro models and system voices to automatically detect and display gender, nationality/dialect, and online/offline availability in the voice picker.
+* 💾 **Automatic SQLite Schema Migrations:** Implemented safe runtime `ALTER TABLE` schema updates on boot to automatically register missing columns (`is_streaming`, `is_forked`, `is_pinned`, `sys_prompt_preset_name`) without wiping existing user databases.
+* ⚡ **Session Anchor for Warm KV Caches:** Binds startup to a persistent host session contract (`rawllm_session_main`) to keep local llama.cpp KV prefixes warm across conversational turns.
+* 📊 **Dynamic Ingestion Calibration:** Added real-time tracking of measured prefill tokens per second (`measuredPrefillTps`) to provide accurate prompt ingestion estimates across mobile NPUs and CPUs.
 
 ---
 
 ### 🛠️ Bug Fixes & Stability
-* ⏳ **Queue & Voice Handoff Hardening:** Fixed a race condition where queued messages vanished into a limbo state while Text-to-Speech was speaking; queued prompts now remain visible, editable, and cancelable in the queue banner until speech concludes.
-* 🛑 **Decoupled Master Stop & Send Lifecycle:** Automatically hides the master red Stop control the instant text generation completes, seamlessly restoring the interactive Send and Queue buttons during speech playback.
-* 🔄 **UI Queue Reactivity:** Fixed stale button state bugs by ensuring `updateQueueUI()` fires immediately upon global audio termination or natural speech completion.
-* 🧹 **Clean Bridge Event Handling:** Streamlined native bridge message passing with integrated feature flags for lightweight diagnostics.
+* 🛡️ **Cross-Platform Safe-Area Inset Scoping:** Replaced brittle global inset padding with scoped WebKit checks (`@supports (-webkit-touch-callout: none)`) across headers, sidebars, and input docks to prevent dead space on Android while preserving notch clearance on iOS.
+* 📱 **Visual Viewport Keyboard Anchoring:** Attached active resize listeners to `window.visualViewport` to smoothly track and preserve chat scroll positions when the virtual keyboard opens.
+* 🎤 **Native Audio Hardware Unclamping:** Added explicit host audio session cleanup (`releaseHostAudioSession`) to release micro-level microphone session locks when toggling speech recognition.
+* 🗄️ **Synchronous In-Memory Thread Cache:** Integrated a dedicated thread cache map (`threadsCache`) to eliminate redundant disk and database reads during rapid UI switches and message operations.
+* 📐 **Calibrated Token Estimation Ratio:** Updated token estimation heuristics to `Math.ceil(length / 3.4)` to better match modern BPE tokenizer distributions and avoid context clipping.
+* ✂️ **Strict Append-Only Memory Horizon:** Fixed context-pruning behavior to strictly trim from turn 0 only when exceeding context budgets, preventing prefix invalidation during ongoing turns.
 
 ---
 
 **Interface & Features**
 
-| 1. 💬 Main Chat & HUD | 2. 🗂️ Thread Manager | 3. 🧠 Samplers & Tuning | 4. 📝 Prompts & Stops |
+| 1. 💬 Main Chat | 2. 🗂️ Threads | 3. 🧠 Samplers | 4. 📝 Prompts |
 | :---: | :---: | :---: | :---: |
-| <img width="522" height="1024" alt="mainChat" src="https://github.com/user-attachments/assets/2b496ad2-9ed4-4db9-ab63-a3b70c24daaf" /> | <img width="524" height="1024" alt="chatThreads" src="https://github.com/user-attachments/assets/ff2cfd30-6cda-4cc8-b34b-f809bfc8dfd9" /> | <img width="525" height="1024" alt="Imagepipe_2" src="https://github.com/user-attachments/assets/d62e7a70-d259-439a-83d8-b858c77e1c2d" /> | <img width="525" height="1024" alt="Imagepipe_3" src="https://github.com/user-attachments/assets/4bc9da58-f97b-4d77-9741-d5d940e45637" /> |
+| <img src="https://github.com/user-attachments/assets/511c6573-b91e-4cb8-ac9e-ce428757d65b" width="525" alt="Main Chat" /> | <img src="https://github.com/user-attachments/assets/055f47ca-8874-4028-8af2-1701cd467368" width="525" alt="Threads" /> | <img src="https://github.com/user-attachments/assets/794364b7-c0d8-47b2-a057-9012f9f5a8ca" width="525" alt="Samplers" /> | <img src="https://github.com/user-attachments/assets/ec6da647-efef-4110-bb54-b6fa9347f988" width="525" alt="Prompts" /> |
 
-| 5. ⚡ Web & Agents | 6. 📱 App Settings | 7. 💾 Backup & Data | 8. 🔍 Payload Inspector |
+| 5. ⚡ Agents | 6. 📱 App Settings | 7. 💾 Backup & Data | 8. 🔍 Inspector |
 | :---: | :---: | :---: | :---: |
-| <img width="525" height="1024" alt="Imagepipe_4" src="https://github.com/user-attachments/assets/6be76a55-940b-489a-9382-12a933233ddb" /> | <img width="526" height="1024" alt="appSett" src="https://github.com/user-attachments/assets/c2a43d5a-3d04-4b59-8258-3ed5142d3758" /> | <img width="525" height="1024" alt="Imagepipe_6" src="https://github.com/user-attachments/assets/9d148489-02ac-4eff-b235-cf8fe70093bd" /> | <img width="525" height="1024" alt="Imagepipe_7" src="https://github.com/user-attachments/assets/a636b3e8-f428-4bd4-93f6-cfca0da8bcce" /> |
+| <img src="https://github.com/user-attachments/assets/75a9b663-a3cb-4b51-a6b5-85cc1522bd93" width="525" alt="Agents" /> | <img src="https://github.com/user-attachments/assets/ed8a7a5d-a813-457c-ae89-6636d4fd88ba" width="525" alt="App Settings" /> | <img src="https://github.com/user-attachments/assets/27d0f919-3545-439a-904a-b7c4e1ce44c8" width="525" alt="Backup & Data" /> | <img src="https://github.com/user-attachments/assets/05744536-c7e7-480f-ad18-ffe3480da988" width="525" alt="Payload Inspector" /> |

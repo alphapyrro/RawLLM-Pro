@@ -38,7 +38,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>RawLLM Pro</title>
   <script>
     window.onerror = function(message, source, lineno, colno, error) {
@@ -80,12 +80,22 @@
       --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      -webkit-tap-highlight-color: transparent; 
+    }
+    button, select, textarea, input:not([type="range"]):not([type="checkbox"]) {
+      -webkit-appearance: none;
+      appearance: none;
+    }
     body, html {
       height: 100%; width: 100%; font-family: var(--font-sans);
       background-color: var(--bg-base); color: var(--text-main);
-      display: flex; flex-direction: column; overflow: hidden; max-width: 100vw;
+      display: flex; flex-direction: column; overflow: hidden; max-width: 100%;
       -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
       touch-action: pan-x pan-y;
       -webkit-text-size-adjust: 100%;
     }
@@ -101,8 +111,14 @@
     }
     header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 14px; background-color: var(--bg-surface);
-      border-bottom: 1px solid var(--border-color); flex-shrink: 0; min-height: 52px; width: 100%;
+      padding: 8px 14px;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color); flex-shrink: 0; min-height: 50px; width: 100%;
+    }
+    @supports (-webkit-touch-callout: none) {
+      header {
+        padding-top: max(8px, env(safe-area-inset-top));
+      }
     }
     .header-left, .header-right { display: flex; align-items: center; gap: 8px; }
     .icon-btn {
@@ -118,6 +134,9 @@
     #active-thread-title:hover { background-color: var(--bg-surface-hover); }
     #sidebar {
       position: fixed; top: 0; left: 0; bottom: 0; width: 280px;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
       background-color: var(--bg-surface); border-right: 1px solid var(--border-color);
       transform: translateX(-100%); transition: transform 0.3s ease; z-index: 200; display: flex; flex-direction: column;
     }
@@ -161,7 +180,7 @@
     .thread-action-btn:hover { color: var(--text-main); background: var(--border-color); }
     .thread-action-btn.del-btn:hover { color: var(--error); }
     #params-panel {
-      position: absolute; top: 60px; right: 12px; left: 12px; width: calc(100vw - 24px); max-width: 440px; margin: 0 auto; max-height: calc(100vh - 80px);
+      position: absolute; top: max(60px, calc(env(safe-area-inset-top) + 52px)); right: 12px; left: 12px; width: auto; max-width: 440px; margin: 0 auto; max-height: calc(100% - 76px);
       background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;
       padding: 0 16px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); display: none; z-index: 250; flex-direction: column; gap: 12px; overflow-y: auto; overflow-x: hidden;
     }
@@ -202,9 +221,56 @@
     .slider-touch-overlay { position: absolute; inset: 0; z-index: 5; background: transparent; cursor: pointer; display: block; }
     .slider-touch-guard.active .slider-touch-overlay { display: none; }
     input[type="range"] {
-      width: 100%; accent-color: var(--accent); height: 28px;
+      width: 100%; height: 28px;
       touch-action: pan-y; cursor: pointer; pointer-events: auto !important;
       opacity: 0.48; transition: opacity 0.2s ease;
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Track (Thin line with rounded pill ends) */
+    input[type="range"]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 6px;
+      border: none;
+    }
+
+    /* Thumb (Green circular knob centered on the line) */
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      margin-top: -6px;
+      border: none;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Firefox Fallback Track & Thumb */
+    input[type="range"]::-moz-range-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 6px;
+      border: none;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
     }
     .slider-touch-guard.active input[type="range"] { opacity: 1; }
     input[type="range"].locked { pointer-events: none !important; opacity: 0.22 !important; }    
@@ -235,7 +301,12 @@
     .input-with-action input { flex-grow: 1; }
     input[type="number"], input[type="text"], input[type="password"], textarea, select {
       background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main);
-      padding: 10px; border-radius: 8px; font-family: var(--font-sans); font-size: 14px; width: 100%;
+      padding: 10px; border-radius: 8px; font-family: var(--font-sans); font-size: 16px; width: 100%;
+    }
+    @media (min-width: 768px) {
+      input[type="number"], input[type="text"], input[type="password"], textarea, select {
+        font-size: 14px;
+      }
     }
     textarea { resize: vertical; min-height: 70px; font-family: var(--font-mono); }
     select { cursor: pointer; }
@@ -269,7 +340,17 @@
       padding: 12px; font-family: var(--font-mono); font-size: 12px; color: var(--text-main);
       white-space: pre-wrap; word-break: break-all; max-height: 50vh; overflow-y: auto; user-select: text;
     }
-    #chat-viewport { flex-grow: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    #chat-viewport {
+      flex-grow: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      -webkit-tap-highlight-color: transparent;
+      padding: 16px 14px 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
     .message {
       max-width: 92%; min-width: 220px; padding: 10px 14px; border-radius: 12px;
       font-size: var(--chat-font-size); line-height: 1.5; word-wrap: break-word; display: flex; flex-direction: column; gap: 8px; position: relative;
@@ -375,8 +456,13 @@
     .context-bar-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s ease, background-color 0.3s ease; }
     .context-warning-text { color: var(--error); font-weight: 600; display: none; }
     #floating-sampler-btn {
+      background: none; border: none; color: var(--text-main); font-size: 18px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      min-width: 40px; min-height: 40px; border-radius: 8px; transition: background-color 0.2s;
+    }
+    #floating-sampler-btn {
       position: fixed;
-      top: 66px;
+      top: calc(52px + env(safe-area-inset-top, 0px) + 12px);
       right: 14px;
       z-index: 80;
       background: var(--bg-surface);
@@ -399,7 +485,7 @@
     }
     #sampler-popup-menu {
       position: fixed;
-      top: 108px;
+      top: calc(52px + env(safe-area-inset-top, 0px) + 54px);
       right: 14px;
       width: 260px;
       max-height: calc(100vh - 150px);
@@ -412,9 +498,6 @@
       overflow-y: auto;
       z-index: 85;
       padding: 6px 0;
-    }
-    #sampler-popup-menu.open {
-      display: flex;
     }
     .sampler-popup-header {
       padding: 6px 12px;
@@ -488,17 +571,32 @@
     .slash-item:hover, .slash-item.selected { background: var(--bg-surface-hover); }
     .slash-cmd-title { font-size: 13px; font-weight: 700; color: var(--accent); }
     .slash-cmd-desc { font-size: 11px; color: var(--text-muted); }
-    #input-dock { position: relative; background: var(--bg-surface); border-top: 10px 14px; padding: 10px 14px 10px 14px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+    #input-dock {
+      position: relative;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-color);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    
+    @supports (-webkit-touch-callout: none) {
+      #input-dock {
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+      }
+    }
     .input-wrapper { display: flex; gap: 8px; align-items: flex-end; }
-    #user-input { flex-grow: 1; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 18px; padding: 10px 14px; font-family: inherit; font-size: 15px; resize: none; min-height: 44px; max-height: 120px; overflow-y: auto; line-height: 1.4; }
+    #user-input { flex-grow: 1; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 18px; padding: 10px 14px; font-family: inherit; font-size: 16px; resize: none; min-height: 44px; max-height: 120px; overflow-y: auto; line-height: 1.4; -webkit-tap-highlight-color: transparent; -webkit-appearance: none; }
     #user-input:focus { outline: none; border-color: var(--accent); }
     .action-btn { width: 44px; height: 44px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; flex-shrink: 0; }
     #send-btn { background: var(--accent); color: white; }
     #send-btn:hover, #send-btn:active { background: var(--accent-hover); }
     #stop-btn { background: var(--error); color: white; display: none; }
-    .dock-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); padding: 0 4px; }
-    .dock-footer-left { display: flex; align-items: center; gap: 10px; }
-    #status-text { min-width: 95px; display: inline-block; white-space: nowrap; }
+    .dock-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); padding: 0 4px; gap: 8px; }
+    .dock-footer-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto; overflow: hidden; }
+    #status-text { min-width: 75px; max-width: 130px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
     .prefill-toggle-btn { background: none; border: none; color: var(--text-muted); font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 4px; min-height: 28px; }
     .prefill-toggle-btn:hover { color: var(--text-main); background: var(--bg-surface-hover); }
     .prefill-active-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; display: none; }
@@ -668,13 +766,16 @@
       <div style="background: rgba(210, 153, 34, 0.08); border: 1px solid rgba(210, 153, 34, 0.35); border-radius: 8px; padding: 10px 12px; font-size: 11.5px; color: var(--text-main); line-height: 1.4; margin: 4px 0 8px 0;">
         💡 <b style="color: var(--warning);">Engine Allocation Note:</b> Max Tokens and Context Window requested here cannot exceed the hardware allocation configured in Layla's Model Settings.
       </div>
+      <div style="background: rgba(56, 139, 253, 0.08); border: 1px solid rgba(56, 139, 253, 0.35); border-radius: 8px; padding: 10px 12px; font-size: 11.5px; color: var(--text-main); line-height: 1.4; margin: 0 0 8px 0;">
+        ⚡ <b style="color: #58a6ff;">Mobile KV Cache Notice:</b> Turn 1 evaluates your prompt from token 0 using Layla's native engine, which can take 30–60s+ on CPU. Once cached, follow-up messages evaluate only new tokens (~1–3s).
+      </div>
       <div class="param-group">
         <label class="param-header">Max Tokens</label>
         <input type="number" id="param-maxtokens" value="2048" min="1">
       </div>
       <div class="param-group">
         <label class="param-header">Context Window (Tokens)</label>
-        <input type="number" id="param-contextwindow" value="8192" min="512" step="512">
+        <input type="number" id="param-contextwindow" value="2048" min="512" step="512">
       </div>
       <button class="new-chat-btn" id="btn-save-custom-default" style="background: var(--bg-surface-hover); border: 1px solid var(--accent); color: var(--accent); margin-top: 8px;">Save Full Environment Preset</button>
       <button class="btn-overwrite" id="btn-overwrite-preset">Overwrite Full Environment Preset</button>
@@ -757,17 +858,17 @@
         </div>
       </div>
       <div class="param-group">
-        <div class="param-header">
-          <span>Chat Font Size</span>
-          <span id="font-size-val-display" style="font-family: var(--font-mono); color: var(--accent);">15px</span>
-        </div>
-        <div class="sync-row">
-          <div class="slider-touch-guard">
-            <div class="slider-touch-overlay"></div>
-            <input type="range" id="setting-font-size" min="12" max="22" step="1" value="15">
-          </div>
-        </div>
+    <div class="param-header">
+      <span>Chat Font Size</span>
+      <span id="font-size-val-display" style="font-family: var(--font-mono); color: var(--accent);">16px</span>
+    </div>
+    <div class="sync-row">
+      <div class="slider-touch-guard">
+        <div class="slider-touch-overlay"></div>
+        <input type="range" id="setting-font-size" min="12" max="22" step="1" value="16">
       </div>
+    </div>
+  </div>
       <div class="param-group">
         <div class="toggle-group">
           <label class="toggle-label" for="setting-show-stats">Show Generation Stats HUD</label>
@@ -791,14 +892,21 @@
         </div>
       </div>
       <div id="voice-settings-subpanel" style="display: none; flex-direction: column; gap: 10px;">
-        <div style="background: rgba(210, 153, 34, 0.1); border: 1px solid var(--warning); border-radius: 8px; padding: 8px 10px; font-size: 11px; color: var(--text-main); line-height: 1.4;">
-          ⚠️ <b>SDK Notice:</b> Due to current Layla SDK bridge limitations, AI speech plays immediately after text generation finishes.
+        <div style="background: rgba(35, 134, 54, 0.1); border: 1px solid var(--accent); border-radius: 8px; padding: 8px 10px; font-size: 11px; color: var(--text-main); line-height: 1.4;">
+          ⚡ <b>Real-Time Streaming Voice:</b> AI speech streams and speaks concurrently in real-time as text tokens generate.
         </div>
         <div class="param-group">
           <div class="toggle-group">
             <label class="toggle-label" for="setting-auto-tts">Auto-Read AI Responses (TTS)</label>
             <input type="checkbox" id="setting-auto-tts" class="toggle-checkbox" checked>
           </div>
+        </div>
+        <div class="param-group">
+          <label class="param-header">Speech Delivery Timing</label>
+          <select id="setting-tts-timing">
+            <option value="stream">⚡ Stream Clauses (Low Latency - Best for System voices)</option>
+            <option value="batch">📦 Read Full Response on Finish (Smooth - Best for Kokoro)</option>
+          </select>
         </div>
         <div class="param-group">
           <div class="toggle-group">
@@ -891,7 +999,7 @@
   <div id="context-bar-container">
     <div class="context-bar-header">
       <div class="context-bar-left">
-        <span id="context-label">Context: 0 / 8,192 tokens (0%)</span>
+        <span id="context-label">Context: 0 / 2,048 tokens (0%)</span>
         <span class="agent-token-badge" id="agent-token-badge">⚡ Agents Active</span>
       </div>
       <span class="context-warning-text" id="context-warning">Context Truncated (Older messages trimmed)</span>
@@ -1016,27 +1124,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         }
       });
     }
-    function streamChat(messages, onToken){
-      ensureListening();
-      return new Promise(function(resolve, reject){
-        var full = '';
-        queue.push({
-          message: { cmd: 'send_message', data: messages },
-          reject: reject,
-          accept: function(evt){
-            if (evt.event === 'on_message') {
-              var d = evt.data || {};
-              full = d.msg || (full + (d.delta || ''));
-              if (onToken) onToken(d.delta || '', full);
-              return false;
-            }
-            if (evt.event === 'on_message_end') { resolve(full); return true; }
-            return false;
-          }
-        });
-        pump();
-      });
-    }
     window.Bridge = {
       __makeitBridgeLib: true,
       files: {
@@ -1052,10 +1139,10 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
   })();
   </script>
   <script type="module">
-    import { LaylaSDK } from './assets/js/layla-sdk.min.js';
+    import { LaylaSDK } from './assets/js/layla-sdk.js';
     const layla = new LaylaSDK();
     window.layla = layla;
-    const APP_VERSION = '7.6.2';
+    const APP_VERSION = '7.6.3';
     const CONFIG_PATHS = {
       SETTINGS: 'config/settings.json',
       SYS_PROMPTS: 'config/system_prompts.json',
@@ -1141,6 +1228,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       settingVoiceEnabled: document.getElementById('setting-voice-features-enabled'),
       voiceSettingsSubpanel: document.getElementById('voice-settings-subpanel'),
       settingAutoTts: document.getElementById('setting-auto-tts'),
+      settingTtsTiming: document.getElementById('setting-tts-timing'),
       settingAutoListen: document.getElementById('setting-auto-listen'),
       settingTtsVoice: document.getElementById('setting-tts-voice'),
       settingSttMode: document.getElementById('setting-stt-mode'),
@@ -1179,6 +1267,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       contextBarFill: document.getElementById('context-bar-fill'), contextWarning: document.getElementById('context-warning')
     };
     let activeThread = null, isAutoScrolling = true, isUserInteracting = false, currentStreamTokens = 0, isProgrammaticUpdate = false;
+    let measuredPrefillTps = 85.0; // Dynamic calibration scaled for mobile NPUs & small models
     const activeGenerations = new Map();
     const promptQueues = new Map();
     const threadsCache = new Map();
@@ -1635,7 +1724,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         xtc_probability: parseFloat(ui.paramXtcProb.value), xtc_threshold: parseFloat(ui.paramXtcThresh.value),
         dry_multiplier: parseFloat(ui.paramDryMult.value), dry_base: parseFloat(ui.paramDryBase.value),
         dry_allowed_length: parseInt(ui.paramDryAllowed.value, 10) || 2, dry_penalty_range: parseInt(ui.paramDryRange.value, 10) || 1024,
-        max_tokens: parseInt(ui.paramMax.value, 10), context_window: parseInt(ui.paramContextWindow.value, 10) || 8192,
+        max_tokens: parseInt(ui.paramMax.value, 10), context_window: parseInt(ui.paramContextWindow.value, 10) || 2048,
         enable_thinking: ui.paramThinking.checked, stop_sequences: ui.paramStopSequences.value.trim(),
         agents: getAgentToggleStates()
       };
@@ -1895,7 +1984,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       saveSettings({ enter_sends: enterSends });
       updateEnterSendUI();
     });
-    function estimateTokens(text) { return text ? Math.ceil(text.length / 4) : 0; }
+    function estimateTokens(text) { return text ? Math.ceil(text.length / 3.4) : 0; }
     function updateContextBar() {
       if (!activeThread) return;
       const effectiveSys = buildEffectiveSystemPrompt(activeThread.system_prompt, activeThread.parameters.agents);
@@ -1917,7 +2006,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const streamTokens = activeGenerations.has(activeThread.id) ? currentStreamTokens : 0;
       const effectiveAiTokens = aiMsgTokens + streamTokens;
       const totalTokens = sysTokens + userMsgTokens + effectiveAiTokens + draftTokens;
-      const limit = activeThread.parameters?.context_window || 8192;
+      const limit = activeThread.parameters?.context_window || 2048;
       const pct = Math.min(100, Math.round((totalTokens / limit) * 100));
       const activeAgents = activeThread.parameters?.agents || {};
       const anyAgentActive = Object.values(activeAgents).some(Boolean);
@@ -1954,7 +2043,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         if (agent.id === 'get_datetime') {
           const note = document.createElement('div');
           note.style.cssText = 'font-size: 10px; color: var(--text-muted); margin: -4px 0 6px 0; line-height: 1.3;';
-          note.innerHTML = '⚡ <em>Single-pass system context injection (zero latency; no 2-pass tool calling).</em>';
+          note.innerHTML = '⚡ <em>Single-pass system context injection (zero latency; no 2-pass tool calling. Works inconsistently, I am working on it!).</em>';
           ui.agentsContainer.appendChild(note);
         }
         group.querySelector('.agent-toggle-cb').addEventListener('change', (e) => {
@@ -1980,10 +2069,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         if (agentsMap[agent.id]) {
           let addon = agent.system_prompt_addon || '';
           if (agent.id === 'get_datetime' || agent.id.toLowerCase().includes('time')) {
-            // Keep system prompt static per session date to avoid invalidating the root KV cache block every second
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            addon = `System clock access enabled. Current calendar date: ${dateStr}. Reference year is 2026.`;
+            // Static system prompt format to prevent breaking KV prefix cache
+            addon = `System clock access enabled. Reference year is 2026.`;
           }
           if (agent.id === 'web_search') {
             addon = `You have access to live web search integration. When search results are appended to a query, utilize them directly to provide up-to-date facts.`;
@@ -2117,7 +2204,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       ui.paramDryRange.value = params.dry_penalty_range ?? 1024;
       ui.numDryRange.value = ui.paramDryRange.value;
       ui.paramMax.value = params.max_tokens ?? 2048;
-      ui.paramContextWindow.value = params.context_window ?? 8192;
+      ui.paramContextWindow.value = params.context_window ?? 2048;
       isProgrammaticUpdate = false;
     }
     async function applyPresetToPanel(name) {
@@ -2179,6 +2266,12 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       await window.layla.db.executeSql(`
         CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(thread_id, timestamp);
       `);
+
+      // Safe schema migrations for upgrading users
+      try { await window.layla.db.executeSql('ALTER TABLE messages ADD COLUMN is_streaming INTEGER DEFAULT 0;'); } catch(e) {}
+      try { await window.layla.db.executeSql('ALTER TABLE threads ADD COLUMN is_forked INTEGER DEFAULT 0;'); } catch(e) {}
+      try { await window.layla.db.executeSql('ALTER TABLE threads ADD COLUMN is_pinned INTEGER DEFAULT 0;'); } catch(e) {}
+      try { await window.layla.db.executeSql('ALTER TABLE threads ADD COLUMN sys_prompt_preset_name TEXT;'); } catch(e) {}
       
       // Recovery guard: mark all in-flight streaming rows as finalized messages so they survive reboots
       await window.layla.db.executeSql('UPDATE messages SET is_streaming = 0 WHERE is_streaming = 1;');
@@ -2442,7 +2535,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           dry_allowed_length: parseInt(ui.paramDryAllowed.value, 10) || 2,
           dry_penalty_range: parseInt(ui.paramDryRange.value, 10) || 1024,
           max_tokens: parseInt(ui.paramMax.value, 10),
-          context_window: parseInt(ui.paramContextWindow.value, 10) || 8192,
+          context_window: parseInt(ui.paramContextWindow.value, 10) || 2048,
           enable_thinking: ui.paramThinking.checked,
           stop_sequences: ui.paramStopSequences.value.trim(),
           agents: getAgentToggleStates()
@@ -2534,14 +2627,6 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         }
         
         if (window.updateQueueUI) window.updateQueueUI();
-        
-        if (activeGenerations.size === 0 && promptQueues.has(id)) {
-          const nextText = promptQueues.get(id);
-          promptQueues.delete(id);
-          setTimeout(() => { sendMessage(nextText); }, 100);
-        }
-        
-        window.updateQueueUI();
         
         if (activeGenerations.size === 0 && promptQueues.has(id)) {
           const nextText = promptQueues.get(id);
@@ -2842,12 +2927,13 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       };
     }
     function getContextCutoffIndex() {
-      if (!activeThread || !activeThread.messages || activeThread.messages.length === 0) return 0;
+      if (!activeThread || !activeThread.messages || activeThread.messages.length <= 1) return 0;
       const effectiveSys = buildEffectiveSystemPrompt(activeThread.system_prompt, activeThread.parameters?.agents);
       const prefillVal = ui.prefillInput?.value || "";
-      const limit = activeThread.parameters?.context_window || 4096;
+      const limit = activeThread.parameters?.context_window || 2048;
       const maxGen = activeThread.parameters?.max_tokens || 1024;
-      const hardCeiling = Math.max(512, limit - maxGen);
+      // Reserve generation headroom; ensure ceiling is at least 512 tokens
+      const hardCeiling = Math.max(512, limit - Math.min(maxGen, Math.floor(limit * 0.5)));
       
       const allMsgs = activeThread.messages;
       let totalCost = estimateTokens(effectiveSys) + estimateTokens(prefillVal);
@@ -2857,15 +2943,16 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
       if (totalCost <= hardCeiling) return 0;
 
-      const effectiveBudget = Math.max(256, hardCeiling - 512);
-      let tokenBudget = effectiveBudget - estimateTokens(effectiveSys) - estimateTokens(prefillVal);
+      let tokenBudget = hardCeiling - estimateTokens(effectiveSys) - estimateTokens(prefillVal);
       let cutoff = 0;
 
+      // Scan backwards from newest message: keep as many recent messages as fit the budget
       for (let i = allMsgs.length - 1; i >= 0; i--) {
         const m = allMsgs[i];
         const cost = estimateTokens(m.searchContext || m.content || "") + (m.thinking ? estimateTokens(m.thinking) : 0);
         if (tokenBudget - cost < 0) {
-          cutoff = i + 1;
+          // Never prune the latest active message turn
+          cutoff = Math.min(i + 1, allMsgs.length - 1);
           break;
         }
         tokenBudget -= cost;
@@ -3019,39 +3106,45 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     function scrollToBottom(force = false) {
       if (isAutoScrolling || force) requestAnimationFrame(() => { ui.chatViewport.scrollTop = ui.chatViewport.scrollHeight; });
     }
-    function getFormattedPayload() {
-      if (!activeThread) return {};
-      const prefillVal = ui.prefillInput.value;
-      const effectiveSys = buildEffectiveSystemPrompt(activeThread.system_prompt, activeThread.parameters.agents);
-      const limit = activeThread.parameters?.context_window || 4096;
-      const maxGen = activeThread.parameters?.max_tokens || 1024;
-      const hardCeiling = Math.max(512, limit - maxGen);
-      
-      const allMsgs = activeThread.messages || [];
-      let totalEstimatedCost = estimateTokens(effectiveSys) + estimateTokens(prefillVal || "");
-      allMsgs.forEach(m => {
-        totalEstimatedCost += estimateTokens(m.searchContext || m.content || "") + (m.thinking ? estimateTokens(m.thinking) : 0);
-      });
+function getFormattedPayload() {
+  if (!activeThread) return {};
+  const prefillVal = ui.prefillInput.value;
+  const effectiveSys = buildEffectiveSystemPrompt(activeThread.system_prompt, activeThread.parameters.agents);
+  const limit = activeThread.parameters?.context_window || 4096;
+  const maxGen = activeThread.parameters?.max_tokens || 1024;
+  const hardCeiling = Math.max(512, limit - maxGen);
+  const allMsgs = activeThread.messages || [];
 
-      const effectiveBudget = (totalEstimatedCost > hardCeiling) 
-        ? Math.max(256, hardCeiling - 512) 
-        : hardCeiling;
+  let tokenBudget = hardCeiling - estimateTokens(effectiveSys) - estimateTokens(prefillVal || "");
+  let startIndex = 0;
+  let runningCost = 0;
 
-      let tokenBudget = effectiveBudget - estimateTokens(effectiveSys) - estimateTokens(prefillVal || "");
-      const trimmedHistory = [];
+  for (let i = 0; i < allMsgs.length; i++) {
+    const m = allMsgs[i];
+    runningCost += estimateTokens(m.searchContext || m.content || "");
+  }
 
-      for (let i = allMsgs.length - 1; i >= 0; i--) {
-        const m = allMsgs[i];
-        const cost = estimateTokens(m.searchContext || m.content || "") + (m.thinking ? estimateTokens(m.thinking) : 0);
-        if (tokenBudget - cost < 0 && trimmedHistory.length > 0) break;
-        tokenBudget -= cost;
-        trimmedHistory.unshift({ role: m.role, content: m.searchContext || m.content });
-      }
+  while (runningCost > tokenBudget && startIndex < allMsgs.length - 1) {
+    runningCost -= estimateTokens(allMsgs[startIndex].searchContext || allMsgs[startIndex].content || "");
+    startIndex++;
+  }
 
-      const messages = [{ role: 'system', content: effectiveSys }, ...trimmedHistory];
-      if (prefillVal) messages.push({ role: 'assistant', content: prefillVal });
-      return { messages, parameters: activeThread.parameters };
+  const messages = [];
+  if (effectiveSys && effectiveSys.trim()) {
+    messages.push({ role: 'system', content: effectiveSys.trim() });
+  }
+  for (let i = startIndex; i < allMsgs.length; i++) {
+    const m = allMsgs[i];
+    const text = (m.searchContext || m.content || "").trim();
+    if (text) {
+      messages.push({ role: m.role, content: text });
     }
+  }
+  if (prefillVal && prefillVal.trim()) {
+    messages.push({ role: 'assistant', content: prefillVal.trim() });
+  }
+  return { messages, parameters: activeThread.parameters };
+}
     async function regenerateLastResponse() {
       if (!activeThread || activeGenerations.has(activeThread.id)) return;
       if (activeThread.messages.length && activeThread.messages[activeThread.messages.length - 1].role === 'assistant') {
@@ -3207,8 +3300,10 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const targetThreadId = activeThread.id;
       const targetThread = await dbGet(targetThreadId);
       if (!targetThread) return;
+      const isFirstTurn = !targetThread.messages || targetThread.messages.length <= 1;
       if (activeThread?.id === targetThreadId) {
-        ui.typingIndicator.style.display = 'flex'; ui.statusText.textContent = "Loading model...";
+        ui.typingIndicator.style.display = 'flex';
+        ui.statusText.textContent = isFirstTurn ? "Ingesting context (Host)..." : "Checking cache...";
       }
       const abortCtrl = new AbortController();
       const prefillVal = ui.prefillInput.value;
@@ -3223,33 +3318,54 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       const effectiveSys = buildEffectiveSystemPrompt(targetThread.system_prompt, targetThread.parameters.agents);
       const limit = targetThread.parameters?.context_window || 4096;
       const maxGen = targetThread.parameters?.max_tokens || 1024;
-      const hardCeiling = Math.max(512, limit - maxGen);
+      // Reserve at least maxGen + 128 safety buffer tokens to prevent llama.cpp context overflow
+      const hardCeiling = Math.max(256, limit - maxGen - 128);
       
       const allMsgs = targetThread.messages || [];
-      let totalEstimatedCost = estimateTokens(effectiveSys) + estimateTokens(prefillVal || "");
-      allMsgs.forEach(m => {
-        totalEstimatedCost += estimateTokens(m.searchContext || m.content || "") + (m.thinking ? estimateTokens(m.thinking) : 0);
-      });
-
-      // When over limit, prune with a 512-token headroom buffer so prefix stays untouched for the next 4-8 turns
-      const effectiveBudget = (totalEstimatedCost > hardCeiling) 
-        ? Math.max(256, hardCeiling - 512) 
-        : hardCeiling;
-
-      let tokenBudget = effectiveBudget - estimateTokens(effectiveSys) - estimateTokens(prefillVal || "");
-      const trimmedHistory = [];
-
-      for (let i = allMsgs.length - 1; i >= 0; i--) {
-        const m = allMsgs[i];
-        const cost = estimateTokens(m.searchContext || m.content || "") + (m.thinking ? estimateTokens(m.thinking) : 0);
-        if (tokenBudget - cost < 0 && trimmedHistory.length > 0) break;
-        tokenBudget -= cost;
-        trimmedHistory.unshift({ role: m.role, content: m.searchContext || m.content });
+      const payloadMessages = [];
+      if (effectiveSys && effectiveSys.trim()) {
+        payloadMessages.push({ role: 'system', content: effectiveSys.trim() });
       }
 
-      const payloadMessages = [{ role: 'system', content: effectiveSys }, ...trimmedHistory];
+      // KV Cache Preservation: Maintain strict append-only history from turn 0.
+      // Only prune oldest turns when total tokens exceed hardCeiling.
+      let tokenBudget = hardCeiling - estimateTokens(effectiveSys) - estimateTokens(prefillVal || "");
+      let startIndex = 0;
+      let runningCost = 0;
 
-      if (prefillVal) payloadMessages.push({ role: 'assistant', content: prefillVal });
+      for (let i = 0; i < allMsgs.length; i++) {
+        const m = allMsgs[i];
+        runningCost += estimateTokens(m.searchContext || m.content || "");
+      }
+
+      while (runningCost > tokenBudget && startIndex < allMsgs.length - 1) {
+        runningCost -= estimateTokens(allMsgs[startIndex].searchContext || allMsgs[startIndex].content || "");
+        startIndex++;
+      }
+
+      for (let i = startIndex; i < allMsgs.length; i++) {
+        const m = allMsgs[i];
+        const text = (m.searchContext || m.content || "").trim();
+        if (text) {
+          payloadMessages.push({ role: m.role, content: text });
+        }
+      }
+      if (prefillVal && prefillVal.trim()) {
+        payloadMessages.push({ role: 'assistant', content: prefillVal.trim() });
+      }
+
+      let totalPromptTokens = 0;
+      for (const pm of payloadMessages) {
+        totalPromptTokens += estimateTokens(pm.content || "");
+      }
+      totalPromptTokens = Math.max(1, totalPromptTokens);
+
+      const isCachedTurn = !isFirstTurn && payloadMessages.length > 2;
+      const initialStatus = isCachedTurn ? "Reading context" : "Ingesting prompt";
+
+      if (activeThread?.id === targetThreadId) {
+        ui.statusText.textContent = initialStatus + "...";
+      }
       const streamMessageId = `${targetThreadId}_ai_${Date.now()}`;
       let genTimestamp = Date.now();
       const aiBubble = document.createElement('div'); aiBubble.className = 'message msg-ai';
@@ -3283,16 +3399,27 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       }
       stopAllAudio();
       let rawGeneratedText = "", aiResponseContent = prefillVal || "", tokenCount = estimateTokens(aiResponseContent);
+      let ttsSentenceBuffer = "";
+      let lastTtsProcessedLength = 0;
+      let hasQueuedTts = false;
+      const isAutoTtsActive = loadedSettings.voice_enabled && loadedSettings.auto_tts;
+      let ttsSessionId = 0;
+      if (isAutoTtsActive) {
+        currentTtsSession++;
+        ttsSessionId = currentTtsSession;
+      }
       let streamChunkCount = 0, lastSavedTokenCount = 0, lastSavedTime = performance.now(), isDiskSaving = false;
       const startTime = performance.now();
       let firstTokenTime = null, computedStats = null;
       if (activeThread?.id === targetThreadId) currentStreamTokens = tokenCount;
-      let loadingDots = 1;
+
+      let dotCount = 1;
       let loadingInterval = setInterval(() => {
         if (activeThread?.id === targetThreadId && !firstTokenTime && activeGenerations.get(targetThreadId)?.id === genId) {
-          loadingDots = (loadingDots % 3) + 1; ui.statusText.textContent = `Loading model${'.'.repeat(loadingDots)}`;
+          dotCount = (dotCount % 3) + 1;
+          ui.statusText.textContent = `${initialStatus}${'.'.repeat(dotCount)}`;
         }
-      }, 500);
+      }, 450);
 
       const curGenRecord = activeGenerations.get(targetThreadId);
       if (curGenRecord && curGenRecord.id === genId) curGenRecord.loadingInterval = loadingInterval;
@@ -3317,10 +3444,7 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           dry_allowed_length: targetThread.parameters.dry_allowed_length,
           dry_penalty_range: targetThread.parameters.dry_penalty_range,
           max_tokens: maxTokensVal,
-          max_new_tokens: maxTokensVal,
-          n_predict: maxTokensVal,
-          enable_thinking: targetThread.parameters.enable_thinking,
-          stop: stopArray,
+          stop: stopArray.length > 0 ? stopArray : undefined,
           stream: true
         });
         const maxTokensLimit = targetThread.parameters?.max_tokens ?? DEFAULT_PARAMS.max_tokens;
@@ -3341,6 +3465,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           if (delta) {
             if (!firstTokenTime) {
               firstTokenTime = performance.now();
+              const ingestionDuration = Math.max(0.2, (firstTokenTime - startTime) / 1000);
+              measuredPrefillTps = Math.max(4.0, Math.min(150.0, totalPromptTokens / ingestionDuration));
               genTimestamp = Date.now();
               aiBubble.dataset.timestamp = genTimestamp;
               const curRecord = activeGenerations.get(targetThreadId);
@@ -3417,6 +3543,30 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
               displayReply = displayReply.replace(/<\/?(?:think\d*|thought\d*|endthink\d*)>/gi, '').replace(/<\|end_of_thought\|>|\[\/?END_THOUGHT\]/gi, '').trim();
             } else { displayReply = aiResponseContent; }
             displayReply = cleanEosTokens(displayReply);
+
+            // Real-time Concurrent TTS Stream Dispatcher
+            const isStreamingTts = (loadedSettings.tts_timing || 'stream') === 'stream';
+            if (isAutoTtsActive && isStreamingTts && !abortCtrl.signal.aborted && ttsSessionId === currentTtsSession) {
+              if (displayReply.length > lastTtsProcessedLength) {
+                const newSlice = displayReply.slice(lastTtsProcessedLength);
+                lastTtsProcessedLength = displayReply.length;
+                ttsSentenceBuffer += newSlice;
+
+                const clauseRegex = /^([\s\S]{24,}?[,!?:;\n—]+|[\s\S]*?[.!?\n]+)(?:\s+|$)/;
+
+                let sMatch;
+                while ((sMatch = ttsSentenceBuffer.match(clauseRegex)) !== null) {
+                  const chunkText = sMatch[1].trim();
+                  ttsSentenceBuffer = ttsSentenceBuffer.slice(sMatch[0].length);
+                  const cleanChunk = cleanForSpeech(chunkText);
+                  if (cleanChunk.length > 0) {
+                    hasQueuedTts = true;
+                    enqueueTtsChunk(cleanChunk, ttsSessionId, false);
+                  }
+                }
+              }
+            }
+
             if (activeGenerations.get(targetThreadId)?.id === genId) {
               const existingDetails = aiBubble.querySelector('details.think-block');
               const finalIsOpen = existingDetails ? existingDetails.open : isOpen;
@@ -3525,8 +3675,18 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
                 renderSidebar();
                 updateContextBar();
 
-                if (loadedSettings.voice_enabled && loadedSettings.auto_tts && displayReply && !abortCtrl.signal.aborted) {
-                  speakFullResponse(displayReply, true);
+                // Trigger Speech at Completion (Batch or Stream Remainder)
+                if (isAutoTtsActive && !abortCtrl.signal.aborted && ttsSessionId === currentTtsSession) {
+                  const isBatchMode = (loadedSettings.tts_timing || 'stream') === 'batch';
+                  if (isBatchMode) {
+                    speakFullResponse(displayReply, true);
+                  } else {
+                    const remainingText = ttsSentenceBuffer.trim() || (!hasQueuedTts ? displayReply : '');
+                    const cleanRemaining = cleanForSpeech(remainingText);
+                    if (cleanRemaining.length > 0) {
+                      enqueueTtsChunk(cleanRemaining, ttsSessionId, true);
+                    }
+                  }
                 }
               } else {
                 await renderSidebar();
@@ -3963,6 +4123,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     let currentTtsSession = 0;
     let activeHtmlAudio = null;
     let ttsEndResolver = null;
+    let ttsQueue = Promise.resolve();
+    let ttsPendingCount = 0;
 
     // Unified completion listener for all Layla React Native bridge events
     function handleBridgeMessage(eventData) {
@@ -3991,6 +4153,101 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     window.addEventListener('message', (e) => onBridgeEvent(e, 'window'));
     document.addEventListener('message', (e) => onBridgeEvent(e, 'document'));
 
+    function formatVoiceLabel(v) {
+      let rawId = (v.id || '').trim();
+      let rawName = (v.name || '').trim();
+
+      // 1. Detect and parse Layla's serialized JSON Kokoro models
+      if (rawId.startsWith('{') || rawName.startsWith('{')) {
+        try {
+          const jsonStr = rawId.startsWith('{') ? rawId : rawName;
+          const meta = JSON.parse(jsonStr);
+          const name = meta.NAME || meta.name || rawName || 'Neural Voice';
+          const tags = Array.isArray(meta.TAGS) ? meta.TAGS.map(t => String(t).toUpperCase()) : [];
+          
+          let gender = '';
+          if (tags.includes('FEMALE')) gender = ' • ♀ Female';
+          else if (tags.includes('MALE')) gender = ' • ♂ Male';
+
+          let nationality = tags.find(t => t !== 'FEMALE' && t !== 'MALE') || '';
+          if (nationality) nationality = ` (${nationality.charAt(0) + nationality.slice(1).toLowerCase()})`;
+
+          return `${name}${gender}${nationality}`;
+        } catch (e) {
+          // If JSON parse fails, cleanly strip raw filepaths
+          const clean = rawName.replace(/\{[\s\S]*?\}\s*-\s*/, '');
+          if (clean) return clean;
+        }
+      }
+
+      // 2. Simple Neural Models (Bria, Luna, Crepes, af_bella, etc.)
+      if (v.type === 'model' || !rawId.includes('-')) {
+        let genderTag = '';
+        const lower = (rawName || rawId).toLowerCase();
+        if (/^(af_|bf_|zf_|jf_)/.test(lower) || lower.includes('female')) genderTag = ' • ♀ Female';
+        else if (/^(am_|bm_|zm_|jm_)/.test(lower) || lower.includes('male')) genderTag = ' • ♂ Male';
+        return `${v.name || v.id}${genderTag}`;
+      }
+
+      // 3. System / Native Voices (Android Google TTS / iOS AVSpeech)
+      const raw = rawId.toLowerCase();
+      let lang = 'Native';
+      if (raw.startsWith('en-us')) lang = 'English (US)';
+      else if (raw.startsWith('en-gb')) lang = 'English (UK)';
+      else if (raw.startsWith('en-au')) lang = 'English (AU)';
+      else if (raw.startsWith('en-in')) lang = 'English (IN)';
+      else if (raw.startsWith('es-')) lang = 'Spanish';
+      else if (raw.startsWith('fr-')) lang = 'French';
+      else if (raw.startsWith('de-')) lang = 'German';
+      else if (raw.startsWith('ja-')) lang = 'Japanese';
+      else if (raw.startsWith('it-')) lang = 'Italian';
+      else if (raw.startsWith('ar-')) lang = 'Arabic';
+      else if (raw.startsWith('pt-')) lang = 'Portuguese';
+      else if (raw.startsWith('ru-')) lang = 'Russian';
+      else if (raw.startsWith('zh-')) lang = 'Chinese';
+      else {
+        const parts = raw.split('-');
+        lang = parts[0].toUpperCase() + (parts[1] && parts[1].length <= 3 ? ` (${parts[1].toUpperCase()})` : '');
+      }
+
+      let gender = '';
+      if (raw.includes('female') || raw.includes('#female')) {
+        gender = 'Female';
+      } else if (raw.includes('male') || raw.includes('#male')) {
+        gender = 'Male';
+      } else {
+        const gbMap = { gba: 'Female', gbb: 'Male', gbc: 'Female', gbd: 'Male', gbg: 'Female' };
+        for (const [key, g] of Object.entries(gbMap)) {
+          if (raw.includes(key)) { gender = g; break; }
+        }
+        if (!gender) {
+          const usMatch = raw.match(/-x-([a-z0-9_#]+)/);
+          if (usMatch) {
+            const lastChar = usMatch[1].replace(/-(local|network)/, '').slice(-1).toLowerCase();
+            if (['a', 'c', 'e', 'g', 'i'].includes(lastChar)) gender = 'Female';
+            else if (['b', 'd', 'f', 'h', 'j'].includes(lastChar)) gender = 'Male';
+          }
+        }
+      }
+
+      const isOffline = raw.includes('local');
+      const isNetwork = raw.includes('network');
+      let typeTag = isOffline ? 'Offline' : (isNetwork ? 'Online' : '');
+
+      let variantName = '';
+      const varMatch = raw.match(/-x-([a-z0-9_#]+)/);
+      if (varMatch) {
+        const token = varMatch[1].replace(/-(local|network)/, '');
+        const letter = token.slice(-1).toUpperCase();
+        variantName = `Voice ${letter}`;
+      } else {
+        variantName = rawName || 'Default';
+      }
+
+      const metaParts = [gender, typeTag].filter(Boolean).join(', ');
+      return `${lang} - ${variantName}${metaParts ? ` (${metaParts})` : ''}`;
+    }
+
     async function loadVoices() {
       try {
         if (layla && layla.tts && typeof layla.tts.getVoices === 'function') {
@@ -3998,13 +4255,47 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           if (Array.isArray(res) && res.length > 0) {
             availableVoices = res.map(v => typeof v === 'string' ? { id: v, name: v, type: 'model' } : v);
             if (ui.settingTtsVoice) {
-              ui.settingTtsVoice.innerHTML = '<option value="auto">Auto (Best Natural Voice)</option>';
+              ui.settingTtsVoice.innerHTML = '<option value="auto">✨ Auto (Best Neural / Kokoro Voice)</option>';
+              
+              const cloudGroup = document.createElement('optgroup');
+              cloudGroup.label = '☁️ Layla Cloud Voices (Fast & Natural)';
+
+              const neuralGroup = document.createElement('optgroup');
+              neuralGroup.label = '🧠 On-Device Neural Voices (Kokoro)';
+              
+              const systemGroup = document.createElement('optgroup');
+              systemGroup.label = '📱 System / Device Voices (Offline)';
+
+              const autoNativeOpt = document.createElement('option');
+              autoNativeOpt.value = 'auto_native';
+              autoNativeOpt.textContent = '✨ Auto (American Female - Offline)';
+              systemGroup.appendChild(autoNativeOpt);
+
+              const KNOWN_CLOUD_NAMES = ['bria', 'luna', 'crepes', 'ashley', 'sarah', 'dennis', 'theodore', 'pixie', 'olivia'];
+
               availableVoices.forEach(v => {
                 const opt = document.createElement('option');
                 opt.value = v.id;
-                opt.textContent = `${v.name || v.id} (${v.type || 'voice'})`;
-                ui.settingTtsVoice.appendChild(opt);
+                opt.textContent = formatVoiceLabel(v);
+                
+                const rawId = (v.id || '').toLowerCase();
+                const rawName = (v.name || '').toLowerCase();
+                const isJsonModel = rawId.startsWith('{') || rawName.startsWith('{');
+                const isKnownCloud = KNOWN_CLOUD_NAMES.includes(rawName) || KNOWN_CLOUD_NAMES.includes(rawId);
+
+                if (isKnownCloud || v.type === 'cloud') {
+                  cloudGroup.appendChild(opt);
+                } else if (v.type === 'model' || isJsonModel) {
+                  neuralGroup.appendChild(opt);
+                } else {
+                  systemGroup.appendChild(opt);
+                }
               });
+
+              if (cloudGroup.children.length > 0) ui.settingTtsVoice.appendChild(cloudGroup);
+              if (neuralGroup.children.length > 0) ui.settingTtsVoice.appendChild(neuralGroup);
+              if (systemGroup.children.length > 0) ui.settingTtsVoice.appendChild(systemGroup);
+
               ui.settingTtsVoice.value = loadedSettings.tts_voice_id || 'auto';
             }
           }
@@ -4016,13 +4307,53 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
     function getSelectedVoiceId() {
       const pref = loadedSettings.tts_voice_id || 'auto';
-      if (pref !== 'auto' && availableVoices.some(v => v.id === pref)) return pref;
-      if (availableVoices && availableVoices.length > 0) {
-        const nonNative = availableVoices.find(v => v.type && v.type !== 'native');
-        if (nonNative) return nonNative.id;
-        return availableVoices[0].id;
+      if (pref !== 'auto' && pref !== 'auto_native' && availableVoices.some(v => v.id === pref)) {
+        return pref;
       }
-      return null;
+
+      if (!availableVoices || availableVoices.length === 0) return null;
+
+      // Logic for: Auto (American Female - Offline)
+      if (pref === 'auto_native') {
+        // Priority 1: US English + Offline + Explicit Female
+        const usOfflineFemale = availableVoices.find(v => {
+          const id = (v.id || '').toLowerCase();
+          const name = (v.name || '').toLowerCase();
+          const isUs = id.includes('en-us') || name.includes('en-us') || id.includes('en_us');
+          const isOffline = !id.includes('network') && !name.includes('network');
+          const isFemale = id.includes('female') || name.includes('female') || 
+                           /-x-([a-z0-9_#]+)/.test(id) && ['a', 'c', 'e', 'g'].includes(id.match(/-x-([a-z0-9_#]+)/)[1].replace(/-(local|network)/, '').slice(-1));
+          return isUs && isOffline && isFemale;
+        });
+        if (usOfflineFemale) return usOfflineFemale.id;
+
+        // Priority 2: US English + Offline (any voice)
+        const usOfflineAny = availableVoices.find(v => {
+          const id = (v.id || '').toLowerCase();
+          const name = (v.name || '').toLowerCase();
+          const isUs = id.includes('en-us') || name.includes('en-us') || id.includes('en_us');
+          const isOffline = !id.includes('network') && !name.includes('network');
+          return isUs && isOffline;
+        });
+        if (usOfflineAny) return usOfflineAny.id;
+
+        // Priority 3: Fallback to any offline English voice
+        const anyOfflineEn = availableVoices.find(v => {
+          const id = (v.id || '').toLowerCase();
+          const name = (v.name || '').toLowerCase();
+          return (id.startsWith('en') || name.startsWith('en')) && !id.includes('network');
+        });
+        if (anyOfflineEn) return anyOfflineEn.id;
+
+        // Fallback: any system/native voice
+        const nativeVoice = availableVoices.find(v => v.type === 'native' || v.id.includes('-'));
+        return nativeVoice ? nativeVoice.id : availableVoices[0].id;
+      }
+
+      // Logic for standard: Auto (Best Neural / Kokoro / Cloud Voice)
+      const nonNative = availableVoices.find(v => v.type && v.type !== 'native');
+      if (nonNative) return nonNative.id;
+      return availableVoices[0].id;
     }
 
     function cleanForSpeech(raw) {
@@ -4043,6 +4374,8 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
     function stopAllAudio() {
       currentTtsSession++;
+      ttsPendingCount = 0;
+      ttsQueue = Promise.resolve();
       if (ttsEndResolver) {
         ttsEndResolver();
         ttsEndResolver = null;
@@ -4074,33 +4407,72 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       }
     }
 
-    async function speakFullResponse(rawText, isAutoRead = false) {
-      if (!loadedSettings.voice_enabled || !rawText) return;
-      const cleaned = cleanForSpeech(rawText);
-      if (!cleaned) return;
+    let activePlayPromise = Promise.resolve();
 
-      if (isListening) stopSpeechRecognition(false);
-      stopAllAudio();
-      isTtsPlaying = true;
-      updateVoiceStopButton();
+    function enqueueTtsChunk(textChunk, sessionId, isAutoRead = false) {
+      if (!loadedSettings.voice_enabled || !textChunk) return;
+      ttsPendingCount++;
 
-      if (!activeGenerations.has(activeThread?.id)) {
-        ui.statusText.textContent = "Speaking...";
-      }
+      // Stage 1: Prepare audio dispatch worker immediately
+      const prepareAudioWorker = async () => {
+        if (sessionId !== currentTtsSession || window.isManualAbort || !loadedSettings.voice_enabled) return null;
+        return textChunk;
+      };
 
-      await new Promise(r => setTimeout(r, 60));
-      currentTtsSession++;
-      const thisSession = currentTtsSession;
+      const pendingChunkPromise = prepareAudioWorker();
+
+      // Stage 2: Sequential playback execution
+      activePlayPromise = activePlayPromise.then(async () => {
+        const chunk = await pendingChunkPromise;
+        if (!chunk || sessionId !== currentTtsSession || window.isManualAbort || !loadedSettings.voice_enabled) {
+          ttsPendingCount = Math.max(0, ttsPendingCount - 1);
+          return;
+        }
+
+        isTtsPlaying = true;
+        updateVoiceStopButton();
+        if (!activeGenerations.has(activeThread?.id)) {
+          ui.statusText.textContent = "Speaking...";
+        }
+
+        await playVoiceAudioChunk(chunk, sessionId);
+        ttsPendingCount = Math.max(0, ttsPendingCount - 1);
+
+        if (ttsPendingCount === 0 && sessionId === currentTtsSession) {
+          isTtsPlaying = false;
+          updateVoiceStopButton();
+          if (!activeGenerations.has(activeThread?.id) && ui.statusText.textContent === "Speaking...") {
+            ui.statusText.textContent = "Ready";
+          }
+
+          let didProcessQueue = false;
+          if (typeof window.processPromptQueue === 'function') {
+            didProcessQueue = window.processPromptQueue();
+          }
+          if (typeof window.updateQueueUI === 'function') {
+            window.updateQueueUI();
+          }
+
+          if (!didProcessQueue && isAutoRead && loadedSettings.voice_enabled && loadedSettings.auto_listen !== false && loadedSettings.stt_mode === 'pause' && !activeGenerations.has(activeThread?.id) && !isListening && !isHoldingMic) {
+            if (!isListening && !isTtsPlaying) startSpeechRecognition();
+          }
+        }
+      }).catch(err => {
+        console.error("[TTS Pipeline Error]", err);
+        ttsPendingCount = Math.max(0, ttsPendingCount - 1);
+      });
+    }
+
+    async function playVoiceAudioChunk(cleaned, sessionId) {
+      if (sessionId !== currentTtsSession || !cleaned) return;
 
       try {
         const voiceId = getSelectedVoiceId();
 
-        // 1. Arm bridge resolver FIRST so no event can be missed during synthesis
         const bridgeEndPromise = new Promise((resolve) => {
           ttsEndResolver = resolve;
         });
 
-        // 2. Dispatch synthesis
         let res = null;
         if (layla && layla.tts) {
           if (typeof layla.tts.generateVoice === 'function') {
@@ -4112,210 +4484,141 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
           }
         }
 
-        // 3. Audio End Handlers (HTML5 Audio, Web Speech, or Native Bridge Event)
-        const audioSrc = (typeof res === 'string' && (res.startsWith('http') || res.startsWith('data:audio') || res.startsWith('blob:')))
-          ? res
-          : (res?.audio || res?.url || res?.uri);
-
-        if (audioSrc) {
+        // Native Layla audio playback: host handles playback directly and emits on_finished_speaking
+        if (layla?.tts) {
+          await Promise.race([
+            bridgeEndPromise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('TTS timeout')), 30000))
+          ]).catch(e => console.warn('[TTS Playback]', e.message));
+        } else if ('speechSynthesis' in window) {
           await new Promise((resolve) => {
-            const audio = new Audio(audioSrc);
-            activeHtmlAudio = audio;
-            audio.onended = () => { activeHtmlAudio = null; resolve(); };
-            audio.onerror = () => { activeHtmlAudio = null; resolve(); };
-            audio.play().catch(() => resolve());
-          });
-        } else if (!res && !layla?.tts && 'speechSynthesis' in window) {
-          await new Promise((resolve) => {
+            if (sessionId !== currentTtsSession) { resolve(); return; }
             const utterance = new SpeechSynthesisUtterance(cleaned);
             window.activeSpeechUtterance = utterance;
             utterance.onend = () => { window.activeSpeechUtterance = null; resolve(); };
             utterance.onerror = () => { window.activeSpeechUtterance = null; resolve(); };
             window.speechSynthesis.speak(utterance);
           });
-        } else {
-          // Strictly await the on_finished_speaking bridge event
-          await bridgeEndPromise;
         }
       } catch (err) {
-        console.error("[Layla TTS Error]", err);
+        console.error("[Layla TTS Chunk Error]", err);
       } finally {
-        if (currentTtsSession === thisSession) {
-          isTtsPlaying = false;
-          updateVoiceStopButton();
-          if (!activeGenerations.has(activeThread?.id) && ui.statusText.textContent === "Speaking...") {
-            ui.statusText.textContent = "Ready";
-          }
-          
-          let didProcessQueue = false;
-          if (typeof window.processPromptQueue === 'function') {
-            didProcessQueue = window.processPromptQueue();
-          }
-
-          if (typeof window.updateQueueUI === 'function') {
-            window.updateQueueUI();
-          }
-          
-          // Only trigger auto-listen if Auto-Pause mode is specifically selected AND nothing was queued
-          if (!didProcessQueue && isAutoRead && loadedSettings.voice_enabled && loadedSettings.auto_listen !== false && loadedSettings.stt_mode === 'pause' && !activeGenerations.has(activeThread?.id) && !isListening && !isHoldingMic) {
-            if (!isListening && !isTtsPlaying) startSpeechRecognition();
-          }
-        }
+        ttsEndResolver = null;
       }
     }
 
-    function startSpeechRecognition() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        showError("Speech Recognition is not supported on this device/webview.");
-        return;
-      }
-      if (isListening) return;
+    async function speakFullResponse(rawText, isAutoRead = false) {
+      if (!loadedSettings.voice_enabled || !rawText) return;
+      const cleaned = cleanForSpeech(rawText);
+      if (!cleaned) return;
 
+      if (isListening) stopSpeechRecognition(false);
+      stopAllAudio();
+
+      await new Promise(r => setTimeout(r, 40));
+      currentTtsSession++;
+      const thisSession = currentTtsSession;
+
+      const sentences = cleaned.match(/[^.!?\n]+[.!?\n]*/g) || [cleaned];
+      sentences.forEach((s, idx) => {
+        const trimmed = s.trim();
+        if (trimmed) {
+          enqueueTtsChunk(trimmed, thisSession, isAutoRead && idx === sentences.length - 1);
+        }
+      });
+    }
+
+    let sttSubscribed = false;
+    let sttSessionAccumulatedText = '';
+    let lastPartialTranscript = '';
+
+    function initNativeSTT() {
+      if (sttSubscribed || !layla?.stt) return;
+      layla.stt.on('speechRecognized', (data) => {
+        if (isTtsPlaying || !data?.transcript) return;
+        const currentChunk = data.transcript.trim();
+        if (!currentChunk) return;
+
+        hasCapturedSpeech = true;
+
+        // Check if engine restarted from a pause or sent an entirely new utterance
+        if (lastPartialTranscript && !currentChunk.startsWith(lastPartialTranscript) && !lastPartialTranscript.startsWith(currentChunk)) {
+          sttSessionAccumulatedText += (sttSessionAccumulatedText ? ' ' : '') + lastPartialTranscript;
+        }
+        lastPartialTranscript = currentChunk;
+
+        const liveCombined = (sttSessionAccumulatedText ? sttSessionAccumulatedText + ' ' : '') + currentChunk;
+        ui.userInput.value = sttPrefixText + liveCombined;
+
+        updateCharCount();
+        updateContextBar();
+        ui.userInput.style.height = 'auto';
+        ui.userInput.style.height = ui.userInput.scrollHeight + 'px';
+        ui.userInput.scrollTop = ui.userInput.scrollHeight;
+
+        if (loadedSettings.stt_mode === 'pause' && !isHoldingMic) {
+          if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
+          sttSilenceTimer = setTimeout(() => {
+            if (isListening && hasCapturedSpeech && ui.userInput.value.trim().length > 0) {
+              stopSpeechRecognition(true);
+            }
+          }, 1400);
+        }
+      });
+      sttSubscribed = true;
+    }
+
+    async function releaseHostAudioSession() {
+      try {
+        if (layla?.stt && typeof layla.stt.stopListening === 'function') {
+          await layla.stt.stopListening();
+        }
+      } catch (e) {}
+    }
+
+    async function startSpeechRecognition() {
+      if (!loadedSettings.voice_enabled || isListening) return;
       stopAllAudio();
       hasCapturedSpeech = false;
       userExplicitlyStoppedStt = false;
-      shouldSendOnEnd = false;
+      sttSessionAccumulatedText = '';
+      lastPartialTranscript = '';
       sttPrefixText = ui.userInput.value.trim() ? ui.userInput.value.trim() + ' ' : '';
 
       try {
-        activeSpeechRecognition = new SpeechRecognition();
-        activeSpeechRecognition.continuous = true;
-        activeSpeechRecognition.interimResults = true;
-        activeSpeechRecognition.lang = 'en-US';
-
-        activeSpeechRecognition.onstart = () => {
+        if (layla?.stt) {
+          initNativeSTT();
+          await layla.stt.startListening();
           isListening = true;
           ui.btnMic.style.background = 'var(--error)';
           ui.btnMic.style.color = 'white';
           ui.statusText.textContent = loadedSettings.stt_mode === 'hold' ? 'Recording (Hold)...' : 'Listening...';
-        };
-
-        activeSpeechRecognition.onresult = (event) => {
-          if (isTtsPlaying) return; // Hard block: prevent mic from capturing AI's voice
-          
-          // Absolute clean extraction using your verified single-index method (zero echo)
-          let sessionText = '';
-          if (event.results.length > 0) {
-            sessionText = event.results[event.results.length - 1][0].transcript;
-          }
-
-          if (sessionText.trim().length > 0) {
-            hasCapturedSpeech = true;
-            ui.userInput.value = sttPrefixText + sessionText;
-            updateCharCount();
-            updateContextBar();
-            ui.userInput.style.height = 'auto';
-            ui.userInput.style.height = ui.userInput.scrollHeight + 'px';
-            ui.userInput.scrollTop = ui.userInput.scrollHeight;
-          }
-
-          // Pause Mode: auto-send after 1400ms of true silence
-          if (loadedSettings.stt_mode === 'pause' && !isHoldingMic) {
-            if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
-            sttSilenceTimer = setTimeout(() => {
-              if (isListening && hasCapturedSpeech && ui.userInput.value.trim().length > 0) {
-                stopSpeechRecognition(true);
-              }
-            }, 1400);
-          }
-        };
-
-        activeSpeechRecognition.onerror = (e) => {
-          console.warn("STT Error:", e.error);
-          if (e.error === 'no-speech' || e.error === 'aborted') return;
-
-          isListening = false;
-          isHoldingMic = false;
-          ui.btnMic.style.background = 'var(--bg-surface-hover)';
-          ui.btnMic.style.color = 'var(--text-main)';
-          if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
-            ui.statusText.textContent = 'Ready';
-          }
-        };
-
-        activeSpeechRecognition.onend = () => {
-          if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
-
-          // 1. Explicit Stop (User hit Send, tapped Mic off, or let go of Push-to-Talk)
-          if (userExplicitlyStoppedStt || (loadedSettings.stt_mode === 'hold' && !isHoldingMic)) {
-            isListening = false;
-            isHoldingMic = false;
-            ui.btnMic.style.background = 'var(--bg-surface-hover)';
-            ui.btnMic.style.color = 'var(--text-main)';
-            if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
-              ui.statusText.textContent = 'Ready';
-            }
-            return;
-          }
-
-          // 2. Pause Mode: Native Android silence dropped the mic. Auto-Send!
-          if (loadedSettings.stt_mode === 'pause') {
-            if (hasCapturedSpeech && ui.userInput.value.trim().length > 0) {
-              isListening = false;
-              ui.btnMic.style.background = 'var(--bg-surface-hover)';
-              ui.btnMic.style.color = 'var(--text-main)';
-              ui.statusText.textContent = 'Ready';
-              hasCapturedSpeech = false;
-              sendMessage();
-              return;
-            } else {
-              // Didn't hear anything yet, seamlessly keep listening
-              sttPrefixText = ui.userInput.value.trim() ? ui.userInput.value.trim() + ' ' : '';
-              try { activeSpeechRecognition.start(); return; } catch (e) {}
-            }
-          }
-
-          // 3. Hold Mode: If finger is still physically down, reconnect seamlessly
-          if (loadedSettings.stt_mode === 'hold') {
-            if (isHoldingMic) {
-              sttPrefixText = ui.userInput.value.trim() ? ui.userInput.value.trim() + ' ' : '';
-              try { activeSpeechRecognition.start(); return; } catch (e) {}
-            } else {
-              // Finger is off, let it die cleanly
-              isListening = false;
-              ui.btnMic.style.background = 'var(--bg-surface-hover)';
-              ui.btnMic.style.color = 'var(--text-main)';
-              ui.statusText.textContent = 'Ready';
-              return;
-            }
-          }
-
-          // 4. Manual Mode: ALWAYS reconnect seamlessly on silence
-          if (loadedSettings.stt_mode === 'manual') {
-            sttPrefixText = ui.userInput.value.trim() ? ui.userInput.value.trim() + ' ' : '';
-            try { activeSpeechRecognition.start(); return; } catch (e) {}
-          }
-
-          // Fallback cleanup
-          isListening = false;
-          isHoldingMic = false;
-          ui.btnMic.style.background = 'var(--bg-surface-hover)';
-          ui.btnMic.style.color = 'var(--text-main)';
-          if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
-            ui.statusText.textContent = 'Ready';
-          }
-        };
-
-        activeSpeechRecognition.start();
+        } else {
+          showError("Speech-to-Text service is not available on this host.");
+        }
       } catch (err) {
         isListening = false;
         isHoldingMic = false;
-        shouldSendOnEnd = false;
         ui.btnMic.style.background = 'var(--bg-surface-hover)';
         ui.btnMic.style.color = 'var(--text-main)';
         showError("Mic Access Error: " + err.message);
       }
     }
 
-        
-    function stopSpeechRecognition(autoSend = false) {
+    async function stopSpeechRecognition(autoSend = false) {
       userExplicitlyStoppedStt = true;
       if (sttSilenceTimer) clearTimeout(sttSilenceTimer);
-      
-      // Force immediate UI cleanup to bypass Android's unreliable onend delivery
+
+      const wasActive = isListening || isHoldingMic;
       isListening = false;
       isHoldingMic = false;
+
+      // Finalize any lingering partial speech into the text buffer
+      if (lastPartialTranscript) {
+        sttSessionAccumulatedText += (sttSessionAccumulatedText ? ' ' : '') + lastPartialTranscript;
+        lastPartialTranscript = '';
+      }
+
       if (ui.btnMic) {
         ui.btnMic.style.background = 'var(--bg-surface-hover)';
         ui.btnMic.style.color = 'var(--text-main)';
@@ -4323,15 +4626,15 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
       if (!isTtsPlaying && !activeGenerations.has(activeThread?.id)) {
         ui.statusText.textContent = 'Ready';
       }
-      
-      if (activeSpeechRecognition) {
-        try { activeSpeechRecognition.stop(); } catch (e) {}
+
+      // Hard release of the recording session to unclamp Android audio hardware
+      if (wasActive) {
+        await releaseHostAudioSession();
       }
-      
-      // Force synchronous message dispatch instantly
+
       const canSend = autoSend && hasCapturedSpeech && ui.userInput.value.trim().length > 0;
       hasCapturedSpeech = false;
-      
+      sttSessionAccumulatedText = '';
       if (canSend) {
         sendMessage();
       }
@@ -4352,22 +4655,31 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     }
 
         if (ui.settingVoiceEnabled) {
-      ui.settingVoiceEnabled.addEventListener('change', (e) => {
-        const enabled = e.target.checked;
-        if (enabled) {
-          alert("🎙️ Voice & Speech Features (Beta)\n\nDue to current Layla SDK bridge limitations, AI speech will play immediately after text generation finishes.\n\nAuto-Read AI Responses has been turned ON by default.");
-          loadedSettings.auto_tts = true;
-          if (ui.settingAutoTts) ui.settingAutoTts.checked = true;
-        }
-        applyVoiceVisibility(enabled);
-        saveSettings({ voice_enabled: enabled, auto_tts: loadedSettings.auto_tts });
-        renderChatViewport();
-      });
+  ui.settingVoiceEnabled.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    if (enabled) {
+      alert("🎙️ Voice & Speech Features (Beta)\n\nReal-Time Streaming Voice is active. AI speech will stream concurrently as text tokens are generated.\n\nAuto-Read AI Responses has been turned ON by default.");
+      loadedSettings.auto_tts = true;
+      if (ui.settingAutoTts) ui.settingAutoTts.checked = true;
+    } else {
+      stopAllAudio();
+      stopSpeechRecognition(false);
     }
+    applyVoiceVisibility(enabled);
+    saveSettings({ voice_enabled: enabled, auto_tts: loadedSettings.auto_tts });
+    renderChatViewport();
+  });
+}
 
     if (ui.settingAutoTts) {
       ui.settingAutoTts.addEventListener('change', (e) => {
         saveSettings({ auto_tts: e.target.checked });
+      });
+    }
+
+    if (ui.settingTtsTiming) {
+      ui.settingTtsTiming.addEventListener('change', (e) => {
+        saveSettings({ tts_timing: e.target.value });
       });
     }
 
@@ -4400,42 +4712,45 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
     }
 
     // Push-to-Talk & Tap Handlers for Mic
-    if (ui.btnMic) {
-      ui.btnMic.addEventListener('contextmenu', (e) => e.preventDefault());
+if (ui.btnMic) {
+  ui.btnMic.addEventListener('contextmenu', (e) => e.preventDefault());
 
-      const handlePressStart = (e) => {
-        if (loadedSettings.stt_mode === 'hold') {
-          if (e.cancelable) e.preventDefault();
-          e.stopPropagation();
-          isHoldingMic = true;
-          userExplicitlyStoppedStt = false;
-          shouldSendOnEnd = false; // Do NOT arm send until finger is physically lifted
-          startSpeechRecognition();
-        }
-      };
-
-      const handlePressEnd = (e) => {
-        if (loadedSettings.stt_mode === 'hold' && isHoldingMic) {
-          if (e && e.cancelable) e.preventDefault();
-          if (e) e.stopPropagation();
-          isHoldingMic = false;
-          stopSpeechRecognition(true); // Arms send and stops recognition
-        }
-      };
-
-      ui.btnMic.addEventListener('touchstart', handlePressStart, { passive: false });
-      window.addEventListener('touchend', handlePressEnd, { passive: false });
-      window.addEventListener('touchcancel', handlePressEnd, { passive: false });
-
-      ui.btnMic.addEventListener('mousedown', handlePressStart);
-      window.addEventListener('mouseup', handlePressEnd);
-
-      ui.btnMic.addEventListener('click', (e) => {
-        if (loadedSettings.stt_mode !== 'hold') {
-          toggleSpeechRecognition();
-        }
-      });
+  const handlePressStart = (e) => {
+    if (!loadedSettings.voice_enabled) return;
+    if (loadedSettings.stt_mode === 'hold') {
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+      isHoldingMic = true;
+      userExplicitlyStoppedStt = false;
+      shouldSendOnEnd = false; // Do NOT arm send until finger is physically lifted
+      startSpeechRecognition();
     }
+  };
+
+  const handlePressEnd = (e) => {
+    if (!loadedSettings.voice_enabled) return;
+    if (loadedSettings.stt_mode === 'hold' && isHoldingMic) {
+      if (e && e.cancelable) e.preventDefault();
+      if (e) e.stopPropagation();
+      isHoldingMic = false;
+      stopSpeechRecognition(true); // Arms send and stops recognition
+    }
+  };
+
+  ui.btnMic.addEventListener('touchstart', handlePressStart, { passive: false });
+  window.addEventListener('touchend', handlePressEnd, { passive: false });
+  window.addEventListener('touchcancel', handlePressEnd, { passive: false });
+
+  ui.btnMic.addEventListener('mousedown', handlePressStart);
+  window.addEventListener('mouseup', handlePressEnd);
+
+  ui.btnMic.addEventListener('click', (e) => {
+    if (!loadedSettings.voice_enabled) return;
+    if (loadedSettings.stt_mode !== 'hold') {
+      toggleSpeechRecognition();
+    }
+  });
+}
 
     async function boot() {
       try {
@@ -4465,6 +4780,22 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
 
         await initDatabase();
         await warmThreadsCache();
+
+        // Native Session Anchor: Binds RawLLM Pro to a host session so llama.cpp retains warm KV cache
+        try {
+          if (window.layla?.chat?.saveChatMessage) {
+            await window.layla.chat.saveChatMessage({
+              id: -1,
+              character_id: "layla",
+              session_id: "rawllm_session_main",
+              role: "assistant",
+              content: "Session initialized",
+              timestamp: Date.now()
+            });
+          }
+        } catch (sessErr) {
+          console.warn('[SESSION ANCHOR] Host session init notice:', sessErr);
+        }
 
         // ---------------------------------------------------------
         // ROBUST BOOT RECOVERY: Check single JSON file
@@ -4515,6 +4846,14 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         }
         // ---------------------------------------------------------
 
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', () => {
+            if (document.activeElement === ui.userInput) {
+              scrollToBottom(true);
+            }
+          });
+        }
+
         await loadSettings();
         enterSends = loadedSettings.enter_sends !== false;
         applyFontSize(loadedSettings.font_size || 15);
@@ -4531,6 +4870,9 @@ Negative Prompt:" style="resize: vertical; min-height: 48px; max-height: 140px;"
         }
         if (ui.settingAutoTts) {
           ui.settingAutoTts.checked = loadedSettings.auto_tts !== false;
+        }
+        if (ui.settingTtsTiming) {
+          ui.settingTtsTiming.value = loadedSettings.tts_timing || 'stream';
         }
         if (ui.settingAutoListen) {
           ui.settingAutoListen.checked = loadedSettings.auto_listen !== false;

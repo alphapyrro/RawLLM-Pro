@@ -4,3 +4,9 @@ Thumbs.db
 assets/js/eruda.js
 eruda.js
 index2.html
+.feedme/
+/package
+/typescript
+typescript/layla-sdk.d.ts
+typescript/README.md
+assets/js/layla-sdk.d.ts
